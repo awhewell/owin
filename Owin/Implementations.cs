@@ -26,7 +26,6 @@ namespace Owin
         /// <param name="factory"></param>
         public static void Register(IClassFactory factory)
         {
-            factory.Register<Owin.Interface.IEnvironment, Environment>();
             factory.Register<Owin.Interface.IPipeline, Pipeline>();
             factory.Register<Owin.Interface.IPipelineBuilder, PipelineBuilder>();
             factory.Register<Owin.Interface.IPipelineBuilderEnvironment, PipelineBuilderEnvironment>();

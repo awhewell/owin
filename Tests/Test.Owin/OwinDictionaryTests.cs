@@ -8,37 +8,63 @@
 //
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using InterfaceFactory;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Owin.Interface;
 
-namespace Owin
+namespace Test.Owin
 {
-    /// <summary>
-    /// Default implementation of <see cref="IEnvironment"/>.
-    /// </summary>
-    class Environment : Dictionary<string, object>, IEnvironment
+    [TestClass]
+    public class OwinDictionaryTests
     {
-        /// <summary>
-        /// Overrides getter to return the default value rather than throw an exception
-        /// when using a key that does not exist.
-        /// </summary>
-        /// <param name="idx"></param>
-        /// <returns></returns>
-        public new object this[string idx]
+        private OwinDictionary<object> _Dictionary;
+
+        [TestInitialize]
+        public void TestInitialise()
         {
-            get {
-                base.TryGetValue(idx, out var result);
-                return result;
-            }
+            _Dictionary = new OwinDictionary<object>();
         }
 
-        /// <summary>
-        /// Creates a new object.
-        /// </summary>
-        public Environment() : base(StringComparer.Ordinal)
+        [TestMethod]
+        public void OwinDictionary_Index_Operator_Returns_Null_For_Missing_Keys()
         {
+            Assert.IsNull(_Dictionary["missing"]);
+        }
+
+        [TestMethod]
+        public void OwinDictionary_Index_Operator_Supports_Assignment_For_New_Keys()
+        {
+            _Dictionary["a.b"] = 12;
+
+            Assert.AreEqual(12, (int)_Dictionary["a.b"]);
+        }
+
+        [TestMethod]
+        public void OwinDictionary_Index_Operator_Supports_Assignment_For_Existing_Keys()
+        {
+            _Dictionary["a.b"] = 12;
+            _Dictionary["a.b"] = 24;
+
+            Assert.AreEqual(24, (int)_Dictionary["a.b"]);
+        }
+
+        [TestMethod]
+        public void OwinDictionary_Is_Case_Sensitive_When_Reading()
+        {
+            _Dictionary.Add("A", 1);
+
+            Assert.IsNull(_Dictionary["a"]);
+        }
+
+        [TestMethod]
+        public void OwinDictionary_Is_Case_Sensitive_When_Writing()
+        {
+            _Dictionary.Add("A", 1);
+            _Dictionary.Add("a", 2);
+
+            Assert.AreEqual(1, (int)_Dictionary["A"]);
+            Assert.AreEqual(2, (int)_Dictionary["a"]);
         }
     }
 }

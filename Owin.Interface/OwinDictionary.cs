@@ -8,63 +8,31 @@
 //
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System.Linq;
-using InterfaceFactory;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Owin.Interface;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace Test.Owin
+namespace Owin.Interface
 {
-    [TestClass]
-    public class EnvironmentTests
+    /// <summary>
+    /// A dictionary with a case sensitive string key whose indexed get returns default(TValue)
+    /// when fetching a non-existent key instead of throwing an exception.
+    /// </summary>
+    /// <typeparam name="TValue">The type of value stored by the dictionary.</typeparam>
+    public class OwinDictionary<TValue> : Dictionary<string, TValue>
     {
-        private IEnvironment _Environment;
-
-        [TestInitialize]
-        public void TestInitialise()
+        /// <summary>
+        /// See class summary.
+        /// </summary>
+        /// <param name="idx"></param>
+        /// <returns></returns>
+        public new TValue this[string idx]
         {
-            _Environment = Factory.Resolve<IEnvironment>();
-        }
-
-        [TestMethod]
-        public void Environment_Index_Operator_Returns_Null_For_Missing_Keys()
-        {
-            Assert.IsNull(_Environment["missing"]);
-        }
-
-        [TestMethod]
-        public void Environment_Index_Operator_Supports_Assignment_For_New_Keys()
-        {
-            _Environment["a.b"] = 12;
-
-            Assert.AreEqual(12, (int)_Environment["a.b"]);
-        }
-
-        [TestMethod]
-        public void Environment_Index_Operator_Supports_Assignment_For_Existing_Keys()
-        {
-            _Environment["a.b"] = 12;
-            _Environment["a.b"] = 24;
-
-            Assert.AreEqual(24, (int)_Environment["a.b"]);
-        }
-
-        [TestMethod]
-        public void Environment_Is_Case_Sensitive_When_Reading()
-        {
-            _Environment.Add("A", 1);
-
-            Assert.IsNull(_Environment["a"]);
-        }
-
-        [TestMethod]
-        public void Environment_Is_Case_Sensitive_When_Writing()
-        {
-            _Environment.Add("A", 1);
-            _Environment.Add("a", 2);
-
-            Assert.AreEqual(1, (int)_Environment["A"]);
-            Assert.AreEqual(2, (int)_Environment["a"]);
+            get {
+                base.TryGetValue(idx, out var result);
+                return result;
+            }
+            set => base[idx] = value;
         }
     }
 }
