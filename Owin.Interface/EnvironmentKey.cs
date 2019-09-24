@@ -17,7 +17,7 @@ namespace Owin.Interface
     /// <summary>
     /// A collection of standard OWIN environment dictionary keys.
     /// </summary>
-    public static class OwinEnvironmentKey
+    public static class EnvironmentKey
     {
         // Request keys
         public const string RequestBody =           "owin.RequestBody";         // [Required] A Stream with the request body, if any. Stream.Null MAY be used as a placeholder if there is no request body.

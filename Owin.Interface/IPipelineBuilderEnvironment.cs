@@ -24,6 +24,12 @@ namespace Owin.Interface
     public interface IPipelineBuilderEnvironment
     {
         /// <summary>
+        /// Gets a dictionary of properties set by the host and middleware that describes the environment
+        /// that the pipeline is being built for.
+        /// </summary>
+        OwinDictionary<object> Properties { get; }
+
+        /// <summary>
         /// Gets a read-only collection of all standard middleware in the order in which they were added.
         /// </summary>
         IEnumerable<Func<AppFunc, AppFunc>> MiddlewareChain { get; }

@@ -11,36 +11,17 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using InterfaceFactory;
 
 namespace Owin.Interface
 {
     /// <summary>
-    /// A singleton that different parts of the application can use to be notified when a new OWIN pipeline is being
-    /// constructed. The notification lets them add middleware to the new pipeline.
+    /// A collection of miscellaneous constants that don't belong anywhere else.
     /// </summary>
-    [Singleton]
-    public interface IPipelineBuilder
+    public static class Constants
     {
         /// <summary>
-        /// Records a function that will be called to create an OWIN middleware function.
+        /// The version of the OWIN specification that the library adheres to.
         /// </summary>
-        /// <param name="callback">A method that is called when the middleware needs to be built.</param>
-        /// <param name="priority">A value indicating the order in which callbacks are called, lowest first.</param>
-        /// <returns>A handle that can be passed to <see cref="DeregisterMiddlewareBuilder"/>.</returns>
-        IMiddlewareBuilderCallbackHandle RegisterMiddlewareBuilder(Action<IPipelineBuilderEnvironment> callback, int priority);
-
-        /// <summary>
-        /// Deregisters a callback that was previously registered with <see cref="RegisterMiddlewareBuilder"/>.
-        /// </summary>
-        /// <param name="handle"></param>
-        void DeregisterMiddlewareBuilder(IMiddlewareBuilderCallbackHandle handle);
-
-        /// <summary>
-        /// Creates a new pipeline by calling the section callbacks in order of priority.
-        /// </summary>
-        /// <param name="environment">The environment to use when building the pipeline.</param>
-        /// <returns></returns>
-        IPipeline CreatePipeline(IPipelineBuilderEnvironment environment);
+        public static readonly string Version = "1.0.0";
     }
 }

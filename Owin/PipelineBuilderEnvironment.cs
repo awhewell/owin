@@ -22,6 +22,11 @@ namespace Owin
     /// </summary>
     class PipelineBuilderEnvironment : IPipelineBuilderEnvironment
     {
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        public OwinDictionary<object> Properties => new OwinDictionary<object>();
+
         private readonly List<Func<AppFunc, AppFunc>> _MiddlewareChain = new List<Func<AppFunc, AppFunc>>();
         /// <summary>
         /// See interface docs.

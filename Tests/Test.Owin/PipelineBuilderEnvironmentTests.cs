@@ -36,6 +36,12 @@ namespace Test.Owin
         private AppFunc AppFuncChainLink_2(AppFunc next)  => throw new NotImplementedException();
 
         [TestMethod]
+        public void PipelineBuilderEnvironment_Properties_Defaults_To_Known_State()
+        {
+            Assert.AreEqual(0, _Environment.Properties.Count);
+        }
+
+        [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
         public void PipelineBuilderEnvironment_UseMiddleware_Throws_If_Passed_Null()
         {

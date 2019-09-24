@@ -21,7 +21,7 @@ namespace Test.Owin
     {
         private IClassFactory                       _Snapshot;
         private IPipelineBuilder                    _PipelineBuilder;
-        private Mock<IPipelineBuilderEnvironment>   _PipelineBuilderEnvironment;
+        private Mock<IPipelineBuilderEnvironment>   _Environment;
         private Mock<IPipeline>                     _Pipeline;
 
         [TestInitialize]
@@ -29,7 +29,7 @@ namespace Test.Owin
         {
             _Snapshot = Factory.TakeSnapshot();
 
-            _PipelineBuilderEnvironment = MockHelper.FactoryImplementation<IPipelineBuilderEnvironment>();
+            _Environment = MockHelper.FactoryImplementation<IPipelineBuilderEnvironment>();
             _Pipeline = MockHelper.FactoryImplementation<IPipeline>();
 
             _PipelineBuilder = Factory.ResolveNewInstance<IPipelineBuilder>();
@@ -73,34 +73,49 @@ namespace Test.Owin
         }
 
         [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void PipelineBuilder_CreatePipeline_Throws_If_Passed_Null()
+        {
+            _PipelineBuilder.CreatePipeline(null);
+        }
+
+        [TestMethod]
         public void PipelineBuilder_CreatePipeline_Calls_Registered_Callback()
         {
             var callback = new MockPipelineCallback();
             _PipelineBuilder.RegisterMiddlewareBuilder(callback.Callback, 0);
 
-            _PipelineBuilder.CreatePipeline();
+            _PipelineBuilder.CreatePipeline(_Environment.Object);
 
             Assert.AreEqual(1, callback.CallCount);
             Assert.AreEqual(1, callback.AllEnvironments.Count);
-            Assert.AreSame(_PipelineBuilderEnvironment.Object, callback.LastEnvironment);
+            Assert.AreSame(_Environment.Object, callback.LastEnvironment);
+        }
+
+        [TestMethod]
+        public void PipelineBuilder_Sets_Mandatory_Keys_In_Properties()
+        {
+            _PipelineBuilder.CreatePipeline(_Environment.Object);
+
+            Assert.AreEqual(Constants.Version, _Environment.Object.Properties["owin.Version"]);
         }
 
         [TestMethod]
         public void PipelineBuilder_CreatePipeline_Passes_Environment_To_New_Instance_Of_Pipeline()
         {
             var callback = new MockPipelineCallback();
-            callback.Action = (env) => _Pipeline.Verify(r => r.Construct(_PipelineBuilderEnvironment.Object), Times.Never);
+            callback.Action = (env) => _Pipeline.Verify(r => r.Construct(_Environment.Object), Times.Never);
             _PipelineBuilder.RegisterMiddlewareBuilder(callback.Callback, 0);
 
-            _PipelineBuilder.CreatePipeline();
+            _PipelineBuilder.CreatePipeline(_Environment.Object);
 
-            _Pipeline.Verify(r => r.Construct(_PipelineBuilderEnvironment.Object), Times.Once);
+            _Pipeline.Verify(r => r.Construct(_Environment.Object), Times.Once);
         }
 
         [TestMethod]
         public void PipelineBuilder_CreatePipeline_Returns_Pipeline()
         {
-            var result = _PipelineBuilder.CreatePipeline();
+            var result = _PipelineBuilder.CreatePipeline(_Environment.Object);
 
             Assert.AreSame(_Pipeline.Object, result);
         }
@@ -112,7 +127,7 @@ namespace Test.Owin
             var handle = _PipelineBuilder.RegisterMiddlewareBuilder(callback.Callback, 0);
             _PipelineBuilder.DeregisterMiddlewareBuilder(handle);
 
-            _PipelineBuilder.CreatePipeline();
+            _PipelineBuilder.CreatePipeline(_Environment.Object);
 
             Assert.AreEqual(0, callback.CallCount);
         }
@@ -141,7 +156,7 @@ namespace Test.Owin
                 Assert.AreEqual(1, callback_2.CallCount, "2nd callback not called before 3rd");
             };
 
-            _PipelineBuilder.CreatePipeline();
+            _PipelineBuilder.CreatePipeline(_Environment.Object);
 
             Assert.AreEqual(1, callback_1.CallCount);
             Assert.AreEqual(1, callback_2.CallCount);

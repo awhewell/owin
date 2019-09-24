@@ -62,10 +62,15 @@ namespace Owin
         /// <summary>
         /// See interface docs.
         /// </summary>
+        /// <param name="environment"></param>
         /// <returns></returns>
-        public IPipeline CreatePipeline()
+        public IPipeline CreatePipeline(IPipelineBuilderEnvironment environment)
         {
-            var environment = Factory.Resolve<IPipelineBuilderEnvironment>();
+            if(environment == null) {
+                throw new ArgumentNullException(nameof(environment));
+            }
+            environment.Properties[ApplicationStartupKey.Version] = Constants.Version;
+
             foreach(var callback in _Callbacks.OrderBy(r => r.Priority)) {
                 callback.Callback(environment);
             }
