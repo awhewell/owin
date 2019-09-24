@@ -27,25 +27,6 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void Environment_Is_Case_Insensitive_When_Reading()
-        {
-            _Environment.Add("A", 1);
-
-            Assert.AreEqual(1, (int)_Environment["a"]);
-        }
-
-        [TestMethod]
-        public void Environment_Is_Case_Insensitive_When_Writing()
-        {
-            _Environment.Add("A", 1);
-            _Environment["a"] = 2;
-
-            Assert.AreEqual(2, (int)_Environment["A"]);
-            Assert.AreEqual(1, _Environment.Count);
-            Assert.AreEqual("A", _Environment.Keys.Single());
-        }
-
-        [TestMethod]
         public void Environment_Index_Operator_Returns_Null_For_Missing_Keys()
         {
             Assert.IsNull(_Environment["missing"]);
@@ -66,6 +47,24 @@ namespace Test.Owin
             _Environment["a.b"] = 24;
 
             Assert.AreEqual(24, (int)_Environment["a.b"]);
+        }
+
+        [TestMethod]
+        public void Environment_Is_Case_Sensitive_When_Reading()
+        {
+            _Environment.Add("A", 1);
+
+            Assert.IsNull(_Environment["a"]);
+        }
+
+        [TestMethod]
+        public void Environment_Is_Case_Sensitive_When_Writing()
+        {
+            _Environment.Add("A", 1);
+            _Environment.Add("a", 2);
+
+            Assert.AreEqual(1, (int)_Environment["A"]);
+            Assert.AreEqual(2, (int)_Environment["a"]);
         }
     }
 }

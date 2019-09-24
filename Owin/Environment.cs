@@ -35,9 +35,9 @@ namespace Owin
         }
 
         /// <summary>
-        /// Creates a new object, ensuring that the key is case insensitive.
+        /// Creates a new object.
         /// </summary>
-        public Environment() : base(StringComparer.OrdinalIgnoreCase)
+        public Environment() : base(StringComparer.Ordinal)
         {
         }
     }

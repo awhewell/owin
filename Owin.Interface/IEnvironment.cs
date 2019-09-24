@@ -15,15 +15,13 @@ using System.Text;
 namespace Owin.Interface
 {
     /// <summary>
-    /// Describes a standard OWIN environment.
+    /// Describes a standard OWIN environment of objects indexed by case sensitive strings.
     /// </summary>
     /// <remarks>
-    /// You are not obligated to use this for your OWIN environment, you can use
-    /// any IDictionary with a string key and object value. However, this guarantees
-    /// that the keys are case insensitive, which is a requirement for OWIN
-    /// implementations, and it also complies with Microsoft's OWIN implementation in
-    /// that fetching a missing key returns a null rather than throwing an exception
-    /// and setting a missing key just adds the key.
+    /// You are not obliged to use this for your OWIN environment, you can use any IDictionary with a string
+    /// key and object value. However, this guarantees that the keys are case sensitive, which is a requirement
+    /// for strict OWIN implementations, and it also borrows behaviour from Microsoft's OWIN implementation in
+    /// that fetching a missing key returns a null rather than throwing an exception.
     /// </remarks>
     public interface IEnvironment : IDictionary<string, object>
     {
