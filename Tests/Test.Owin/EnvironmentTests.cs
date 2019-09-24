@@ -8,28 +8,64 @@
 //
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using InterfaceFactory;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Owin.Interface;
 
-namespace Owin
+namespace Test.Owin
 {
-    /// <summary>
-    /// Registers implementations of interfaces with the interface factory.
-    /// </summary>
-    public static class Implementations
+    [TestClass]
+    public class EnvironmentTests
     {
-        /// <summary>
-        /// Registers implementations.
-        /// </summary>
-        /// <param name="factory"></param>
-        public static void Register(IClassFactory factory)
+        private IEnvironment _Environment;
+
+        [TestInitialize]
+        public void TestInitialise()
         {
-            factory.Register<Owin.Interface.IEnvironment, Environment>();
-            factory.Register<Owin.Interface.IPipeline, Pipeline>();
-            factory.Register<Owin.Interface.IPipelineBuilder, PipelineBuilder>();
-            factory.Register<Owin.Interface.IPipelineBuilderEnvironment, PipelineBuilderEnvironment>();
+            _Environment = Factory.Resolve<IEnvironment>();
+        }
+
+        [TestMethod]
+        public void Environment_Is_Case_Insensitive_When_Reading()
+        {
+            _Environment.Add("A", 1);
+
+            Assert.AreEqual(1, (int)_Environment["a"]);
+        }
+
+        [TestMethod]
+        public void Environment_Is_Case_Insensitive_When_Writing()
+        {
+            _Environment.Add("A", 1);
+            _Environment["a"] = 2;
+
+            Assert.AreEqual(2, (int)_Environment["A"]);
+            Assert.AreEqual(1, _Environment.Count);
+            Assert.AreEqual("A", _Environment.Keys.Single());
+        }
+
+        [TestMethod]
+        public void Environment_Index_Operator_Returns_Null_For_Missing_Keys()
+        {
+            Assert.IsNull(_Environment["missing"]);
+        }
+
+        [TestMethod]
+        public void Environment_Index_Operator_Supports_Assignment_For_New_Keys()
+        {
+            _Environment["a.b"] = 12;
+
+            Assert.AreEqual(12, (int)_Environment["a.b"]);
+        }
+
+        [TestMethod]
+        public void Environment_Index_Operator_Supports_Assignment_For_Existing_Keys()
+        {
+            _Environment["a.b"] = 12;
+            _Environment["a.b"] = 24;
+
+            Assert.AreEqual(24, (int)_Environment["a.b"]);
         }
     }
 }

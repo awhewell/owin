@@ -11,25 +11,34 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using InterfaceFactory;
+using Owin.Interface;
 
 namespace Owin
 {
     /// <summary>
-    /// Registers implementations of interfaces with the interface factory.
+    /// Default implementation of <see cref="IEnvironment"/>.
     /// </summary>
-    public static class Implementations
+    class Environment : Dictionary<string, object>, IEnvironment
     {
         /// <summary>
-        /// Registers implementations.
+        /// Overrides getter to return the default value rather than throw an exception
+        /// when using a key that does not exist.
         /// </summary>
-        /// <param name="factory"></param>
-        public static void Register(IClassFactory factory)
+        /// <param name="idx"></param>
+        /// <returns></returns>
+        public new object this[string idx]
         {
-            factory.Register<Owin.Interface.IEnvironment, Environment>();
-            factory.Register<Owin.Interface.IPipeline, Pipeline>();
-            factory.Register<Owin.Interface.IPipelineBuilder, PipelineBuilder>();
-            factory.Register<Owin.Interface.IPipelineBuilderEnvironment, PipelineBuilderEnvironment>();
+            get {
+                base.TryGetValue(idx, out var result);
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Creates a new object, ensuring that the key is case insensitive.
+        /// </summary>
+        public Environment() : base(StringComparer.OrdinalIgnoreCase)
+        {
         }
     }
 }

@@ -11,25 +11,21 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using InterfaceFactory;
 
-namespace Owin
+namespace Owin.Interface
 {
     /// <summary>
-    /// Registers implementations of interfaces with the interface factory.
+    /// Describes a standard OWIN environment.
     /// </summary>
-    public static class Implementations
+    /// <remarks>
+    /// You are not obligated to use this for your OWIN environment, you can use
+    /// any IDictionary with a string key and object value. However, this guarantees
+    /// that the keys are case insensitive, which is a requirement for OWIN
+    /// implementations, and it also complies with Microsoft's OWIN implementation in
+    /// that fetching a missing key returns a null rather than throwing an exception
+    /// and setting a missing key just adds the key.
+    /// </remarks>
+    public interface IEnvironment : IDictionary<string, object>
     {
-        /// <summary>
-        /// Registers implementations.
-        /// </summary>
-        /// <param name="factory"></param>
-        public static void Register(IClassFactory factory)
-        {
-            factory.Register<Owin.Interface.IEnvironment, Environment>();
-            factory.Register<Owin.Interface.IPipeline, Pipeline>();
-            factory.Register<Owin.Interface.IPipelineBuilder, PipelineBuilder>();
-            factory.Register<Owin.Interface.IPipelineBuilderEnvironment, PipelineBuilderEnvironment>();
-        }
     }
 }
