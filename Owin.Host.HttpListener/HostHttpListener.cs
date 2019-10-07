@@ -289,11 +289,20 @@ namespace Owin.Host.HttpListener
             var path = pathQuery.Item1;
             var query = pathQuery.Item2;
 
-            result[EnvironmentKey.RequestPathBase] = root == "/" ? "" : root;
-            result[EnvironmentKey.RequestPath] = root == "/" ? path : path.Substring(root.Length);
-            result[EnvironmentKey.RequestQueryString] = query;
-            result[EnvironmentKey.RequestProtocol] = $"HTTP/{request.ProtocolVersion}";
-            result[EnvironmentKey.RequestScheme] = request.Url.Scheme;
+            result[EnvironmentKey.RequestPathBase] =        root == "/" ? "" : root;
+            result[EnvironmentKey.RequestPath] =            root == "/" ? path : path.Substring(root.Length);
+            result[EnvironmentKey.RequestQueryString] =     query;
+            result[EnvironmentKey.RequestProtocol] =        $"HTTP/{request.ProtocolVersion}";
+            result[EnvironmentKey.RequestScheme] =          request.Url.Scheme;
+            result[EnvironmentKey.ServerIsLocal] =          request.IsLocal;
+            result[EnvironmentKey.ServerLocalIpAddress] =   request.LocalEndPoint?.Address?.ToString() ?? "";
+            result[EnvironmentKey.ServerLocalPort] =        request.LocalEndPoint?.Port ?? 0;
+            result[EnvironmentKey.ServerRemoteIpAddress] =  request.RemoteEndPoint?.Address?.ToString() ?? "";
+            result[EnvironmentKey.ServerRemotePort] =       request.RemoteEndPoint?.Port ?? 0;
+
+            if(String.Equals(request.Url.Scheme, "https", StringComparison.OrdinalIgnoreCase)) {
+                result[EnvironmentKey.SslClientCertificate] = request.GetClientCertificate();
+            }
 
             return result;
         }

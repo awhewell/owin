@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using InterfaceFactory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -580,10 +581,116 @@ namespace Test.Owin.Host.HttpListener
         public void GetContext_Environment_RequestScheme_Filled_Correctly(string scheme, string expectedScheme)
         {
             AssertEnvironment(
-                context => context.MockRequest.SetUrl("/", scheme: scheme, httpListenerUrlUnescapesPath: false),
+                context => context.MockRequest.SetUrl("/", scheme: scheme),
                 expectedScheme,
                 env => env[EnvironmentKey.RequestScheme]
             );
+        }
+
+        [TestMethod]
+        public void GetContext_Environment_ssl_ClientCertificate_Set_To_Null_For_Http()
+        {
+            using(var certificate = new X509Certificate2()) {
+                AssertEnvironment(
+                    context => {
+                        context.MockRequest.SetUrl("/", scheme: "http");
+                        context.MockRequest.Setup(r => r.GetClientCertificate()).Returns(certificate);
+                    },
+                    null,
+                    env => env[EnvironmentKey.SslClientCertificate]
+                );
+            }
+        }
+
+        [TestMethod]
+        public void GetContext_Environment_ssl_ClientCertificate_Fetched_For_Https()
+        {
+            using(var certificate = new X509Certificate2()) {
+                AssertEnvironment(
+                    context => {
+                        context.MockRequest.SetUrl("/", scheme: "https");
+                        context.MockRequest.Setup(r => r.GetClientCertificate()).Returns(certificate);
+                    },
+                    certificate,
+                    env => env[EnvironmentKey.SslClientCertificate],
+                    assertMethod: (expected, actual) => Assert.AreSame(expected, actual)
+                );
+            }
+        }
+
+        [TestMethod]
+        [DataRow("192.168.0.12")]
+        [DataRow("::1")]
+        [DataRow(null)]
+        public void GetContext_Environment_server_RemoteIpAddress_Filled_Correctly(string remoteIPAddress)
+        {
+            var expected = remoteIPAddress == null ? null : IPEndPoint.Parse(remoteIPAddress);
+
+            AssertEnvironment(
+                context => context.MockRequest.SetupGet(r => r.RemoteEndPoint).Returns(expected),
+                remoteIPAddress ?? "",
+                env => env[EnvironmentKey.ServerRemoteIpAddress]
+            );
+        }
+
+        [TestMethod]
+        [DataRow("192.168.0.12:12345", 12345)]
+        [DataRow("[::1]:2",            2)]
+        [DataRow(null,                 0)]
+        public void GetContext_Environment_server_RemotePort_Filled_Correctly(string remoteIPAddress, int expectedPort)
+        {
+            var remoteIPEndPoint = remoteIPAddress == null ? null : IPEndPoint.Parse(remoteIPAddress);
+
+            AssertEnvironment(
+                context => context.MockRequest.SetupGet(r => r.RemoteEndPoint).Returns(remoteIPEndPoint),
+                expectedPort,
+                env => env[EnvironmentKey.ServerRemotePort]
+            );
+        }
+
+        [TestMethod]
+        [DataRow("192.168.0.12")]
+        [DataRow("::1")]
+        [DataRow(null)]
+        public void GetContext_Environment_server_LocalIpAddress_Filled_Correctly(string localIPAddress)
+        {
+            var expected = localIPAddress == null ? null : IPEndPoint.Parse(localIPAddress);
+
+            AssertEnvironment(
+                context => context.MockRequest.SetupGet(r => r.LocalEndPoint).Returns(expected),
+                localIPAddress ?? "",
+                env => env[EnvironmentKey.ServerLocalIpAddress]
+            );
+        }
+
+        [TestMethod]
+        [DataRow("192.168.0.12:12345", 12345)]
+        [DataRow("[::1]:2",            2)]
+        [DataRow(null,                 0)]
+        public void GetContext_Environment_server_LocalPort_Filled_Correctly(string localIPAddress, int expectedPort)
+        {
+            var localIPEndPoint = localIPAddress == null ? null : IPEndPoint.Parse(localIPAddress);
+
+            AssertEnvironment(
+                context => context.MockRequest.SetupGet(r => r.LocalEndPoint).Returns(localIPEndPoint),
+                expectedPort,
+                env => env[EnvironmentKey.ServerLocalPort]
+            );
+        }
+
+        [TestMethod]
+        public void GetContext_Environment_server_IsLocal_Filled_Correctly()
+        {
+            foreach(var isLocal in new bool[] { true, false }) {
+                TestCleanup();
+                TestInitialise();
+
+                AssertEnvironment(
+                    context => context.MockRequest.SetupGet(r => r.IsLocal).Returns(isLocal),
+                    isLocal,
+                    env => env[EnvironmentKey.ServerIsLocal]
+                );
+            }
         }
     }
 }

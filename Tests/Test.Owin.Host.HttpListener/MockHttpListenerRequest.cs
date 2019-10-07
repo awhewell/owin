@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
+using System.Net;
 using System.Text;
 using Moq;
 using Owin.Interface.HttpListenerWrapper;
@@ -30,7 +31,10 @@ namespace Test.Owin.Host.HttpListener
             SetupAllProperties();
 
             SetupGet(r => r.Headers).Returns(Headers);
-            SetUrl("/", httpListenerUrlUnescapesPath: true);
+            SetUrl("/");
+
+            SetupGet(r => r.LocalEndPoint).Returns((IPEndPoint)null);
+            SetupGet(r => r.RemoteEndPoint).Returns((IPEndPoint)null);
 
             SetupGet(r => r.HasEntityBody)
             .Returns(() => {
@@ -53,7 +57,7 @@ namespace Test.Owin.Host.HttpListener
             SetupGet(r => r.InputStream).Returns(stream);
         }
 
-        public void SetUrl(string url, bool httpListenerUrlUnescapesPath, string scheme = "http")
+        public void SetUrl(string url, bool httpListenerUrlUnescapesPath = true, string scheme = "http")
         {
             // In testing under .NET 4 the Uri presented by HttpListenerRequest.Url
             // has its path unescaped and its query string left escaped. However,
