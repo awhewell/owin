@@ -8,46 +8,48 @@
 //
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Net;
+using System.Security.Principal;
+using Owin.Interface.HttpListenerWrapper;
 
-namespace Test.Owin
+namespace Owin.Host.HttpListener.HttpListenerWrapper
 {
-    using AppFunc = Func<IDictionary<string, object>, Task>;
-
-    public class MockMiddleware
+    /// <summary>
+    /// Default implementation of <see cref="IHttpListenerContext"/>.
+    /// </summary>
+    class HttpListenerContextWrapper : IHttpListenerContext
     {
-        public int CreateAppFuncCallCount { get; private set; }
+        /// <summary>
+        /// The wrapped context.
+        /// </summary>
+        private HttpListenerContext _Wrapped;
 
-        public bool ChainToNextMiddleware { get; set; } = true;
+        private HttpListenerRequestWrapper _RequestWrapper;
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        public IHttpListenerRequest Request => _RequestWrapper;
 
-        public List<IDictionary<string, object>> Environments { get; } = new List<IDictionary<string, object>>();
+        private HttpListenerResponseWrapper _ResponseWrapper;
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        public IHttpListenerResponse Response => _ResponseWrapper;
 
-        public IDictionary<string, object> LastEnvironment => Environments.Count > 0 ? Environments[Environments.Count - 1] : null;
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        public IPrincipal User => _Wrapped.User;
 
-        public int AppFuncCallCount => Environments.Count;
-
-        public List<AppFunc> Nexts { get; } = new List<AppFunc>();
-
-        public AppFunc LastNext => Nexts.Count > 0 ? Nexts[Nexts.Count - 1] : null;
-
-        public Action Action { get; set; }
-
-        public AppFunc CreateAppFunc(AppFunc next)
+        /// <summary>
+        /// Creates a new object.
+        /// </summary>
+        /// <param name="wrapped"></param>
+        public HttpListenerContextWrapper(HttpListenerContext wrapped)
         {
-            ++CreateAppFuncCallCount;
-
-            return async(IDictionary<string, object> environment) => {
-                Environments.Add(environment);
-                Nexts.Add(next);
-
-                Action?.Invoke();
-
-                if(ChainToNextMiddleware) {
-                    next.Invoke(environment).Wait();
-                }
-            };
+            _Wrapped = wrapped;
+            _RequestWrapper = new HttpListenerRequestWrapper(wrapped.Request);
+            _ResponseWrapper = new HttpListenerResponseWrapper(wrapped.Response);
         }
     }
 }

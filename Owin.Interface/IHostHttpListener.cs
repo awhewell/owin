@@ -10,44 +10,23 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Text;
 
-namespace Test.Owin
+namespace Owin.Interface
 {
-    using AppFunc = Func<IDictionary<string, object>, Task>;
-
-    public class MockMiddleware
+    /// <summary>
+    /// The interface for a host that is implemented using HttpListener.
+    /// </summary>
+    public interface IHostHttpListener : IHost
     {
-        public int CreateAppFuncCallCount { get; private set; }
+        /// <summary>
+        /// Gets or sets a value indicating that the strong wildcard should be used in URL profiles.
+        /// </summary>
+        bool UseStrongWildcard { get; set; }
 
-        public bool ChainToNextMiddleware { get; set; } = true;
-
-        public List<IDictionary<string, object>> Environments { get; } = new List<IDictionary<string, object>>();
-
-        public IDictionary<string, object> LastEnvironment => Environments.Count > 0 ? Environments[Environments.Count - 1] : null;
-
-        public int AppFuncCallCount => Environments.Count;
-
-        public List<AppFunc> Nexts { get; } = new List<AppFunc>();
-
-        public AppFunc LastNext => Nexts.Count > 0 ? Nexts[Nexts.Count - 1] : null;
-
-        public Action Action { get; set; }
-
-        public AppFunc CreateAppFunc(AppFunc next)
-        {
-            ++CreateAppFuncCallCount;
-
-            return async(IDictionary<string, object> environment) => {
-                Environments.Add(environment);
-                Nexts.Add(next);
-
-                Action?.Invoke();
-
-                if(ChainToNextMiddleware) {
-                    next.Invoke(environment).Wait();
-                }
-            };
-        }
+        /// <summary>
+        /// Gets or sets a value indicating that the server should bind to localhost rather than all network interfaces.
+        /// </summary>
+        bool BindToLocalhost { get; set; }
     }
 }

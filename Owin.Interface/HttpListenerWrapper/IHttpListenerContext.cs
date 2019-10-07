@@ -10,44 +10,45 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Security.Principal;
+using System.Text;
 
-namespace Test.Owin
+namespace Owin.Interface.HttpListenerWrapper
 {
-    using AppFunc = Func<IDictionary<string, object>, Task>;
-
-    public class MockMiddleware
+    /// <summary>
+    /// Wraps the context returned by <see cref="IHttpListener"/>.
+    /// </summary>
+    public interface IHttpListenerContext
     {
-        public int CreateAppFuncCallCount { get; private set; }
+        //
+        // Summary:
+        //     Gets the System.Net.HttpListenerRequest that represents a client's request for
+        //     a resource.
+        //
+        // Returns:
+        //     An System.Net.HttpListenerRequest object that represents the client request.
+        IHttpListenerRequest Request { get; }
 
-        public bool ChainToNextMiddleware { get; set; } = true;
+        //
+        // Summary:
+        //     Gets the System.Net.HttpListenerResponse object that will be sent to the client
+        //     in response to the client's request.
+        //
+        // Returns:
+        //     An System.Net.HttpListenerResponse object used to send a response back to the
+        //     client.
+        IHttpListenerResponse Response { get; }
 
-        public List<IDictionary<string, object>> Environments { get; } = new List<IDictionary<string, object>>();
-
-        public IDictionary<string, object> LastEnvironment => Environments.Count > 0 ? Environments[Environments.Count - 1] : null;
-
-        public int AppFuncCallCount => Environments.Count;
-
-        public List<AppFunc> Nexts { get; } = new List<AppFunc>();
-
-        public AppFunc LastNext => Nexts.Count > 0 ? Nexts[Nexts.Count - 1] : null;
-
-        public Action Action { get; set; }
-
-        public AppFunc CreateAppFunc(AppFunc next)
-        {
-            ++CreateAppFuncCallCount;
-
-            return async(IDictionary<string, object> environment) => {
-                Environments.Add(environment);
-                Nexts.Add(next);
-
-                Action?.Invoke();
-
-                if(ChainToNextMiddleware) {
-                    next.Invoke(environment).Wait();
-                }
-            };
-        }
+        //
+        // Summary:
+        //     Gets an object used to obtain identity, authentication information, and security
+        //     roles for the client whose request is represented by this System.Net.HttpListenerContext
+        //     object.
+        //
+        // Returns:
+        //     An System.Security.Principal.IPrincipal object that describes the client, or
+        //     null if the System.Net.HttpListener that supplied this System.Net.HttpListenerContext
+        //     does not require authentication.
+        IPrincipal User { get; }
     }
 }

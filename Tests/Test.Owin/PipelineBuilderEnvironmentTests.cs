@@ -36,20 +36,20 @@ namespace Test.Owin
         private AppFunc AppFuncChainLink_2(AppFunc next)  => throw new NotImplementedException();
 
         [TestMethod]
-        public void PipelineBuilderEnvironment_Properties_Defaults_To_Known_State()
+        public void Properties_Defaults_To_Known_State()
         {
             Assert.AreEqual(0, _Environment.Properties.Count);
         }
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void PipelineBuilderEnvironment_UseMiddleware_Throws_If_Passed_Null()
+        public void UseMiddleware_Throws_If_Passed_Null()
         {
             _Environment.UseMiddleware(null);
         }
 
         [TestMethod]
-        public void PipelineBuilderEnvironment_UseMiddleware_Adds_AppFunc_To_Middlewares_Collection()
+        public void UseMiddleware_Adds_AppFunc_To_Middlewares_Collection()
         {
             var link = (Func<AppFunc, AppFunc>)AppFuncChainLink_1;
 
@@ -61,7 +61,7 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void PipelineBuilderEnvironment_UseMiddleware_Has_Cumulative_Effect()
+        public void UseMiddleware_Has_Cumulative_Effect()
         {
             var link_1 = (Func<AppFunc, AppFunc>)AppFuncChainLink_1;
             var link_2 = (Func<AppFunc, AppFunc>)AppFuncChainLink_2;
@@ -77,13 +77,13 @@ namespace Test.Owin
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void PipelineBuilderEnvironment_UseStreamManipulator_Throws_If_Passed_Null()
+        public void UseStreamManipulator_Throws_If_Passed_Null()
         {
             _Environment.UseStreamManipulator(null);
         }
 
         [TestMethod]
-        public void PipelineBuilderEnvironment_UseStreamManipulator_Adds_AppFunc_To_Manipulators_Collection()
+        public void UseStreamManipulator_Adds_AppFunc_To_Manipulators_Collection()
         {
             var link = (Func<AppFunc, AppFunc>)AppFuncChainLink_1;
 
@@ -95,7 +95,7 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void PipelineBuilderEnvironment_UseStreamManipulator_Has_Cumulative_Effect()
+        public void UseStreamManipulator_Has_Cumulative_Effect()
         {
             var link_1 = (Func<AppFunc, AppFunc>)AppFuncChainLink_1;
             var link_2 = (Func<AppFunc, AppFunc>)AppFuncChainLink_2;
@@ -110,7 +110,7 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void PipelineBuilderEnvironment_Middleware_And_Manipulators_Are_Isolated_From_Each_Other()
+        public void Middleware_And_Manipulators_Are_Isolated_From_Each_Other()
         {
             var link_1 = (Func<AppFunc, AppFunc>)AppFuncChainLink_1;
             var link_2 = (Func<AppFunc, AppFunc>)AppFuncChainLink_2;

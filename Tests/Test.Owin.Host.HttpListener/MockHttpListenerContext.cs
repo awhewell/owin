@@ -10,44 +10,25 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Text;
+using Moq;
+using Owin.Interface.HttpListenerWrapper;
 
-namespace Test.Owin
+namespace Test.Owin.Host.HttpListener
 {
-    using AppFunc = Func<IDictionary<string, object>, Task>;
-
-    public class MockMiddleware
+    class MockHttpListenerContext : Mock<IHttpListenerContext>
     {
-        public int CreateAppFuncCallCount { get; private set; }
+        public MockHttpListenerRequest MockRequest { get; } = new MockHttpListenerRequest();
 
-        public bool ChainToNextMiddleware { get; set; } = true;
+        public MockHttpListenerResponse MockResponse { get; } = new MockHttpListenerResponse();
 
-        public List<IDictionary<string, object>> Environments { get; } = new List<IDictionary<string, object>>();
-
-        public IDictionary<string, object> LastEnvironment => Environments.Count > 0 ? Environments[Environments.Count - 1] : null;
-
-        public int AppFuncCallCount => Environments.Count;
-
-        public List<AppFunc> Nexts { get; } = new List<AppFunc>();
-
-        public AppFunc LastNext => Nexts.Count > 0 ? Nexts[Nexts.Count - 1] : null;
-
-        public Action Action { get; set; }
-
-        public AppFunc CreateAppFunc(AppFunc next)
+        public MockHttpListenerContext() : base()
         {
-            ++CreateAppFuncCallCount;
+            DefaultValue = DefaultValue.Mock;
+            SetupAllProperties();
 
-            return async(IDictionary<string, object> environment) => {
-                Environments.Add(environment);
-                Nexts.Add(next);
-
-                Action?.Invoke();
-
-                if(ChainToNextMiddleware) {
-                    next.Invoke(environment).Wait();
-                }
-            };
+            SetupGet(r => r.Request).Returns(MockRequest.Object);
+            SetupGet(r => r.Response).Returns(MockResponse.Object);
         }
     }
 }

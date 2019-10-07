@@ -18,7 +18,7 @@ namespace Test.Owin
     /// <summary>
     /// Mock helpers.
     /// </summary>
-    static class MockHelper
+    public static class MockHelper
     {
         /// <summary>
         /// Creates and registers a Moq mock object for an interface tagged as Singleton.

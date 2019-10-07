@@ -10,44 +10,64 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Text;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Owin.Interface;
 
 namespace Test.Owin
 {
-    using AppFunc = Func<IDictionary<string, object>, Task>;
-
-    public class MockMiddleware
+    public class CommonHostTests
     {
-        public int CreateAppFuncCallCount { get; private set; }
-
-        public bool ChainToNextMiddleware { get; set; } = true;
-
-        public List<IDictionary<string, object>> Environments { get; } = new List<IDictionary<string, object>>();
-
-        public IDictionary<string, object> LastEnvironment => Environments.Count > 0 ? Environments[Environments.Count - 1] : null;
-
-        public int AppFuncCallCount => Environments.Count;
-
-        public List<AppFunc> Nexts { get; } = new List<AppFunc>();
-
-        public AppFunc LastNext => Nexts.Count > 0 ? Nexts[Nexts.Count - 1] : null;
-
-        public Action Action { get; set; }
-
-        public AppFunc CreateAppFunc(AppFunc next)
+        protected void All_Hosts_Root_Defaults_To_Slash(IHost host)
         {
-            ++CreateAppFuncCallCount;
+            Assert.AreEqual("/", host.Root);
+        }
 
-            return async(IDictionary<string, object> environment) => {
-                Environments.Add(environment);
-                Nexts.Add(next);
+        protected void All_Hosts_Root_Coalesces_Null_To_Slash(IHost host)
+        {
+            host.Root = null;
+            Assert.AreEqual("/", host.Root);
+        }
 
-                Action?.Invoke();
+        protected void All_Hosts_Root_Replaces_Empty_String_With_Slash(IHost host)
+        {
+            host.Root = "";
+            Assert.AreEqual("/", host.Root);
+        }
 
-                if(ChainToNextMiddleware) {
-                    next.Invoke(environment).Wait();
-                }
-            };
+        protected void All_Hosts_Root_Always_Prefixed_With_Slash(IHost host)
+        {
+            host.Root = "A";
+            Assert.AreEqual("/A", host.Root);
+        }
+
+        protected void All_Hosts_Root_Does_Not_Prefix_With_Slash_When_Already_Starts_With_Slash(IHost host)
+        {
+            host.Root = "/A";
+            Assert.AreEqual("/A", host.Root);
+        }
+
+        protected void All_Hosts_Root_Strips_Trailing_Slash(IHost host)
+        {
+            host.Root = "/A/";
+            Assert.AreEqual("/A", host.Root);
+        }
+
+        protected void All_Hosts_Port_Defaults_To_80(IHost host)
+        {
+            Assert.AreEqual(80, host.Port);
+        }
+
+        protected void All_Hosts_Initialise_Throws_If_Called_Twice(IHost host)
+        {
+            host.Initialise();
+            host.Initialise();
+        }
+
+
+        protected void All_Hosts_Start_Throws_If_Not_Initialised(IHost host)
+        {
+            host.Start();
         }
     }
 }

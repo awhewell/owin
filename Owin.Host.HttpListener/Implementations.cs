@@ -10,44 +10,24 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Text;
+using InterfaceFactory;
 
-namespace Test.Owin
+namespace Owin.Host.HttpListener
 {
-    using AppFunc = Func<IDictionary<string, object>, Task>;
-
-    public class MockMiddleware
+    /// <summary>
+    /// Registers implementations of interfaces with the interface factory.
+    /// </summary>
+    public static class Implementations
     {
-        public int CreateAppFuncCallCount { get; private set; }
-
-        public bool ChainToNextMiddleware { get; set; } = true;
-
-        public List<IDictionary<string, object>> Environments { get; } = new List<IDictionary<string, object>>();
-
-        public IDictionary<string, object> LastEnvironment => Environments.Count > 0 ? Environments[Environments.Count - 1] : null;
-
-        public int AppFuncCallCount => Environments.Count;
-
-        public List<AppFunc> Nexts { get; } = new List<AppFunc>();
-
-        public AppFunc LastNext => Nexts.Count > 0 ? Nexts[Nexts.Count - 1] : null;
-
-        public Action Action { get; set; }
-
-        public AppFunc CreateAppFunc(AppFunc next)
+        /// <summary>
+        /// Registers implementations.
+        /// </summary>
+        /// <param name="factory"></param>
+        public static void Register(IClassFactory factory)
         {
-            ++CreateAppFuncCallCount;
-
-            return async(IDictionary<string, object> environment) => {
-                Environments.Add(environment);
-                Nexts.Add(next);
-
-                Action?.Invoke();
-
-                if(ChainToNextMiddleware) {
-                    next.Invoke(environment).Wait();
-                }
-            };
+            factory.Register<Owin.Interface.IHostHttpListener, HostHttpListener>();
+            factory.Register<Owin.Interface.HttpListenerWrapper.IHttpListener, HttpListenerWrapper.HttpListener>();
         }
     }
 }

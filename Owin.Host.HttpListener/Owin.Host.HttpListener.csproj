@@ -8,4 +8,8 @@
     <PackageReference Include="AWhewell.InterfaceFactory" Version="4.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Owin.Interface\Owin.Interface.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -17,7 +17,7 @@ namespace Test.Owin
     /// <summary>
     /// An observable callback that can be used with <see cref="Owin.Interface.IPipelineBuilder"/>.
     /// </summary>
-    class MockPipelineCallback
+    public class MockPipelineCallback
     {
         /// <summary>
         /// The number of times the callback has been called.

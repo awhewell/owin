@@ -10,44 +10,43 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Text;
 
-namespace Test.Owin
+namespace Owin.Interface
 {
-    using AppFunc = Func<IDictionary<string, object>, Task>;
-
-    public class MockMiddleware
+    /// <summary>
+    /// The interface for OWIN hosts.
+    /// </summary>
+    public interface IHost : IDisposable
     {
-        public int CreateAppFuncCallCount { get; private set; }
+        /// <summary>
+        /// Gets or sets the site's path from root (excluding port and protocol).
+        /// </summary>
+        string Root { get; set; }
 
-        public bool ChainToNextMiddleware { get; set; } = true;
+        /// <summary>
+        /// Gets or sets the port that the host is listening to.
+        /// </summary>
+        int Port { get; set; }
 
-        public List<IDictionary<string, object>> Environments { get; } = new List<IDictionary<string, object>>();
+        /// <summary>
+        /// Gets a value indicating that the host is listening for requests.
+        /// </summary>
+        bool IsListening { get; }
 
-        public IDictionary<string, object> LastEnvironment => Environments.Count > 0 ? Environments[Environments.Count - 1] : null;
+        /// <summary>
+        /// Initialises the host. At a minimum this should build the pipeline.
+        /// </summary>
+        void Initialise();
 
-        public int AppFuncCallCount => Environments.Count;
+        /// <summary>
+        /// Starts the host. Does nothing if called while already listening.
+        /// </summary>
+        void Start();
 
-        public List<AppFunc> Nexts { get; } = new List<AppFunc>();
-
-        public AppFunc LastNext => Nexts.Count > 0 ? Nexts[Nexts.Count - 1] : null;
-
-        public Action Action { get; set; }
-
-        public AppFunc CreateAppFunc(AppFunc next)
-        {
-            ++CreateAppFuncCallCount;
-
-            return async(IDictionary<string, object> environment) => {
-                Environments.Add(environment);
-                Nexts.Add(next);
-
-                Action?.Invoke();
-
-                if(ChainToNextMiddleware) {
-                    next.Invoke(environment).Wait();
-                }
-            };
-        }
+        /// <summary>
+        /// Stops the host. Does nothing if called while not listening.
+        /// </summary>
+        void Stop();
     }
 }

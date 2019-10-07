@@ -43,13 +43,13 @@ namespace Test.Owin
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void PipelineBuilder_RegisterMiddlewareBuilder_Throws_If_Passed_Null()
+        public void RegisterMiddlewareBuilder_Throws_If_Passed_Null()
         {
             _PipelineBuilder.RegisterMiddlewareBuilder(null, 0);
         }
 
         [TestMethod]
-        public void PipelineBuilder_RegisterMiddlewareBuilder_Returns_Handle()
+        public void RegisterMiddlewareBuilder_Returns_Handle()
         {
             var callback = new MockPipelineCallback();
             Assert.IsNotNull(_PipelineBuilder.RegisterMiddlewareBuilder(callback.Callback, 0));
@@ -57,13 +57,13 @@ namespace Test.Owin
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void PipelineBuilder_DeregisterMiddlewareBuilder_Throws_If_Passed_Null()
+        public void DeregisterMiddlewareBuilder_Throws_If_Passed_Null()
         {
             _PipelineBuilder.DeregisterMiddlewareBuilder(null);
         }
 
         [TestMethod]
-        public void PipelineBuilder_DeregisterMiddlewareBuilder_Does_Nothing_If_Passed_Same_Handle_Twice()
+        public void DeregisterMiddlewareBuilder_Does_Nothing_If_Passed_Same_Handle_Twice()
         {
             var callback = new MockPipelineCallback();
             var handle = _PipelineBuilder.RegisterMiddlewareBuilder(callback.Callback, 0);
@@ -74,13 +74,13 @@ namespace Test.Owin
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void PipelineBuilder_CreatePipeline_Throws_If_Passed_Null()
+        public void CreatePipeline_Throws_If_Passed_Null()
         {
             _PipelineBuilder.CreatePipeline(null);
         }
 
         [TestMethod]
-        public void PipelineBuilder_CreatePipeline_Calls_Registered_Callback()
+        public void CreatePipeline_Calls_Registered_Callback()
         {
             var callback = new MockPipelineCallback();
             _PipelineBuilder.RegisterMiddlewareBuilder(callback.Callback, 0);
@@ -93,7 +93,7 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void PipelineBuilder_Sets_Mandatory_Keys_In_Properties()
+        public void Sets_Mandatory_Keys_In_Properties()
         {
             _PipelineBuilder.CreatePipeline(_Environment.Object);
 
@@ -101,7 +101,7 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void PipelineBuilder_CreatePipeline_Passes_Environment_To_New_Instance_Of_Pipeline()
+        public void CreatePipeline_Passes_Environment_To_New_Instance_Of_Pipeline()
         {
             var callback = new MockPipelineCallback();
             callback.Action = (env) => _Pipeline.Verify(r => r.Construct(_Environment.Object), Times.Never);
@@ -113,7 +113,7 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void PipelineBuilder_CreatePipeline_Returns_Pipeline()
+        public void CreatePipeline_Returns_Pipeline()
         {
             var result = _PipelineBuilder.CreatePipeline(_Environment.Object);
 
@@ -121,7 +121,7 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void PipelineBuilder_CreatePipeline_Does_Not_Call_Callbacks_That_Have_Been_Removed()
+        public void CreatePipeline_Does_Not_Call_Callbacks_That_Have_Been_Removed()
         {
             var callback = new MockPipelineCallback();
             var handle = _PipelineBuilder.RegisterMiddlewareBuilder(callback.Callback, 0);
@@ -133,7 +133,7 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void PipelineBuilder_CreatePipeline_Calls_Registered_Callbacks_In_Correct_Order()
+        public void CreatePipeline_Calls_Registered_Callbacks_In_Correct_Order()
         {
             var callback_1 = new MockPipelineCallback();
             var callback_2 = new MockPipelineCallback();

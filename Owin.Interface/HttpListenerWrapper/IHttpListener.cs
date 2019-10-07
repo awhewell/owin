@@ -12,17 +12,52 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Owin.Interface
+namespace Owin.Interface.HttpListenerWrapper
 {
     /// <summary>
-    /// A collection of OWIN standard application startup keys.
+    /// The interface for classes that wrap HttpListener. These are used by <see cref="IHostHttpListener"/>,
+    /// they can be replaced by mocks to make the host testable.
     /// </summary>
-    public static class ApplicationStartupKey
+    public interface IHttpListener : IDisposable
     {
-        // Standard keys
-        public const string Version = "owin.Version";       // [Required] A string indicating the OWIN version.
+        /// <summary>
+        /// Gets or sets a value indicating whether write exceptions should be ignored.
+        /// </summary>
+        bool IgnoreWriteExceptions { get; set; }
 
-        // Implementation specific keys
-        public const string HostType = "server.HostType";   // The implementation of the host - Owin.Host.HttpListener
+        /// <summary>
+        /// Gets a value indicating that the listener is accepting incoming requests.
+        /// </summary>
+        bool IsListening { get; }
+
+        /// <summary>
+        /// Gets a collection of URL prefixes that the listener will listen to.
+        /// </summary>
+        ICollection<string> Prefixes { get; }
+
+        /// <summary>
+        /// Starts listening for requests.
+        /// </summary>
+        void Start();
+
+        /// <summary>
+        /// Stops listening for requests.
+        /// </summary>
+        void Stop();
+
+        /// <summary>
+        /// Waits in background for an incoming request and calls the callback when it arrives.
+        /// </summary>
+        /// <param name="asyncCallback"></param>
+        /// <param name="state"></param>
+        /// <returns></returns>
+        IAsyncResult BeginGetContext(AsyncCallback asyncCallback, object state);
+
+        /// <summary>
+        /// Fetches the context for an async result returned by <see cref="BeginGetContext"/>.
+        /// </summary>
+        /// <param name="asyncResult"></param>
+        /// <returns></returns>
+        IHttpListenerContext EndGetContext(IAsyncResult asyncResult);
     }
 }

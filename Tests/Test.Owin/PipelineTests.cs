@@ -46,21 +46,21 @@ namespace Test.Owin
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void Pipeline_Construct_Throws_If_Passed_Null()
+        public void Construct_Throws_If_Passed_Null()
         {
             _Pipeline.Construct(null);
         }
 
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
-        public void Pipeline_Construct_Throws_If_Called_Twice()
+        public void Construct_Throws_If_Called_Twice()
         {
             _Pipeline.Construct(_BuilderEnvironment.Object);
             _Pipeline.Construct(_BuilderEnvironment.Object);
         }
 
         [TestMethod]
-        public void Pipeline_Construct_Builds_Middleware_AppFunc_And_ProcessRequest_Uses_It()
+        public void Construct_Builds_Middleware_AppFunc_And_ProcessRequest_Uses_It()
         {
             var middleware = new MockMiddleware();
             _MiddlewareChain.Add(middleware.CreateAppFunc);
@@ -73,13 +73,13 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void Pipeline_HasStreamManipulators_Is_Clear_Before_Construct_Is_Called()
+        public void HasStreamManipulators_Is_Clear_Before_Construct_Is_Called()
         {
             Assert.AreEqual(false, _Pipeline.HasStreamManipulators);
         }
 
         [TestMethod]
-        public void Pipeline_HasStreamManipulators_Is_Set_When_Stream_Manipulators_Are_Added()
+        public void HasStreamManipulators_Is_Set_When_Stream_Manipulators_Are_Added()
         {
             _StreamManipulatorChain.Add(new MockMiddleware().CreateAppFunc);
 
@@ -89,7 +89,7 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void Pipeline_HasStreamManipulators_Is_Clear_When_Stream_Manipulators_Are_Not_Added()
+        public void HasStreamManipulators_Is_Clear_When_Stream_Manipulators_Are_Not_Added()
         {
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
@@ -98,7 +98,7 @@ namespace Test.Owin
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void Pipeline_ProcessRequest_Throws_If_Passed_Null()
+        public void ProcessRequest_Throws_If_Passed_Null()
         {
             _Pipeline.Construct(_BuilderEnvironment.Object);
             _Pipeline.ProcessRequest(null);
@@ -106,13 +106,13 @@ namespace Test.Owin
 
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
-        public void Pipeline_ProcessRequest_Throws_If_Not_Yet_Constructed()
+        public void ProcessRequest_Throws_If_Not_Yet_Constructed()
         {
             _Pipeline.ProcessRequest(_Environment);
         }
 
         [TestMethod]
-        public void Pipeline_ProcessRequest_Works_When_Pipeline_Is_Empty()
+        public void ProcessRequest_Works_When_Pipeline_Is_Empty()
         {
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
@@ -122,7 +122,7 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void Pipeline_ProcessRequest_Calls_Middleware()
+        public void ProcessRequest_Calls_Middleware()
         {
             var middleware = new MockMiddleware();
             _MiddlewareChain.Add(middleware.CreateAppFunc);
@@ -138,7 +138,7 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void Pipeline_ProcessRequest_Calls_Two_Middleware()
+        public void ProcessRequest_Calls_Two_Middleware()
         {
             var middleware_1 = new MockMiddleware();
             var middleware_2 = new MockMiddleware();
@@ -156,7 +156,7 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void Pipeline_ProcessRequest_Middleware_Can_End_Processing_Early()
+        public void ProcessRequest_Middleware_Can_End_Processing_Early()
         {
             var middleware_1 = new MockMiddleware() { ChainToNextMiddleware = false, };
             var middleware_2 = new MockMiddleware();
@@ -172,7 +172,7 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void Pipeline_ProcessRequest_Middleware_Can_End_Chain_In_One_Request_And_Not_End_Chain_In_Another()
+        public void ProcessRequest_Middleware_Can_End_Chain_In_One_Request_And_Not_End_Chain_In_Another()
         {
             var middleware_1 = new MockMiddleware() { ChainToNextMiddleware = false, };
             var middleware_2 = new MockMiddleware();
@@ -189,7 +189,7 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void Pipeline_ProcessRequest_Calls_Stream_Manipulators()
+        public void ProcessRequest_Calls_Stream_Manipulators()
         {
             var middleware = new MockMiddleware();
             _StreamManipulatorChain.Add(middleware.CreateAppFunc);
@@ -205,7 +205,7 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void Pipeline_ProcessRequest_Calls_Stream_Manipulators_After_Middleware()
+        public void ProcessRequest_Calls_Stream_Manipulators_After_Middleware()
         {
             var middleware = new MockMiddleware();
             var streamManipulator = new MockMiddleware();
@@ -223,7 +223,7 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void Pipeline_ProcessRequest_Does_Not_Let_Stream_Manipulators_Break_The_Chain()
+        public void ProcessRequest_Does_Not_Let_Stream_Manipulators_Break_The_Chain()
         {
             var middleware_1 = new MockMiddleware() { ChainToNextMiddleware = false, };
             var middleware_2 = new MockMiddleware();
@@ -239,7 +239,7 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void Pipeline_ProcessRequest_Calls_Stream_Manipulators_Even_If_Middleware_Breaks_Chain()
+        public void ProcessRequest_Calls_Stream_Manipulators_Even_If_Middleware_Breaks_Chain()
         {
             var middleware_1 = new MockMiddleware() { ChainToNextMiddleware = false, };
             var middleware_2 = new MockMiddleware();
