@@ -22,88 +22,38 @@ namespace Test.Owin
     // dictionary can pass their tests:
     //
     // https://github.com/aspnet/AspNetKatana/blob/dev/tests/Microsoft.Owin.Tests/HeaderTests.cs
-    [TestClass]
-    public class HeadersDictionaryTests
+    public abstract class HeadersDictionaryAgnosticTests
     {
-        private HeadersDictionary _Headers;
+        protected HeadersDictionary _Headers;
 
         // Known comma-separated values
-        private const string                        _Key = "header-key";
-        private static readonly string[]            _RawStringArray = new string[] {
-                                                        "simple-1",
-                                                        "comma-1, separated-1",
-                                                        "\"enclosed, in double-quotes\"",
-                                                        "comma-2, separated-2",
-                                                        "simple-2",
-                                                    };
-        private const string                        _JoinedString = "simple-1,comma-1, separated-1,\"enclosed, in double-quotes\",comma-2, separated-2,simple-2";
-        private static readonly IEnumerable<string> _NormalisedStringArray = new string[] {
-                                                        "simple-1",
-                                                        "comma-1",
-                                                        "separated-1",
-                                                        "enclosed, in double-quotes",
-                                                        "comma-2",
-                                                        "separated-2",
-                                                        "simple-2",
-                                                    };
+        protected const string                          _Key = "header-key";
+        protected static readonly string[]              _RawStringArray = new string[] {
+                                                            "simple-1",
+                                                            "comma-1, separated-1",
+                                                            "\"enclosed, in double-quotes\"",
+                                                            "comma-2, separated-2",
+                                                            "simple-2",
+                                                        };
+        protected const string                          _JoinedString = "simple-1,comma-1, separated-1,\"enclosed, in double-quotes\",comma-2, separated-2,simple-2";
+        protected static readonly IEnumerable<string>   _NormalisedStringArray = new string[] {
+                                                            "simple-1",
+                                                            "comma-1",
+                                                            "separated-1",
+                                                            "enclosed, in double-quotes",
+                                                            "comma-2",
+                                                            "separated-2",
+                                                            "simple-2",
+                                                        };
 
-        [TestInitialize]
-        public void TestInitialise()
-        {
-            _Headers = new HeadersDictionary();
-        }
-
-        private void Reset_To_RawStringArray()
-        {
-            _Headers = new HeadersDictionary() {
-                { _Key, _RawStringArray },
-            };
-        }
+        protected abstract void Reset_To_RawStringArray();
 
         [TestMethod]
-        public void Default_Ctor_Keys_Are_Case_Insensitive()
+        public void Keys_Are_Case_Insensitive()
         {
             _Headers.Add("one", new string[] { "value" });
 
             Assert.AreEqual("value", _Headers["ONE"]);
-        }
-
-        [TestMethod]
-        public void Wrapper_Ctor_Keys_Use_Whatever_Comparison_The_Original_Dictionary_Has()
-        {
-            var existingDictionary = new Dictionary<string, string[]>(StringComparer.Ordinal);
-            _Headers = new HeadersDictionary(existingDictionary);
-
-            _Headers.Add("one", new string[] { "value" });
-
-            Assert.IsNull(_Headers["ONE"]);
-        }
-
-        [TestMethod]
-        public void Wrapper_Ctor_Accepts_Null_Wrapped_Dictionary()
-        {
-            _Headers = new HeadersDictionary(null);
-            Assert.AreEqual(0, _Headers.Count);
-        }
-
-        [TestMethod]
-        public void Wrapper_Ctor_Converts_Null_Wrapped_Dictionary_To_Case_Insensitive_Dictionary()
-        {
-            _Headers = new HeadersDictionary(null);
-            _Headers.Add("one", new string[] { "value" });
-
-            Assert.AreEqual("value", _Headers["ONE"]);
-        }
-
-        [TestMethod]
-        public void Initialising_Dictonary_To_Null_Array_Produces_Null_Results()
-        {
-            _Headers = new HeadersDictionary(null);
-
-            Assert.IsNull(_Headers[_Key]);
-            Assert.IsNull(_Headers.Get(_Key));
-            Assert.IsNull(_Headers.GetValues(_Key));
-            Assert.IsNull(_Headers.GetCommaSeparatedValues(_Key));
         }
 
         [TestMethod]
@@ -125,18 +75,13 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void Indexed_Set_Of_Null_Or_Empty_String_Removes_Header()
+        [DataRow(null)]
+        [DataRow("")]
+        [DataRow(" ")]
+        public void Indexed_Set_Of_Null_Or_Empty_String_Removes_Header(string value)
         {
             Reset_To_RawStringArray();
-            _Headers[_Key] = null;
-            Assert.IsFalse(_Headers.ContainsKey(_Key));
-
-            Reset_To_RawStringArray();
-            _Headers[_Key] = string.Empty;
-            Assert.IsFalse(_Headers.ContainsKey(_Key));
-
-            Reset_To_RawStringArray();
-            _Headers[_Key] = " ";
+            _Headers[_Key] = value;
             Assert.IsFalse(_Headers.ContainsKey(_Key));
         }
 
@@ -159,18 +104,13 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void Set_Of_Null_Or_Empty_String_Removes_Header()
+        [DataRow(null)]
+        [DataRow("")]
+        [DataRow(" ")]
+        public void Set_Of_Null_Or_Empty_String_Removes_Header(string value)
         {
             Reset_To_RawStringArray();
-            _Headers.Set(_Key, null);
-            Assert.IsFalse(_Headers.ContainsKey(_Key));
-
-            Reset_To_RawStringArray();
-            _Headers.Set(_Key, String.Empty);
-            Assert.IsFalse(_Headers.ContainsKey(_Key));
-
-            Reset_To_RawStringArray();
-            _Headers.Set(_Key, " ");
+            _Headers.Set(_Key, value);
             Assert.IsFalse(_Headers.ContainsKey(_Key));
         }
 
@@ -195,18 +135,13 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void Append_Ignores_Null_Or_Empty_Values()
+        [DataRow(null)]
+        [DataRow("")]
+        [DataRow(" ")]
+        public void Append_Ignores_Null_Or_Empty_Values(string value)
         {
             Reset_To_RawStringArray();
-            _Headers.Append(_Key, null);
-            Assert.IsTrue(_RawStringArray.SequenceEqual(_Headers.GetValues(_Key)));
-
-            Reset_To_RawStringArray();
-            _Headers.Append(_Key, String.Empty);
-            Assert.IsTrue(_RawStringArray.SequenceEqual(_Headers.GetValues(_Key)));
-
-            Reset_To_RawStringArray();
-            _Headers.Append(_Key, " ");
+            _Headers.Append(_Key, value);
             Assert.IsTrue(_RawStringArray.SequenceEqual(_Headers.GetValues(_Key)));
         }
 
@@ -241,22 +176,13 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void SetValues_Of_Null_Or_Empty_Array_Removes_Header()
+        [DataRow(null)]
+        [DataRow(new string[0])]
+        [DataRow(new string[] { null, "", " " })]
+        public void SetValues_Of_Null_Or_Empty_Array_Removes_Header(string[] value)
         {
             Reset_To_RawStringArray();
-            _Headers.SetValues(_Key, null);
-            Assert.IsFalse(_Headers.ContainsKey(_Key));
-
-            Reset_To_RawStringArray();
-            _Headers.SetValues(_Key, (string[])null);
-            Assert.IsFalse(_Headers.ContainsKey(_Key));
-
-            Reset_To_RawStringArray();
-            _Headers.SetValues(_Key, new string[0]);
-            Assert.IsFalse(_Headers.ContainsKey(_Key));
-
-            Reset_To_RawStringArray();
-            _Headers.SetValues(_Key, null, "", " ");
+            _Headers.SetValues(_Key, value);
             Assert.IsFalse(_Headers.ContainsKey(_Key));
         }
 
@@ -322,22 +248,13 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void SetCommaSeparatedValues_Of_Null_Or_Empty_Array_Removes_Header()
+        [DataRow(null)]
+        [DataRow(new string[0])]
+        [DataRow(new string[] { null, "", " " })]
+        public void SetCommaSeparatedValues_Of_Null_Or_Empty_Array_Removes_Header(string[] value)
         {
             Reset_To_RawStringArray();
-            _Headers.SetCommaSeparatedValues(_Key, null);
-            Assert.IsFalse(_Headers.ContainsKey(_Key));
-
-            Reset_To_RawStringArray();
-            _Headers.SetCommaSeparatedValues(_Key, (string[])null);
-            Assert.IsFalse(_Headers.ContainsKey(_Key));
-
-            Reset_To_RawStringArray();
-            _Headers.SetCommaSeparatedValues(_Key, new string[0]);
-            Assert.IsFalse(_Headers.ContainsKey(_Key));
-
-            Reset_To_RawStringArray();
-            _Headers.SetCommaSeparatedValues(_Key, null, "", " ");
+            _Headers.SetCommaSeparatedValues(_Key, value);
             Assert.IsFalse(_Headers.ContainsKey(_Key));
         }
 
