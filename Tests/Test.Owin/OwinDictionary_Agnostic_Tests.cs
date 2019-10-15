@@ -11,61 +11,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Owin.Interface;
 
 namespace Test.Owin
 {
-    [TestClass]
-    public class OwinDictionaryTests
+    public class OwinDictionary_Agnostic_Tests
     {
-        private OwinDictionary<object> _Dictionary;
-
-        [TestInitialize]
-        public void TestInitialise()
-        {
-            _Dictionary = new OwinDictionary<object>();
-        }
-
-        [TestMethod]
-        public void Ctor_Is_Case_Sensitive_By_Default()
-        {
-            _Dictionary["a"] = 1;
-
-            Assert.AreEqual(1,    _Dictionary["a"]);
-            Assert.AreEqual(null, _Dictionary["A"]);
-        }
-
-        [TestMethod]
-        public void Ctor_Can_Accept_Existing_Dictionary_As_Backing_Store()
-        {
-            var existingDictionary = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-            _Dictionary = new OwinDictionary<object>(existingDictionary);
-
-            _Dictionary["a"] = 1;
-
-            Assert.AreEqual(1, _Dictionary["a"]);
-            Assert.AreEqual(1, _Dictionary["A"]);
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void Ctor_Throws_If_Existing_Dictionary_Is_Null()
-        {
-            _Dictionary = new OwinDictionary<object>(null);
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public void Ctor_Throws_If_Existing_Dictionary_Is_ReadOnly()
-        {
-            // When the OWIN spec talks about dictionaries they are always mutable.
-            var wrappedDictionary = new Dictionary<string, object>();
-            var readonlyDictionary = new ReadOnlyDictionary<string, object>(wrappedDictionary);
-            _Dictionary = new OwinDictionary<object>(readonlyDictionary);
-        }
+        protected OwinDictionary<object> _Dictionary;
 
         [TestMethod]
         public void Index_Operator_Returns_Null_For_Missing_Keys()
@@ -94,47 +48,6 @@ namespace Test.Owin
             _Dictionary["a.b"] = 24;
 
             Assert.AreEqual(24, (int)_Dictionary["a.b"]);
-        }
-
-        [TestMethod]
-        public void Keys_Are_Case_Sensitive_By_Default_When_Reading()
-        {
-            _Dictionary.Add("A", 1);
-
-            Assert.IsNull(_Dictionary["a"]);
-        }
-
-        [TestMethod]
-        public void Keys_Are_Case_Sensitive_By_Default_When_Writing()
-        {
-            _Dictionary.Add("A", 1);
-            _Dictionary.Add("a", 2);
-
-            Assert.AreEqual(1, (int)_Dictionary["A"]);
-            Assert.AreEqual(2, (int)_Dictionary["a"]);
-        }
-
-        [TestMethod]
-        public void Keys_Can_Be_Case_Insensitive_When_Reading()
-        {
-            _Dictionary = new OwinDictionary<object>(caseSensitive: false);
-
-            _Dictionary.Add("A", 1);
-
-            Assert.AreEqual(_Dictionary["a"], 1);
-        }
-
-        [TestMethod]
-        public void Keys_Can_Be_Case_Insensitive_When_Writing()
-        {
-            _Dictionary = new OwinDictionary<object>(caseSensitive: false);
-
-            _Dictionary["a"] = 1;
-            _Dictionary["A"] = 2;
-
-            Assert.AreEqual(1, _Dictionary.Count);
-            Assert.AreEqual(2, (int)_Dictionary["a"]);
-            Assert.AreEqual(2, (int)_Dictionary["A"]);
         }
 
         [TestMethod]

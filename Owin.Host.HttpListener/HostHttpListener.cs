@@ -271,20 +271,17 @@ namespace Owin.Host.HttpListener
         private OwinDictionary<object> OwinEnvironmentFromContext(IHttpListenerContext context, CancellationToken cancellationToken, string root, Tuple<string,string> pathQuery)
         {
             var request = context.Request;
+            var response = context.Response;
 
             var result = new OwinDictionary<object> {
-                { EnvironmentKey.Version,       Constants.Version },
-                { EnvironmentKey.CallCancelled, cancellationToken },
-                { EnvironmentKey.RequestMethod, request.HttpMethod },
+                { EnvironmentKey.Version,           Constants.Version },
+                { EnvironmentKey.CallCancelled,     cancellationToken },
+                { EnvironmentKey.RequestMethod,     request.HttpMethod },
+                { EnvironmentKey.RequestHeaders,    new HeadersWrapper(request.Headers) },
+                { EnvironmentKey.ResponseHeaders,   new HeadersWrapper(response.Headers) },
             };
 
             result[EnvironmentKey.RequestBody] = !request.HasEntityBody ? Stream.Null : request.InputStream;
-
-            var headerDictionary = new HeadersDictionary();
-            foreach(var headerKey in request.Headers.AllKeys) {
-                headerDictionary[headerKey] = request.Headers[headerKey];
-            }
-            result[EnvironmentKey.RequestHeaders] = headerDictionary;
 
             var path = pathQuery.Item1;
             var query = pathQuery.Item2;
@@ -294,6 +291,9 @@ namespace Owin.Host.HttpListener
             result[EnvironmentKey.RequestQueryString] =     query;
             result[EnvironmentKey.RequestProtocol] =        $"HTTP/{request.ProtocolVersion}";
             result[EnvironmentKey.RequestScheme] =          request.Url.Scheme;
+
+            result[EnvironmentKey.ResponseBody] =           response.OutputStream;
+
             result[EnvironmentKey.ServerIsLocal] =          request.IsLocal;
             result[EnvironmentKey.ServerLocalIpAddress] =   request.LocalEndPoint?.Address?.ToString() ?? "";
             result[EnvironmentKey.ServerLocalPort] =        request.LocalEndPoint?.Port ?? 0;

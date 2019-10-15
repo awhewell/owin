@@ -22,7 +22,7 @@ namespace Test.Owin
     // dictionary can pass their tests:
     //
     // https://github.com/aspnet/AspNetKatana/blob/dev/tests/Microsoft.Owin.Tests/HeaderTests.cs
-    public abstract class HeadersDictionaryAgnosticTests
+    public abstract class HeadersDictionary_Agnostic_Tests
     {
         protected HeadersDictionary _Headers;
 

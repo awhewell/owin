@@ -197,14 +197,32 @@ namespace Owin.Interface.HttpListenerWrapper
         //     A System.String that contains the method used in the request.
         string HttpMethod { get; }
 
-        //
-        // Summary:
-        //     Gets the collection of header name/value pairs sent in the request.
-        //
-        // Returns:
-        //     A System.Net.WebHeaderCollection that contains the HTTP headers included in the
-        //     request.
-        NameValueCollection Headers { get; }
+
+        /// <summary>
+        /// Gets the collection of header name/value pairs sent in the request.
+        /// </summary>
+        /// <returns>
+        /// A System.Net.WebHeaderCollection that contains the HTTP headers included in the request.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// Note that HttpListenerRequest declares this property as a NameValueCollection, which is a base
+        /// class of WebHeaderCollection. However, the documentation says it returns a WebHeaderCollection,
+        /// every version of .NET Framework since at least 3.5 and the DotNet Core implementations all return a
+        /// WebHeaderCollection. The response Headers declares the response as a WebHeaderCollection.
+        /// </para>
+        /// <para>
+        /// There are two major differences between NameValueCollection and WebHeaderCollection. WHC will throw
+        /// an exception if you try to set restricted headers and it will coalesce null header values into an
+        /// empty string. NVC will not do either of those, so testing using NVCs is not realistic. You need to
+        /// use a WHC instead.
+        /// </para>
+        /// <para>
+        /// Long story short - in the implementation you need to cast the NameValueCollection into a
+        /// WebHeaderCollection.
+        /// </para>
+        /// </remarks>
+        WebHeaderCollection Headers { get; }
 
         //
         // Summary:

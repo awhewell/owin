@@ -18,7 +18,7 @@ using Owin.Interface;
 namespace Test.Owin
 {
     [TestClass]
-    public class HeadersDictionary_DefaultCtor_Tests : HeadersDictionaryAgnosticTests
+    public class HeadersDictionary_DefaultCtor_Tests : HeadersDictionary_Agnostic_Tests
     {
         [TestInitialize]
         public void TestInitialise()
@@ -42,6 +42,55 @@ namespace Test.Owin
             Assert.IsNull(_Headers.Get(_Key));
             Assert.IsNull(_Headers.GetValues(_Key));
             Assert.IsNull(_Headers.GetCommaSeparatedValues(_Key));
+        }
+
+        [TestMethod]
+        [DataRow(new string[] { "" },                   null)]      // Null input is expected to be coalesced to an empty string before use
+        [DataRow(new string[] { "" },                   "")]
+        [DataRow(new string[] { "a" },                  "a")]
+        [DataRow(new string[] { "a", "b" },             "a,b")]
+        [DataRow(new string[] { "a", "b", "", "" },     "a,b,,")]
+        [DataRow(new string[] { "a", "b", "", " c" },   "a,b,, c")]
+        [DataRow(new string[] { "\"a,b\"" },            "\"a,b\"")]
+        public void Static_SplitRawHeaderValue_Returns_Correct_Array_For_Header_Value(string[] expected, string rawString)
+        {
+            var actual = HeadersDictionary.SplitRawHeaderValue(rawString);
+
+            Assert.IsTrue(expected.SequenceEqual(actual));
+        }
+
+        [TestMethod]
+        [DataRow(null,                                      "")]    // Null input is expected to be coalesced to an empty array before use
+        [DataRow(new string[] { null },                     "")]
+        [DataRow(new string[] { "" },                       "")]
+        [DataRow(new string[] { " " },                      " ")]
+        [DataRow(new string[] { "a", null, "", " ", "b" },  "a,,, ,b")]
+        [DataRow(new string[] { "\"a, b\"", " c" },         "\"a, b\", c")]
+        public void Static_JoinCookedHeaderValues_Ignores_Null_And_Empty_Values(string[] rawStringArray, string expected)
+        {
+            var actual = HeadersDictionary.JoinCookedHeaderValues(rawStringArray);
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        [DataRow(new string[] { "" },               "")]
+        [DataRow(new string[] { " " },              " ")]
+        [DataRow(new string[] { "\"a, b\"", " c" }, "\"a, b\", c")]
+        public void Static_SplitRawHeaderValue_Round_Trips_With_JoinCookedHeaderValues(string [] splitValues, string headerValue)
+        {
+            var splitHeaderValues = HeadersDictionary.SplitRawHeaderValue(headerValue);
+            if(splitValues == null) {
+                Assert.IsNull(splitHeaderValues);
+            } else {
+                Assert.IsTrue(splitValues.SequenceEqual(splitHeaderValues));
+            }
+
+            var rejoinedHeader = HeadersDictionary.JoinCookedHeaderValues(splitHeaderValues);
+            if(headerValue == null) {
+                Assert.IsNull(rejoinedHeader);
+            } else {
+                Assert.AreEqual(headerValue, rejoinedHeader);
+            }
         }
     }
 }

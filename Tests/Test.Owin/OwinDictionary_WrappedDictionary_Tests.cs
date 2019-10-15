@@ -9,41 +9,51 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.IO;
-using System.Net;
-using System.Text;
-using Moq;
-using Owin.Interface.HttpListenerWrapper;
+using System.Collections.ObjectModel;
+using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Owin.Interface;
 
-namespace Test.Owin.Host.HttpListener
+namespace Test.Owin
 {
-    class MockHttpListenerResponse : Mock<IHttpListenerResponse>
+    [TestClass]
+    public class OwinDictionary_WrappedDictionary_Tests : OwinDictionary_Agnostic_Tests
     {
-        public WebHeaderCollection Headers { get; } = new WebHeaderCollection();
-
-        private MemoryStream _OutputStream = new MemoryStream();
-        public MemoryStream UnderlyingStream => _OutputStream;
-
-        public MockHttpListenerResponse() : base()
+        [TestInitialize]
+        public void TestInitialise()
         {
-            DefaultValue = DefaultValue.Mock;
-            SetupAllProperties();
-
-            SetupGet(r => r.Headers).Returns(Headers);
-            SetupGet(r => r.OutputStream).Returns(_OutputStream);
+            _Dictionary = new OwinDictionary<object>();
         }
 
-        public byte[] OutputStreamBytes()
+        [TestMethod]
+        public void Ctor_Can_Accept_Existing_Dictionary_As_Backing_Store()
         {
-            return _OutputStream.ToArray();
+            var existingDictionary = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            _Dictionary = new OwinDictionary<object>(existingDictionary);
+
+            _Dictionary["a"] = 1;
+
+            Assert.AreEqual(1, _Dictionary["a"]);
+            Assert.AreEqual(1, _Dictionary["A"]);
         }
 
-        public string OutputStreamText(Encoding encoding = null)
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void Ctor_Throws_If_Existing_Dictionary_Is_Null()
         {
-            encoding = encoding ?? Encoding.UTF8;
-            return encoding.GetString(OutputStreamBytes());
+            _Dictionary = new OwinDictionary<object>((IDictionary<string, object>)null);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void Ctor_Throws_If_Existing_Dictionary_Is_ReadOnly()
+        {
+            // When the OWIN spec talks about dictionaries they are always mutable.
+            var wrappedDictionary = new Dictionary<string, object>();
+            var readonlyDictionary = new ReadOnlyDictionary<string, object>(wrappedDictionary);
+            _Dictionary = new OwinDictionary<object>(readonlyDictionary);
         }
     }
 }

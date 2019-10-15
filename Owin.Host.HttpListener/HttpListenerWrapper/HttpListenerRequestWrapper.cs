@@ -133,7 +133,7 @@ namespace Owin.Host.HttpListener.HttpListenerWrapper
         /// <summary>
         /// See interface docs.
         /// </summary>
-        public NameValueCollection Headers => _Wrapped.Headers;
+        public WebHeaderCollection Headers => (WebHeaderCollection)_Wrapped.Headers;
 
         /// <summary>
         /// See interface docs.

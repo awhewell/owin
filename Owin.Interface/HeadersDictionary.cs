@@ -61,11 +61,7 @@ namespace Owin.Interface
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public string Get(string key)
-        {
-            var strings = GetValues(key);
-            return strings == null ? null : String.Join(",", strings);
-        }
+        public string Get(string key) => base.ContainsKey(key) ? JoinCookedHeaderValues(GetValues(key)) : null;
 
         /// <summary>
         /// Assigns a single string as the value for the header key.
@@ -247,6 +243,66 @@ namespace Owin.Interface
                 .ToArray()
             );
             base[key] = buffer.ToArray();
+        }
+
+        /// <summary>
+        /// Splits a header value into an array of values separated at commas. If a comma is
+        /// within double-quotes then it is kept as a part of the value and not split out.
+        /// </summary>
+        /// <param name="headerValue"></param>
+        /// <returns></returns>
+        public static IEnumerable<string> SplitRawHeaderValue(string headerValue)
+        {
+            IEnumerable<string> result = null;
+
+            if(headerValue != null) {
+                var splitValues = new List<string>();
+                result = splitValues;
+                var buffer = new StringBuilder();
+                var inString = false;
+
+                void wordCompleted()
+                {
+                    splitValues.Add(buffer.ToString());
+                    buffer.Clear();
+                    inString = false;
+                }
+
+                for(var i = 0;i < headerValue.Length;++i) {
+                    var ch = headerValue[i];
+                    switch(ch) {
+                        case '"':
+                            inString = !inString;
+                            goto default;
+                        case ',':
+                            if(!inString) {
+                                wordCompleted();
+                            } else {
+                                goto default;
+                            }
+                            break;
+                        default:
+                            buffer.Append(ch);
+                            break;
+                    }
+                }
+
+                wordCompleted();
+            }
+
+            return result ?? new string[] { "" };
+        }
+
+        /// <summary>
+        /// Joins an array of cooked header values into a single string header value.
+        /// </summary>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public static string JoinCookedHeaderValues(IEnumerable<string> values)
+        {
+            return values == null
+            ? ""
+            : String.Join(",", values.Select(r => r ?? ""));
         }
     }
 }

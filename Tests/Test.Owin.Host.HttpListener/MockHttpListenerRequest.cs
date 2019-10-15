@@ -21,7 +21,7 @@ namespace Test.Owin.Host.HttpListener
 {
     class MockHttpListenerRequest : Mock<IHttpListenerRequest>
     {
-        public NameValueCollection Headers { get; } = new NameValueCollection();
+        public WebHeaderCollection Headers { get; } = new WebHeaderCollection();
 
         public bool OptionalBodyPresent { get; set; }
 

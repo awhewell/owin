@@ -33,6 +33,7 @@ namespace Test.Owin.Host.HttpListener
         private Mock<IPipelineBuilderEnvironment>   _PipelineBuilderEnvironment;
         private Mock<IPipeline>                     _Pipeline;
         private IDictionary<string, object>         _PipelineEnvironment;
+        private Action<IDictionary<string, object>> _ProcessRequestAction;
 
         [TestInitialize]
         public void TestInitialise()
@@ -42,8 +43,12 @@ namespace Test.Owin.Host.HttpListener
             _PipelineBuilder = MockHelper.FactorySingleton<IPipelineBuilder>();
             _PipelineBuilderEnvironment = MockHelper.FactoryImplementation<IPipelineBuilderEnvironment>();
             _Pipeline = MockHelper.FactoryImplementation<IPipeline>();
+            _ProcessRequestAction = null;
             _Pipeline.Setup(r => r.ProcessRequest(It.IsAny<IDictionary<string, object>>()))
-                .Callback((IDictionary<string, object> environment) => _PipelineEnvironment = environment);
+            .Callback((IDictionary<string, object> environment) => {
+                _PipelineEnvironment = environment;
+                _ProcessRequestAction?.Invoke(environment);
+            });
 
             _PipelineBuilder.Setup(r => r.CreatePipeline(_PipelineBuilderEnvironment.Object)).Returns(() => _Pipeline.Object);
 
@@ -512,6 +517,7 @@ namespace Test.Owin.Host.HttpListener
         [DataRow("/Root",   "/Root%2fA",                "/A")]      // Path expands escaped slashes - this seems a bit odd but 5.5 Percent encoding in the spec says the path must be expanded
         [DataRow("/Root",   "/Root/a?q=1",              "/a")]      // Path does not include query string
         [DataRow("/Root",   "/Root/a%3Fid=1?id=2?id=3", "/a?id=1")] // Path includes an escaped question mark
+        [DataRow("/Root",   "/root?/a=b",               "")]        // Path is empty, query string includes slash
         [DataRow("/",       "/%25%36%31",               "/%61")]    // Path unescapes once.
                                                                     // .NET HttpListener will double-unescape this to /a in the Url property and leave it as received in RawUrl
                                                                     // DotNet Core will safe unescape it in the Url property, leaving it as %2561, and leave it as received in RawUrl
@@ -546,6 +552,7 @@ namespace Test.Owin.Host.HttpListener
         [DataRow("/",       "/?",                       "")]            // Sanity check - query string with ampersand in it
         [DataRow("/Root",   "/root?a=1&b=2",            "a=1&b=2")]     // Sanity check - query string with ampersand in it
         [DataRow("/Root",   "/root?a=1&amp;b=2",        "a=1&amp;b=2")] // Sanity check - query string with HTTP-encoded ampersand in it
+        [DataRow("/Root",   "/root?/a=b",               "/a=b")]        // Sanity check - query string with slashes in it
         public void GetContext_Environment_RequestQueryString_Filled_Correctly(string hostRoot, string requestUrl, string expectedQueryString)
         {
             foreach(var unescaped in new bool[] { true, false }) {
@@ -691,6 +698,49 @@ namespace Test.Owin.Host.HttpListener
                     env => env[EnvironmentKey.ServerIsLocal]
                 );
             }
+        }
+
+        [TestMethod]
+        public void GetContext_Environment_ResponseBody_Filled__Correctly()
+        {
+            _Host.Initialise();
+            var expected = _HttpListener.MockContext.MockResponse.UnderlyingStream;
+
+            _Host.Start();
+
+            Assert.AreSame(expected, _PipelineEnvironment[EnvironmentKey.ResponseBody]);
+        }
+
+        [TestMethod]
+        public void GetContext_Environment_ResponseHeaders_Is_Case_Insensitive()
+        {
+            _ProcessRequestAction = (env) => {
+                var headers = new HeadersDictionary((IDictionary<string, string[]>)_PipelineEnvironment[EnvironmentKey.ResponseHeaders]) {
+                    ["aB"] = "cD"
+                };
+            };
+
+            _Host.Initialise();
+            _Host.Start();
+
+            var headers = new HeadersDictionary((IDictionary<string, string[]>)_PipelineEnvironment[EnvironmentKey.ResponseHeaders]);
+            Assert.AreEqual("cD", headers["Ab"]);
+        }
+
+        [TestMethod]
+        public void GetContext_Environment_ResponseHeaders_Writes_Are_Applied_In_Real_Time()
+        {
+            var actualHeaders = _HttpListener.MockContext.MockResponse.Object.Headers;
+
+            _ProcessRequestAction = (env) => {
+                var headers = new HeadersDictionary((IDictionary<string, string[]>)_PipelineEnvironment[EnvironmentKey.ResponseHeaders]) {
+                    ["aB"] = "cD"
+                };
+                Assert.AreEqual("cD", actualHeaders.Get("aB"));
+            };
+
+            _Host.Initialise();
+            _Host.Start();
         }
     }
 }
