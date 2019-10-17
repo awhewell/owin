@@ -278,7 +278,7 @@ namespace Owin.Host.HttpListener
                 { EnvironmentKey.CallCancelled,     cancellationToken },
                 { EnvironmentKey.RequestMethod,     request.HttpMethod },
                 { EnvironmentKey.RequestHeaders,    new HeadersWrapper(request.Headers) },
-                { EnvironmentKey.ResponseHeaders,   new HeadersWrapper(response.Headers) },
+                { EnvironmentKey.ResponseHeaders,   new HeadersWrapper_Response(response, response.Headers) },
             };
 
             result[EnvironmentKey.RequestBody] = !request.HasEntityBody ? Stream.Null : request.InputStream;

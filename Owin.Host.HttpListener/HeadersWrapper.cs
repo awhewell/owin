@@ -46,7 +46,7 @@ namespace Owin.Host.HttpListener
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public string[] this[string key]
+        public virtual string[] this[string key]
         {
             get {
                 var headerValue = _Collection[key];
@@ -110,7 +110,7 @@ namespace Owin.Host.HttpListener
                 throw new ArgumentException($"There is already a key of {key} in the collection");
             }
 
-            _Collection.Add(key, HeadersDictionary.JoinCookedHeaderValues(value));
+            this[key] = value;
         }
 
         /// <summary>
@@ -240,6 +240,16 @@ namespace Owin.Host.HttpListener
 
             value = this[key];
             return ContainsKey(key);
+        }
+
+        /// <summary>
+        /// Returns the first element in the array.
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
+        protected static string FirstElement(string[] array)
+        {
+            return array == null || array.Length == 0 ? null : array[0];
         }
     }
 }

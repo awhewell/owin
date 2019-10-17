@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Net;
 using System.Text;
 using InterfaceFactory;
@@ -78,6 +79,110 @@ namespace Test.Owin.Host.HttpListener
             _Host.Start();
 
             return (IDictionary<string, string[]>)_PipelineEnvironment[EnvironmentKey.ResponseHeaders];
+        }
+
+        private void RestrictedHeaderAssignmentTest(string headerKey, string validValue, Action<MockHttpListenerResponse> verifyResponseConfigured)
+        {
+            headerKey = headerKey.ToLower();
+            RestrictedHeaderAssignmentTest_CheckAction(headerKey, validValue, (h,v) => h[headerKey] = v,                                        verifyResponseConfigured);
+            RestrictedHeaderAssignmentTest_CheckAction(headerKey, validValue, (h,v) => h.Add(headerKey, v),                                     verifyResponseConfigured);
+            RestrictedHeaderAssignmentTest_CheckAction(headerKey, validValue, (h,v) => h.Add(new KeyValuePair<string, string[]>(headerKey, v)), verifyResponseConfigured);
+
+            headerKey = headerKey.ToUpper();
+            RestrictedHeaderAssignmentTest_CheckAction(headerKey, validValue, (h,v) => h[headerKey] = v,                                        verifyResponseConfigured);
+            RestrictedHeaderAssignmentTest_CheckAction(headerKey, validValue, (h,v) => h.Add(headerKey, v),                                     verifyResponseConfigured);
+            RestrictedHeaderAssignmentTest_CheckAction(headerKey, validValue, (h,v) => h.Add(new KeyValuePair<string, string[]>(headerKey, v)), verifyResponseConfigured);
+        }
+
+        private void RestrictedHeaderAssignmentTest_CheckAction(string headerKey, string validValue, Action<IDictionary<string, string[]>, string[]> dictionaryAssign, Action<MockHttpListenerResponse> verifyResponseConfigured, bool caseSensitive = false)
+        {
+            if(!validValue.Any(r => Char.IsLetter(r))) {
+                caseSensitive = true;
+            }
+
+            foreach(var useUpperCase in new bool?[] { null, true, false }) {
+                TestCleanup();
+                TestInitialise();
+
+                var headers = GetEnvironmentDictionary();
+
+                var caseAdjustedValue = validValue;
+                switch(useUpperCase) {
+                    case true:  caseAdjustedValue = caseAdjustedValue.ToUpper(); break;
+                    case false: caseAdjustedValue = caseAdjustedValue.ToLower(); break;
+                }
+
+                dictionaryAssign(headers, new string[] { caseAdjustedValue });
+
+                Assert.IsNull(GetNativeHeaderValue(headerKey));
+                verifyResponseConfigured(_HttpListener.MockContext.MockResponse);
+
+                if(caseSensitive) {
+                    break;
+                }
+            }
+        }
+
+        [TestMethod]
+        public void ContentLength_Writes_To_Response_Not_Dictionary()
+        {
+            RestrictedHeaderAssignmentTest(
+                "Content-Length",
+                "1",
+                response => response.VerifySet(r => r.ContentLength64 = 1)
+            );
+        }
+
+        [TestMethod]
+        public void KeepAlive_Writes_To_Response_Not_Dictionary()
+        {
+            RestrictedHeaderAssignmentTest(
+                "Keep-Alive",
+                "False",
+                response => response.VerifySet(r => r.KeepAlive = false)
+            );
+            RestrictedHeaderAssignmentTest(
+                "Keep-Alive",
+                "True",
+                response => response.VerifySet(r => r.KeepAlive = true)
+            );
+        }
+
+        [TestMethod]
+        public void TransferEncoding_Writes_To_Response_Not_Dictionary()
+        {
+            RestrictedHeaderAssignmentTest(
+                "Transfer-Encoding",
+                "chunked",
+                response => response.VerifySet(r => r.SendChunked = true)
+            );
+        }
+
+        [TestMethod]
+        public void TransferEncoding_Ignores_Other_Header_Values()
+        {
+            RestrictedHeaderAssignmentTest(
+                "Transfer-Encoding",
+                "gzip",
+                response => {
+                    response.VerifySet(r => r.SendChunked = true, Times.Never());
+                    response.VerifySet(r => r.SendChunked = false, Times.Never());
+                }
+            );
+        }
+
+        [TestMethod]
+        public void TransferEncoding_Chunked_Can_Be_Any_Element()
+        {
+            var headers = GetEnvironmentDictionary();
+
+            headers["Transfer-Encoding"] = new string[] {
+                "gzip",
+                "chunked",
+            };
+
+            _HttpListener.MockContext.MockResponse.VerifySet(r => r.SendChunked = true);
+            Assert.IsNull(GetNativeHeaderValue("Transfer-Encoding"));
         }
     }
 }
