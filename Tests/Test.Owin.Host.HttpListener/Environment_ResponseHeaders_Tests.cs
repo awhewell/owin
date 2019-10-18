@@ -12,13 +12,11 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Net;
-using System.Text;
 using InterfaceFactory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Owin.Interface;
-using Owin.Interface.HttpListenerWrapper;
+using Owin.Interface.Host.HttpListener.HttpListenerWrapper;
 
 namespace Test.Owin.Host.HttpListener
 {

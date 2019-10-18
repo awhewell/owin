@@ -10,54 +10,45 @@
 
 using System;
 using System.Collections.Generic;
+using System.Security.Principal;
 using System.Text;
 
-namespace Owin.Interface.HttpListenerWrapper
+namespace Owin.Interface.Host.HttpListener.HttpListenerWrapper
 {
     /// <summary>
-    /// The interface for classes that wrap HttpListener. These are used by <see cref="IHostHttpListener"/>,
-    /// they can be replaced by mocks to make the host testable.
+    /// Wraps the context returned by <see cref="IHttpListener"/>.
     /// </summary>
-    public interface IHttpListener : IDisposable
+    public interface IHttpListenerContext
     {
-        /// <summary>
-        /// Gets or sets a value indicating whether write exceptions should be ignored.
-        /// </summary>
-        bool IgnoreWriteExceptions { get; set; }
+        //
+        // Summary:
+        //     Gets the System.Net.HttpListenerRequest that represents a client's request for
+        //     a resource.
+        //
+        // Returns:
+        //     An System.Net.HttpListenerRequest object that represents the client request.
+        IHttpListenerRequest Request { get; }
 
-        /// <summary>
-        /// Gets a value indicating that the listener is accepting incoming requests.
-        /// </summary>
-        bool IsListening { get; }
+        //
+        // Summary:
+        //     Gets the System.Net.HttpListenerResponse object that will be sent to the client
+        //     in response to the client's request.
+        //
+        // Returns:
+        //     An System.Net.HttpListenerResponse object used to send a response back to the
+        //     client.
+        IHttpListenerResponse Response { get; }
 
-        /// <summary>
-        /// Gets a collection of URL prefixes that the listener will listen to.
-        /// </summary>
-        ICollection<string> Prefixes { get; }
-
-        /// <summary>
-        /// Starts listening for requests.
-        /// </summary>
-        void Start();
-
-        /// <summary>
-        /// Stops listening for requests.
-        /// </summary>
-        void Stop();
-
-        /// <summary>
-        /// Waits in background for an incoming request and calls the callback when it arrives.
-        /// </summary>
-        /// <param name="asyncCallback"></param>
-        /// <param name="state"></param>
-        /// <returns></returns>
-        IAsyncResult BeginGetContext(AsyncCallback asyncCallback, object state);
-
-        /// <summary>
-        /// Fetches the context for an async result returned by <see cref="BeginGetContext"/>.
-        /// </summary>
-        /// <param name="asyncResult"></param>
-        /// <returns></returns>
-        IHttpListenerContext EndGetContext(IAsyncResult asyncResult);
+        //
+        // Summary:
+        //     Gets an object used to obtain identity, authentication information, and security
+        //     roles for the client whose request is represented by this System.Net.HttpListenerContext
+        //     object.
+        //
+        // Returns:
+        //     An System.Security.Principal.IPrincipal object that describes the client, or
+        //     null if the System.Net.HttpListener that supplied this System.Net.HttpListenerContext
+        //     does not require authentication.
+        IPrincipal User { get; }
     }
 }

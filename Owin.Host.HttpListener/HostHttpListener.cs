@@ -14,7 +14,7 @@ using System.Net;
 using System.Threading;
 using InterfaceFactory;
 using Owin.Interface;
-using Owin.Interface.HttpListenerWrapper;
+using Owin.Interface.Host.HttpListener.HttpListenerWrapper;
 
 namespace Owin.Host.HttpListener
 {

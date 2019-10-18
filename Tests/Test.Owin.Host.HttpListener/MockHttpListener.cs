@@ -10,9 +10,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Moq;
-using Owin.Interface.HttpListenerWrapper;
+using Owin.Interface.Host.HttpListener.HttpListenerWrapper;
 
 namespace Test.Owin.Host.HttpListener
 {

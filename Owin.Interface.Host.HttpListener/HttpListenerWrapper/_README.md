@@ -1,4 +1,4 @@
-﻿# Owin.Interface.HttpListenerWrapper
+﻿# Owin.Interface.Host.HttpListener.HttpListenerWrapper
 
 These interfaces exist so that the **HttpListener** can be
 unit tested.

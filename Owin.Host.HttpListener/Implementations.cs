@@ -27,7 +27,7 @@ namespace Owin.Host.HttpListener
         public static void Register(IClassFactory factory)
         {
             factory.Register<Owin.Interface.IHostHttpListener, HostHttpListener>();
-            factory.Register<Owin.Interface.HttpListenerWrapper.IHttpListener, HttpListenerWrapper.HttpListener>();
+            factory.Register<Owin.Interface.Host.HttpListener.HttpListenerWrapper.IHttpListener, HttpListenerWrapper.HttpListener>();
         }
     }
 }

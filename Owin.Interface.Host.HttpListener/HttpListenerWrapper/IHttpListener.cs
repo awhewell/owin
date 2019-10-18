@@ -8,48 +8,56 @@
 //
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System.Net;
-using System.Security.Principal;
-using Owin.Interface.Host.HttpListener.HttpListenerWrapper;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace Owin.Host.HttpListener.HttpListenerWrapper
+namespace Owin.Interface.Host.HttpListener.HttpListenerWrapper
 {
     /// <summary>
-    /// Default implementation of <see cref="IHttpListenerContext"/>.
+    /// The interface for classes that wrap HttpListener. These are used by <see cref="IHostHttpListener"/>,
+    /// they can be replaced by mocks to make the host testable.
     /// </summary>
-    class HttpListenerContextWrapper : IHttpListenerContext
+    public interface IHttpListener : IDisposable
     {
         /// <summary>
-        /// The wrapped context.
+        /// Gets or sets a value indicating whether write exceptions should be ignored.
         /// </summary>
-        private HttpListenerContext _Wrapped;
-
-        private HttpListenerRequestWrapper _RequestWrapper;
-        /// <summary>
-        /// See interface docs.
-        /// </summary>
-        public IHttpListenerRequest Request => _RequestWrapper;
-
-        private HttpListenerResponseWrapper _ResponseWrapper;
-        /// <summary>
-        /// See interface docs.
-        /// </summary>
-        public IHttpListenerResponse Response => _ResponseWrapper;
+        bool IgnoreWriteExceptions { get; set; }
 
         /// <summary>
-        /// See interface docs.
+        /// Gets a value indicating that the listener is accepting incoming requests.
         /// </summary>
-        public IPrincipal User => _Wrapped.User;
+        bool IsListening { get; }
 
         /// <summary>
-        /// Creates a new object.
+        /// Gets a collection of URL prefixes that the listener will listen to.
         /// </summary>
-        /// <param name="wrapped"></param>
-        public HttpListenerContextWrapper(HttpListenerContext wrapped)
-        {
-            _Wrapped = wrapped;
-            _RequestWrapper = new HttpListenerRequestWrapper(wrapped.Request);
-            _ResponseWrapper = new HttpListenerResponseWrapper(wrapped.Response);
-        }
+        ICollection<string> Prefixes { get; }
+
+        /// <summary>
+        /// Starts listening for requests.
+        /// </summary>
+        void Start();
+
+        /// <summary>
+        /// Stops listening for requests.
+        /// </summary>
+        void Stop();
+
+        /// <summary>
+        /// Waits in background for an incoming request and calls the callback when it arrives.
+        /// </summary>
+        /// <param name="asyncCallback"></param>
+        /// <param name="state"></param>
+        /// <returns></returns>
+        IAsyncResult BeginGetContext(AsyncCallback asyncCallback, object state);
+
+        /// <summary>
+        /// Fetches the context for an async result returned by <see cref="BeginGetContext"/>.
+        /// </summary>
+        /// <param name="asyncResult"></param>
+        /// <returns></returns>
+        IHttpListenerContext EndGetContext(IAsyncResult asyncResult);
     }
 }

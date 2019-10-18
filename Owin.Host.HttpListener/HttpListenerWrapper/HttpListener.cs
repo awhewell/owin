@@ -10,8 +10,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net;
-using Owin.Interface.HttpListenerWrapper;
+using Owin.Interface.Host.HttpListener.HttpListenerWrapper;
 
 namespace Owin.Host.HttpListener.HttpListenerWrapper
 {

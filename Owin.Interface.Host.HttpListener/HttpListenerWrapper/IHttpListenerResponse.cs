@@ -14,7 +14,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 
-namespace Owin.Interface.HttpListenerWrapper
+namespace Owin.Interface.Host.HttpListener.HttpListenerWrapper
 {
     /// <summary>
     /// The interface for wrappers around an HttpListenerResponse.

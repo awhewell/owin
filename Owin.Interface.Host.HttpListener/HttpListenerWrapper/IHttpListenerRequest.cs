@@ -16,7 +16,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Owin.Interface.HttpListenerWrapper
+namespace Owin.Interface.Host.HttpListener.HttpListenerWrapper
 {
     /// <summary>
     /// The interface for objects that wrap an HttpListenerRequest.
