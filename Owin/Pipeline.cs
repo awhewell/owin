@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Owin.Interface;
 
@@ -47,14 +48,14 @@ namespace Owin
                 throw new InvalidOperationException($"You cannot call {nameof(Construct)} twice");
             }
 
-            _MiddlewareChain = NoOperationAppFunc;
+            _MiddlewareChain = NotFoundAppFunc;
             foreach(var chainLink in buildEnvironment.MiddlewareChain.Reverse()) {
                 _MiddlewareChain = chainLink.Invoke(_MiddlewareChain);
             }
 
             var streamManipulators = new List<AppFunc>();
             foreach(var chainLink in buildEnvironment.StreamManipulatorChain) {
-                streamManipulators.Add(chainLink.Invoke(NoOperationAppFunc));
+                streamManipulators.Add(chainLink.Invoke(NotFoundAppFunc));
             }
             _StreamManipulatorChain = streamManipulators.ToArray();
         }
@@ -80,12 +81,13 @@ namespace Owin
         }
 
         /// <summary>
-        /// An AppFunc that does nothing.
+        /// An AppFunc that sets the status to 404 not found.
         /// </summary>
         /// <param name="environment"></param>
         /// <returns></returns>
-        private static Task NoOperationAppFunc(IDictionary<string, object> environment)
+        private static Task NotFoundAppFunc(IDictionary<string, object> environment)
         {
+            environment[EnvironmentKey.ResponseStatusCode] = (int)HttpStatusCode.NotFound;
             return Task.FromResult(0);
         }
     }

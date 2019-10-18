@@ -112,13 +112,14 @@ namespace Test.Owin
         }
 
         [TestMethod]
-        public void ProcessRequest_Works_When_Pipeline_Is_Empty()
+        public void ProcessRequest_Sets_404_Status_Code_When_Pipeline_Is_Empty()
         {
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
             _Pipeline.ProcessRequest(_Environment);
 
-            Assert.AreEqual(0, _Environment.Count);
+            Assert.AreEqual(1, _Environment.Count);
+            Assert.AreEqual(404, (int)_Environment[EnvironmentKey.ResponseStatusCode]);
         }
 
         [TestMethod]
