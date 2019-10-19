@@ -40,7 +40,7 @@ namespace Test.Owin.Host.HttpListener
         {
             _Snapshot = Factory.TakeSnapshot();
 
-            _PipelineBuilder = MockHelper.FactorySingleton<IPipelineBuilder>();
+            _PipelineBuilder = MockHelper.FactoryImplementation<IPipelineBuilder>();
             _PipelineBuilderEnvironment = MockHelper.FactoryImplementation<IPipelineBuilderEnvironment>();
             _Pipeline = MockHelper.FactoryImplementation<IPipeline>();
             _ProcessRequestAction = null;
@@ -67,11 +67,19 @@ namespace Test.Owin.Host.HttpListener
             Factory.RestoreSnapshot(_Snapshot);
         }
 
+        private void Initialise() => _Host.Initialise(_PipelineBuilder.Object, _PipelineBuilderEnvironment.Object);
+
+        private void InitialiseAndStart()
+        {
+            _Host.Initialise(_PipelineBuilder.Object, _PipelineBuilderEnvironment.Object);
+            _Host.Start();
+        }
+
         private void AssertEnvironment(Action<MockHttpListenerContext> setupContext, Action<IDictionary<string, object>> assertEnvironment)
         {
             setupContext?.Invoke(_HttpListener.MockContext);
 
-            _Host.Initialise();
+            Initialise();
             _Host.Start();
 
             assertEnvironment(_PipelineEnvironment);
@@ -115,7 +123,7 @@ namespace Test.Owin.Host.HttpListener
         [TestMethod]
         public void Initialise_Creates_Pipeline()
         {
-            _Host.Initialise();
+            Initialise();
 
             _PipelineBuilder.Verify(r => r.CreatePipeline(_PipelineBuilderEnvironment.Object), Times.Once);
         }
@@ -123,7 +131,7 @@ namespace Test.Owin.Host.HttpListener
         [TestMethod]
         public void Initialise_Sets_Environment_Properties()
         {
-            _Host.Initialise();
+            Initialise();
 
             var properties = _PipelineBuilderEnvironment.Object.Properties;
             Assert.AreEqual(Constants.Version,          properties[ApplicationStartupKey.Version]);
@@ -133,6 +141,14 @@ namespace Test.Owin.Host.HttpListener
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
         public void Initialise_Throws_If_Called_Twice() => All_Hosts_Initialise_Throws_If_Called_Twice(_Host);
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void Initialise_Throws_If_Builder_Is_Null() => All_Hosts_Initialise_Throws_If_Builder_Is_Null(_Host);
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void Initialise_Throws_If_Environment_Is_Null() => All_Hosts_Initialise_Throws_If_Environment_Is_Null(_Host);
 
         [TestMethod]
         public void Root_Defaults_To_Slash() => All_Hosts_Root_Defaults_To_Slash(_Host);
@@ -197,8 +213,7 @@ namespace Test.Owin.Host.HttpListener
         [TestMethod]
         public void Start_Passes_Through_To_HttpListener()
         {
-            _Host.Initialise();
-            _Host.Start();
+            InitialiseAndStart();
 
             _HttpListener.Verify(r => r.Start(), Times.Once());
         }
@@ -206,7 +221,7 @@ namespace Test.Owin.Host.HttpListener
         [TestMethod]
         public void Start_Will_Not_Pass_Through_If_Already_Listening()
         {
-            _Host.Initialise();
+            Initialise();
             _Host.Start();
             _Host.Start();
 
@@ -217,8 +232,7 @@ namespace Test.Owin.Host.HttpListener
         public void Start_Calls_BeginGetContext()
         {
             _HttpListener.BeginContextTriggersCallback = false;
-            _Host.Initialise();
-            _Host.Start();
+            InitialiseAndStart();
 
             _HttpListener.Verify(r => r.BeginGetContext(It.IsAny<AsyncCallback>(), It.IsAny<object>()), Times.Once());
         }
@@ -226,8 +240,7 @@ namespace Test.Owin.Host.HttpListener
         [TestMethod]
         public void Stop_Passes_Through_To_HttpListener()
         {
-            _Host.Initialise();
-            _Host.Start();
+            InitialiseAndStart();
             _Host.Stop();
 
             _HttpListener.Verify(r => r.Stop(), Times.Once());
@@ -236,8 +249,8 @@ namespace Test.Owin.Host.HttpListener
         [TestMethod]
         public void Stop_Will_Not_Pass_Through_If_Not_Already_Listening()
         {
-            _Host.Initialise();
-            _Host.Start();
+            InitialiseAndStart();
+
             _Host.Stop();
             _Host.Stop();
 
@@ -247,8 +260,7 @@ namespace Test.Owin.Host.HttpListener
         [TestMethod]
         public void GetContext_Calls_EndGetContext_When_Context_Is_Received()
         {
-            _Host.Initialise();
-            _Host.Start();
+            InitialiseAndStart();
 
             _HttpListener.Verify(r => r.EndGetContext(_HttpListener.MockAsyncResult.Object), Times.Once());
         }
@@ -258,8 +270,7 @@ namespace Test.Owin.Host.HttpListener
         {
             _HttpListener.BeginContextAction = () => _Host.Stop();
 
-            _Host.Initialise();
-            _Host.Start();
+            InitialiseAndStart();
 
             _HttpListener.Verify(r => r.EndGetContext(_HttpListener.MockAsyncResult.Object), Times.Never());
         }
@@ -269,8 +280,7 @@ namespace Test.Owin.Host.HttpListener
         {
             _HttpListener.EndGetContextAction = () => throw new InvalidOperationException();
 
-            _Host.Initialise();
-            _Host.Start();
+            InitialiseAndStart();
         }
 
         [TestMethod]
@@ -278,8 +288,7 @@ namespace Test.Owin.Host.HttpListener
         {
             _HttpListener.EndGetContextAction = () => _HttpListener.Verify(r => r.BeginGetContext(It.IsAny<AsyncCallback>(), It.IsAny<object>()), Times.Once());
 
-            _Host.Initialise();
-            _Host.Start();
+            InitialiseAndStart();
 
             // The first call is the initial BeginGetContext from the Start() call
             // The second call is the second BeginGetContext in the callback
@@ -291,8 +300,7 @@ namespace Test.Owin.Host.HttpListener
         {
             _HttpListener.BeginContextAction = () => _Host.Stop();
 
-            _Host.Initialise();
-            _Host.Start();
+            InitialiseAndStart();
 
             // The first call is the initial BeginGetContext from the Start() call
             _HttpListener.Verify(r => r.BeginGetContext(It.IsAny<AsyncCallback>(), It.IsAny<object>()), Times.Once());
@@ -303,8 +311,7 @@ namespace Test.Owin.Host.HttpListener
         {
             _HttpListener.EndGetContextAction = () => throw new InvalidOperationException();
 
-            _Host.Initialise();
-            _Host.Start();
+            InitialiseAndStart();
 
             // The first call is the initial BeginGetContext from the Start() call
             _HttpListener.Verify(r => r.BeginGetContext(It.IsAny<AsyncCallback>(), It.IsAny<object>()), Times.Once());
@@ -315,8 +322,7 @@ namespace Test.Owin.Host.HttpListener
         {
             _HttpListener.EndGetContextAction = () => throw new HttpListenerException();
 
-            _Host.Initialise();
-            _Host.Start();
+            InitialiseAndStart();
 
             // The first call is the initial BeginGetContext from the Start() call
             // The second call is the second BeginGetContext in the callback
@@ -332,15 +338,13 @@ namespace Test.Owin.Host.HttpListener
                 }
             };
 
-            _Host.Initialise();
-            _Host.Start();
+            InitialiseAndStart();
         }
 
         [TestMethod]
         public void GetContext_Sends_Request_Down_Pipeline()
         {
-            _Host.Initialise();
-            _Host.Start();
+            InitialiseAndStart();
 
             _Pipeline.Verify(r => r.ProcessRequest(It.IsAny<IDictionary<string, object>>()), Times.Once());
         }
@@ -358,7 +362,7 @@ namespace Test.Owin.Host.HttpListener
                 TestInitialise();
 
                 _Host.Root = hostRoot;
-                _Host.Initialise();
+                Initialise();
 
                 _HttpListener.MockContext.MockRequest.SetUrl(requestUrl, httpListenerUrlUnescapesPath: unescaped);
                 _Host.Start();
@@ -376,8 +380,7 @@ namespace Test.Owin.Host.HttpListener
         {
             _HttpListener.EndGetContextAction = () => throw new HttpListenerException();
 
-            _Host.Initialise();
-            _Host.Start();
+            InitialiseAndStart();
 
             _Pipeline.Verify(r => r.ProcessRequest(It.IsAny<OwinDictionary<object>>()), Times.Never());
         }
@@ -391,8 +394,7 @@ namespace Test.Owin.Host.HttpListener
                 }
             };
 
-            _Host.Initialise();
-            _Host.Start();
+            InitialiseAndStart();
 
             _Pipeline.Verify(r => r.ProcessRequest(It.IsAny<OwinDictionary<object>>()), Times.Never());
         }
@@ -400,8 +402,7 @@ namespace Test.Owin.Host.HttpListener
         [TestMethod]
         public void GetContext_Environment_Is_Case_Sensitive()
         {
-            _Host.Initialise();
-            _Host.Start();
+            InitialiseAndStart();
 
             Assert.IsNotNull(_PipelineEnvironment["owin.Version"]);
             Assert.IsNull(_PipelineEnvironment["OWIN.VERSION"]);
@@ -703,7 +704,7 @@ namespace Test.Owin.Host.HttpListener
         [TestMethod]
         public void GetContext_Environment_ResponseBody_Filled__Correctly()
         {
-            _Host.Initialise();
+            Initialise();
             var expected = _HttpListener.MockContext.MockResponse.UnderlyingStream;
 
             _Host.Start();
@@ -720,8 +721,7 @@ namespace Test.Owin.Host.HttpListener
                 };
             };
 
-            _Host.Initialise();
-            _Host.Start();
+            InitialiseAndStart();
 
             var headers = new HeadersDictionary((IDictionary<string, string[]>)_PipelineEnvironment[EnvironmentKey.ResponseHeaders]);
             Assert.AreEqual("cD", headers["Ab"]);
@@ -739,8 +739,7 @@ namespace Test.Owin.Host.HttpListener
                 Assert.AreEqual("cD", actualHeaders.Get("aB"));
             };
 
-            _Host.Initialise();
-            _Host.Start();
+            InitialiseAndStart();
         }
     }
 }

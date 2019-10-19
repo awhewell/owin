@@ -60,10 +60,24 @@ namespace Test.Owin
 
         protected void All_Hosts_Initialise_Throws_If_Called_Twice(IHost host)
         {
-            host.Initialise();
-            host.Initialise();
+            var builder =     MockHelper.FactoryImplementation<IPipelineBuilder>();
+            var environment = MockHelper.FactoryImplementation<IPipelineBuilderEnvironment>();
+
+            host.Initialise(builder.Object, environment.Object);
+            host.Initialise(builder.Object, environment.Object);
         }
 
+        protected void All_Hosts_Initialise_Throws_If_Builder_Is_Null(IHost host)
+        {
+            var environment = MockHelper.FactoryImplementation<IPipelineBuilderEnvironment>();
+            host.Initialise(null, environment.Object);
+        }
+
+        protected void All_Hosts_Initialise_Throws_If_Environment_Is_Null(IHost host)
+        {
+            var builder = MockHelper.FactoryImplementation<IPipelineBuilder>();
+            host.Initialise(builder.Object, null);
+        }
 
         protected void All_Hosts_Start_Throws_If_Not_Initialised(IHost host)
         {

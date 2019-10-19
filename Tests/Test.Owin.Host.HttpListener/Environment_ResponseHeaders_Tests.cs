@@ -38,7 +38,7 @@ namespace Test.Owin.Host.HttpListener
         {
             _Snapshot = Factory.TakeSnapshot();
 
-            _PipelineBuilder = MockHelper.FactorySingleton<IPipelineBuilder>();
+            _PipelineBuilder = MockHelper.FactoryImplementation<IPipelineBuilder>();
             _PipelineBuilderEnvironment = MockHelper.FactoryImplementation<IPipelineBuilderEnvironment>();
             _Pipeline = MockHelper.FactoryImplementation<IPipeline>();
             _ProcessRequestAction = null;
@@ -73,7 +73,7 @@ namespace Test.Owin.Host.HttpListener
 
         protected override IDictionary<string, string[]> GetEnvironmentDictionary()
         {
-            _Host.Initialise();
+            _Host.Initialise(_PipelineBuilder.Object, _PipelineBuilderEnvironment.Object);
             _Host.Start();
 
             return (IDictionary<string, string[]>)_PipelineEnvironment[EnvironmentKey.ResponseHeaders];

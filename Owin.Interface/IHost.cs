@@ -37,7 +37,10 @@ namespace Owin.Interface
         /// <summary>
         /// Initialises the host. At a minimum this should build the pipeline.
         /// </summary>
-        void Initialise();
+        /// <param name="builder">The builder that can be used to construct the pipeline for the host.</param>
+        /// <param name="environment">The environment to use when constructing the pipeline.</param>
+        /// <remarks></remarks>
+        void Initialise(IPipelineBuilder builder, IPipelineBuilderEnvironment environment);
 
         /// <summary>
         /// Starts the host. Does nothing if called while already listening.

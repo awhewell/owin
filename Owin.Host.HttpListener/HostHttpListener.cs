@@ -139,19 +139,24 @@ namespace Owin.Host.HttpListener
         /// <summary>
         /// See interface docs.
         /// </summary>
-        public void Initialise()
+        /// <param name="builder"></param>
+        /// <param name="environment"></param>
+        public void Initialise(IPipelineBuilder builder, IPipelineBuilderEnvironment environment)
         {
+            if(builder == null) {
+                throw new ArgumentNullException(nameof(builder));
+            }
+            if(environment == null) {
+                throw new ArgumentNullException(nameof(environment));
+            }
             if(_Pipeline != null) {
                 throw new InvalidOperationException("You cannot initialise a host twice");
             }
 
-            var pipelineBuilder = Factory.ResolveSingleton<IPipelineBuilder>();
-            var builderEnvironment = Factory.Resolve<IPipelineBuilderEnvironment>();
+            environment.Properties[ApplicationStartupKey.HostType] = "Owin.Host.HttpListener";
+            environment.Properties[ApplicationStartupKey.Version] =  Constants.Version;
 
-            builderEnvironment.Properties[ApplicationStartupKey.HostType] = "Owin.Host.HttpListener";
-            builderEnvironment.Properties[ApplicationStartupKey.Version] =  Constants.Version;
-
-            _Pipeline = pipelineBuilder.CreatePipeline(builderEnvironment);
+            _Pipeline = builder.CreatePipeline(environment);
         }
 
         /// <summary>

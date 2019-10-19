@@ -32,7 +32,7 @@ namespace Test.Owin
             _Environment = MockHelper.FactoryImplementation<IPipelineBuilderEnvironment>();
             _Pipeline = MockHelper.FactoryImplementation<IPipeline>();
 
-            _PipelineBuilder = Factory.ResolveNewInstance<IPipelineBuilder>();
+            _PipelineBuilder = Factory.Resolve<IPipelineBuilder>();
         }
 
         [TestCleanup]

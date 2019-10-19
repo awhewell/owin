@@ -16,10 +16,9 @@ using InterfaceFactory;
 namespace Owin.Interface
 {
     /// <summary>
-    /// A singleton that different parts of the application can use to be notified when a new OWIN pipeline is being
+    /// An object that different parts of the application can use to be notified when a new OWIN pipeline is being
     /// constructed. The notification lets them add middleware to the new pipeline.
     /// </summary>
-    [Singleton]
     public interface IPipelineBuilder
     {
         /// <summary>
