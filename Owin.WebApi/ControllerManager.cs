@@ -10,35 +10,42 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
+using InterfaceFactory;
+using Owin.Interface.WebApi;
 
-namespace Owin.Interface.WebApi
+namespace Owin.WebApi
 {
-    using AppFunc = Func<IDictionary<string, object>, Task>;
-
     /// <summary>
-    /// The interface for the OWIN middleware object that implements the web API.
+    /// Default implementation of <see cref="IControllerManager"/>.
     /// </summary>
-    public interface IWebApiMiddleware
+    class ControllerManager : IControllerManager
     {
+        private List<Type> _ControllerTypes = new List<Type>();
         /// <summary>
-        /// Gets the controller manager that the Web API will use.
+        /// See interface docs.
         /// </summary>
-        IControllerManager ControllerManager { get; }
+        public IEnumerable<Type> ControllerTypes => _ControllerTypes;
 
         /// <summary>
-        /// Assigns new managers etc. if the default ones are undesirable. Cannot be called after
-        /// <see cref="CreateMiddleware"/> has been called.
+        /// See interface docs.
         /// </summary>
-        /// <param name="controllerManager">If not null then this is used in place of the default controller manager.</param>
-        void Reconfigure(IControllerManager controllerManager = null);
+        public void DiscoverControllers()
+        {
+            _ControllerTypes.Clear();
 
-        /// <summary>
-        /// Creates the web API middleware.
-        /// </summary>
-        /// <param name="next"></param>
-        /// <returns></returns>
-        AppFunc CreateMiddleware(AppFunc next);
+            var appDomainWrapper = Factory.Resolve<IAppDomainWrapper>();
+            _ControllerTypes.AddRange(
+                appDomainWrapper
+                .GetAllTypes()
+                .Where(type =>
+                    type.GetInterfaces().Any(iface =>
+                        iface == typeof(IApiController)
+                    )
+                )
+            );
+        }
     }
 }

@@ -23,6 +23,9 @@ namespace Owin.WebApi
         /// <param name="factory"></param>
         public static void Register(IClassFactory factory)
         {
+            factory.Register<Owin.Interface.WebApi.IAppDomainWrapper, AppDomainWrapper>();
+            factory.Register<Owin.Interface.WebApi.IControllerManager, ControllerManager>();
+            factory.Register<Owin.Interface.WebApi.IWebApiMiddleware, WebApiMiddleware>();
         }
     }
 }

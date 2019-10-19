@@ -11,34 +11,23 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Owin.Interface.WebApi
 {
-    using AppFunc = Func<IDictionary<string, object>, Task>;
-
     /// <summary>
-    /// The interface for the OWIN middleware object that implements the web API.
+    /// The interface for objects that can find classes that implement <see cref="IApiController"/>
+    /// and instantiate them.
     /// </summary>
-    public interface IWebApiMiddleware
+    public interface IControllerManager
     {
         /// <summary>
-        /// Gets the controller manager that the Web API will use.
+        /// Gets a collection of discovered controller types.
         /// </summary>
-        IControllerManager ControllerManager { get; }
+        IEnumerable<Type> ControllerTypes { get; }
 
         /// <summary>
-        /// Assigns new managers etc. if the default ones are undesirable. Cannot be called after
-        /// <see cref="CreateMiddleware"/> has been called.
+        /// Examine all loaded assemblies for controller types.
         /// </summary>
-        /// <param name="controllerManager">If not null then this is used in place of the default controller manager.</param>
-        void Reconfigure(IControllerManager controllerManager = null);
-
-        /// <summary>
-        /// Creates the web API middleware.
-        /// </summary>
-        /// <param name="next"></param>
-        /// <returns></returns>
-        AppFunc CreateMiddleware(AppFunc next);
+        void DiscoverControllers();
     }
 }

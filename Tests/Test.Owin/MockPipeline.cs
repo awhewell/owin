@@ -1,4 +1,4 @@
-﻿// Copyright © 2019 onwards, Andrew Whewell
+﻿// Copyright © 2017 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -10,35 +10,58 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Owin.Interface.WebApi
+namespace Test.Owin
 {
     using AppFunc = Func<IDictionary<string, object>, Task>;
 
     /// <summary>
-    /// The interface for the OWIN middleware object that implements the web API.
+    /// Mocks an OWIN pipeline.
     /// </summary>
-    public interface IWebApiMiddleware
+    public class MockPipeline
     {
         /// <summary>
-        /// Gets the controller manager that the Web API will use.
+        /// Gets or sets a flag indicating that the next task in the pipeline was called.
         /// </summary>
-        IControllerManager ControllerManager { get; }
+        public bool NextMiddlewareCalled { get; set; }
 
         /// <summary>
-        /// Assigns new managers etc. if the default ones are undesirable. Cannot be called after
-        /// <see cref="CreateMiddleware"/> has been called.
+        /// Gets or sets an action that is called when the next middleware is called.
         /// </summary>
-        /// <param name="controllerManager">If not null then this is used in place of the default controller manager.</param>
-        void Reconfigure(IControllerManager controllerManager = null);
+        public Action<IDictionary<string, object>> NextMiddlewareCallback { get; set; }
 
         /// <summary>
-        /// Creates the web API middleware.
+        /// Calls the middleware passed across. Sets or clears <see cref="NextMiddlewareCalled"/> if the
+        /// middleware calls the next function in the chain.
         /// </summary>
-        /// <param name="next"></param>
-        /// <returns></returns>
-        AppFunc CreateMiddleware(AppFunc next);
+        /// <param name="appFunc"></param>
+        /// <param name="environment"></param>
+        public void CallMiddleware(Func<AppFunc, AppFunc> middlewareEntryPoint, IDictionary<string, object> environment)
+        {
+            NextMiddlewareCalled = false;
+
+            AppFunc nextMiddleware = (IDictionary<string, object> env) => {
+                NextMiddlewareCalled = true;
+                NextMiddlewareCallback?.Invoke(env);
+                return Task.FromResult(0);
+            };
+
+            AppFunc testMiddleware = middlewareEntryPoint(nextMiddleware);
+            testMiddleware.Invoke(environment);
+        }
+
+        /// <summary>
+        /// Calls the middleware passed across. Sets or clears <see cref="NextMiddlewareCalled"/> if the
+        /// middleware calls the next function in the chain.
+        /// </summary>
+        /// <param name="middlewareEntryPoint"></param>
+        /// <param name="environment"></param>
+        public void CallMiddleware(Func<AppFunc, AppFunc> middlewareEntryPoint, MockOwinEnvironment environment)
+        {
+            CallMiddleware(middlewareEntryPoint, environment.Environment);
+        }
     }
 }

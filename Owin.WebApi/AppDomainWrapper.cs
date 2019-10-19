@@ -10,35 +10,25 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+using System.Linq;
+using Owin.Interface.WebApi;
 
-namespace Owin.Interface.WebApi
+namespace Owin.WebApi
 {
-    using AppFunc = Func<IDictionary<string, object>, Task>;
-
     /// <summary>
-    /// The interface for the OWIN middleware object that implements the web API.
+    /// See interface docs.
     /// </summary>
-    public interface IWebApiMiddleware
+    class AppDomainWrapper : IAppDomainWrapper
     {
         /// <summary>
-        /// Gets the controller manager that the Web API will use.
+        /// See interface docs.
         /// </summary>
-        IControllerManager ControllerManager { get; }
-
-        /// <summary>
-        /// Assigns new managers etc. if the default ones are undesirable. Cannot be called after
-        /// <see cref="CreateMiddleware"/> has been called.
-        /// </summary>
-        /// <param name="controllerManager">If not null then this is used in place of the default controller manager.</param>
-        void Reconfigure(IControllerManager controllerManager = null);
-
-        /// <summary>
-        /// Creates the web API middleware.
-        /// </summary>
-        /// <param name="next"></param>
         /// <returns></returns>
-        AppFunc CreateMiddleware(AppFunc next);
+        public IEnumerable<Type> GetAllTypes() => AppDomain
+            .CurrentDomain
+            .GetAssemblies()
+            .SelectMany(r =>
+                r.GetTypes()
+            );
     }
 }
