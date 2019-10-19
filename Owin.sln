@@ -15,7 +15,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Owin.Host.HttpListener", "O
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Owin.Host.HttpListener", "Tests\Test.Owin.Host.HttpListener\Test.Owin.Host.HttpListener.csproj", "{75F30949-5973-4C0D-9024-345E7CF52D9C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Owin.Interface.Host.HttpListener", "Owin.Interface.Host.HttpListener\Owin.Interface.Host.HttpListener.csproj", "{FBB6789E-32FD-4262-B1F6-70F438106B87}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Owin.Interface.Host.HttpListener", "Owin.Interface.Host.HttpListener\Owin.Interface.Host.HttpListener.csproj", "{FBB6789E-32FD-4262-B1F6-70F438106B87}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Owin.Interface.WebApi", "Owin.Interface.WebApi\Owin.Interface.WebApi.csproj", "{66C8B8B8-7554-4315-B5CB-EA752A894513}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Owin.WebApi", "Owin.WebApi\Owin.WebApi.csproj", "{B06F8FA6-6301-47EB-BAEA-2E74D89B87C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Owin.WebApi", "Tests\Test.Owin.WebApi\Test.Owin.WebApi.csproj", "{CD761F5C-AA6D-44C2-B30F-0782DDD59171}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,6 +53,18 @@ Global
 		{FBB6789E-32FD-4262-B1F6-70F438106B87}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FBB6789E-32FD-4262-B1F6-70F438106B87}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FBB6789E-32FD-4262-B1F6-70F438106B87}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66C8B8B8-7554-4315-B5CB-EA752A894513}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66C8B8B8-7554-4315-B5CB-EA752A894513}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66C8B8B8-7554-4315-B5CB-EA752A894513}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66C8B8B8-7554-4315-B5CB-EA752A894513}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B06F8FA6-6301-47EB-BAEA-2E74D89B87C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B06F8FA6-6301-47EB-BAEA-2E74D89B87C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B06F8FA6-6301-47EB-BAEA-2E74D89B87C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B06F8FA6-6301-47EB-BAEA-2E74D89B87C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD761F5C-AA6D-44C2-B30F-0782DDD59171}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD761F5C-AA6D-44C2-B30F-0782DDD59171}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD761F5C-AA6D-44C2-B30F-0782DDD59171}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD761F5C-AA6D-44C2-B30F-0782DDD59171}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -54,6 +72,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{579CEE8F-DDF8-410A-AF55-8E4547948B3F} = {2DA2FAC6-D35F-4DCE-BC46-7D0C6D167453}
 		{75F30949-5973-4C0D-9024-345E7CF52D9C} = {2DA2FAC6-D35F-4DCE-BC46-7D0C6D167453}
+		{CD761F5C-AA6D-44C2-B30F-0782DDD59171} = {2DA2FAC6-D35F-4DCE-BC46-7D0C6D167453}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {82325756-AA9C-44D5-8158-55A87D32E271}
