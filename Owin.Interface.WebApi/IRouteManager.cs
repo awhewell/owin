@@ -11,22 +11,19 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Owin.Interface.WebApi
 {
-    using AppFunc = Func<IDictionary<string, object>, Task>;
-
     /// <summary>
-    /// The interface for the OWIN middleware object that implements the web API.
+    /// The interface for an object that can extract routes out of API controllers.
     /// </summary>
-    public interface IWebApiMiddleware
+    public interface IRouteManager
     {
         /// <summary>
-        /// Creates the web API middleware.
+        /// Returns routes extracted from the controller types passed across.
         /// </summary>
-        /// <param name="next"></param>
+        /// <param name="controllerTypes"></param>
         /// <returns></returns>
-        AppFunc CreateMiddleware(AppFunc next);
+        IEnumerable<Route> DiscoverRoutes(IEnumerable<Type> controllerTypes);
     }
 }

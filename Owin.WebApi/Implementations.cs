@@ -25,6 +25,8 @@ namespace Owin.WebApi
         {
             factory.Register<Owin.Interface.WebApi.IAppDomainWrapper, AppDomainWrapper>();
             factory.Register<Owin.Interface.WebApi.IControllerManager, ControllerManager>();
+            factory.Register<Owin.Interface.WebApi.IRouteManager, RouteManager>();
+            factory.Register<Owin.Interface.WebApi.IRouteMapper, RouteMapper>();
             factory.Register<Owin.Interface.WebApi.IWebApiMiddleware, WebApiMiddleware>();
         }
     }

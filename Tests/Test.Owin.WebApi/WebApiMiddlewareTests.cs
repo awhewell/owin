@@ -37,7 +37,7 @@ namespace Test.Owin.WebApi
 
             _ControllerManager = MockHelper.FactoryImplementation<IControllerManager>();
             _Controllers = new List<Type>();
-            _ControllerManager.SetupGet(r => r.ControllerTypes).Returns(_Controllers);
+            _ControllerManager.Setup(r => r.DiscoverControllers()).Returns(_Controllers);
 
             _Pipeline = new MockPipeline();
             _Environment = new MockOwinEnvironment();
@@ -54,23 +54,10 @@ namespace Test.Owin.WebApi
         private void CallMiddleware() => _Pipeline.CallMiddleware(_WebApi.CreateMiddleware, _Environment.Environment);
 
         [TestMethod]
-        public void Ctor_Assigns_ControllerManager()
-        {
-            Assert.AreSame(_ControllerManager.Object, _WebApi.ControllerManager);
-        }
-
-        [TestMethod]
-        public void Ctor_Discovers_Controllers()
-        {
-            _ControllerManager.Verify(r => r.DiscoverControllers(), Times.Once());
-        }
-
-        [TestMethod]
         public void Middleware_Calls_Next_Delegate()
         {
             CallMiddleware();
             Assert.IsTrue(_Pipeline.NextMiddlewareCalled);
         }
-
     }
 }

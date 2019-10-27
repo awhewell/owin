@@ -11,56 +11,43 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
-using InterfaceFactory;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using Owin.Interface.WebApi;
 
-namespace Test.Owin.WebApi
+namespace Owin.WebApi
 {
-    [TestClass]
-    public class ControllerManagerTests
+    /// <summary>
+    /// Default implementation of <see cref="IRouteManager"/>.
+    /// </summary>
+    class RouteManager : IRouteManager
     {
-        class MockController1 : IApiController
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        /// <param name="controllerTypes"></param>
+        public IEnumerable<Route> DiscoverRoutes(IEnumerable<Type> controllerTypes)
         {
-            public IDictionary<string, object> OwinEnvironment { get; set; }
-        }
+            if(controllerTypes == null) {
+                throw new ArgumentNullException(nameof(controllerTypes));
+            }
 
-        private IClassFactory           _Snapshot;
-        private Mock<IAppDomainWrapper> _AppDomainWrapper;
-        private List<Type>              _AllTypes;
-        private IControllerManager      _ControllerManager;
+            var result = new List<Route>();
 
-        [TestInitialize]
-        public void TestInitialise()
-        {
-            _Snapshot = Factory.TakeSnapshot();
+            foreach(var controllerType in controllerTypes) {
+                foreach(var methodInfo in controllerType.GetMethods(BindingFlags.Public | BindingFlags.Instance)) {
+                    var routeAttribute = methodInfo.GetCustomAttributes().OfType<RouteAttribute>().FirstOrDefault();
+                    if(routeAttribute != null) {
+                        result.Add(new Route(
+                            controllerType,
+                            methodInfo,
+                            routeAttribute
+                        ));
+                    }
+                }
+            }
 
-            _AppDomainWrapper = MockHelper.FactoryImplementation<IAppDomainWrapper>();
-            _AllTypes = new List<Type>();
-            _AppDomainWrapper.Setup(r => r.GetAllTypes()).Returns(_AllTypes);
-
-            _ControllerManager = Factory.Resolve<IControllerManager>();
-        }
-
-        [TestCleanup]
-        public void TestCleanup()
-        {
-            Factory.RestoreSnapshot(_Snapshot);
-        }
-
-        [TestMethod]
-        public void DiscoverControllers_Finds_Controllers_Using_AppDomainWrapper()
-        {
-            _AllTypes.Add(typeof(ControllerManagerTests));
-            _AllTypes.Add(typeof(MockController1));
-            _AllTypes.Add(typeof(string));
-
-            var controllerTypes = _ControllerManager.DiscoverControllers();
-
-            _AppDomainWrapper.Verify(r => r.GetAllTypes(), Times.Once());
-            Assert.AreSame(typeof(MockController1), controllerTypes.Single());
+            return result;
         }
     }
 }

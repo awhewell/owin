@@ -23,29 +23,20 @@ namespace Owin.WebApi
     /// </summary>
     class ControllerManager : IControllerManager
     {
-        private List<Type> _ControllerTypes = new List<Type>();
         /// <summary>
         /// See interface docs.
         /// </summary>
-        public IEnumerable<Type> ControllerTypes => _ControllerTypes;
-
-        /// <summary>
-        /// See interface docs.
-        /// </summary>
-        public void DiscoverControllers()
+        public IEnumerable<Type> DiscoverControllers()
         {
-            _ControllerTypes.Clear();
-
             var appDomainWrapper = Factory.Resolve<IAppDomainWrapper>();
-            _ControllerTypes.AddRange(
-                appDomainWrapper
+            return appDomainWrapper
                 .GetAllTypes()
                 .Where(type =>
                     type.GetInterfaces().Any(iface =>
                         iface == typeof(IApiController)
                     )
                 )
-            );
+                .ToArray();
         }
     }
 }

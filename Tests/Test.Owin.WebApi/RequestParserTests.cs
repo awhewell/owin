@@ -12,55 +12,25 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using InterfaceFactory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using Owin.Interface.WebApi;
 
 namespace Test.Owin.WebApi
 {
     [TestClass]
-    public class ControllerManagerTests
+    public class RequestParserTests
     {
-        class MockController1 : IApiController
-        {
-            public IDictionary<string, object> OwinEnvironment { get; set; }
-        }
-
-        private IClassFactory           _Snapshot;
-        private Mock<IAppDomainWrapper> _AppDomainWrapper;
-        private List<Type>              _AllTypes;
-        private IControllerManager      _ControllerManager;
-
-        [TestInitialize]
-        public void TestInitialise()
-        {
-            _Snapshot = Factory.TakeSnapshot();
-
-            _AppDomainWrapper = MockHelper.FactoryImplementation<IAppDomainWrapper>();
-            _AllTypes = new List<Type>();
-            _AppDomainWrapper.Setup(r => r.GetAllTypes()).Returns(_AllTypes);
-
-            _ControllerManager = Factory.Resolve<IControllerManager>();
-        }
-
-        [TestCleanup]
-        public void TestCleanup()
-        {
-            Factory.RestoreSnapshot(_Snapshot);
-        }
-
         [TestMethod]
-        public void DiscoverControllers_Finds_Controllers_Using_AppDomainWrapper()
+        [DataRow(new string[] { }, null)]
+        public void SplitPathIntoParts_Splits_OwinPath_Into_Parts(string[] expected, string owinPath)
         {
-            _AllTypes.Add(typeof(ControllerManagerTests));
-            _AllTypes.Add(typeof(MockController1));
-            _AllTypes.Add(typeof(string));
+            var actual = RequestParser.SplitPathIntoParts(owinPath);
 
-            var controllerTypes = _ControllerManager.DiscoverControllers();
-
-            _AppDomainWrapper.Verify(r => r.GetAllTypes(), Times.Once());
-            Assert.AreSame(typeof(MockController1), controllerTypes.Single());
+            if(expected == null) {
+                Assert.IsNull(actual);
+            } else {
+                Assert.IsTrue(expected.SequenceEqual(actual));
+            }
         }
     }
 }

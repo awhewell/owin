@@ -10,57 +10,32 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using InterfaceFactory;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
-using Owin.Interface.WebApi;
 
-namespace Test.Owin.WebApi
+namespace Owin.Interface.WebApi
 {
-    [TestClass]
-    public class ControllerManagerTests
+    /// <summary>
+    /// A path part that matches against normalsed text.
+    /// </summary>
+    public class PathPartText : PathPart
     {
-        class MockController1 : IApiController
+        /// <summary>
+        /// Creates a new object.
+        /// </summary>
+        /// <param name="part"></param>
+        /// <param name="normalisedPart"></param>
+        internal PathPartText(string part, string normalisedPart) : base(part, normalisedPart)
         {
-            public IDictionary<string, object> OwinEnvironment { get; set; }
         }
 
-        private IClassFactory           _Snapshot;
-        private Mock<IAppDomainWrapper> _AppDomainWrapper;
-        private List<Type>              _AllTypes;
-        private IControllerManager      _ControllerManager;
-
-        [TestInitialize]
-        public void TestInitialise()
+        /// <summary>
+        /// See base docs.
+        /// </summary>
+        /// <param name="pathPart"></param>
+        /// <returns></returns>
+        public override bool MatchesRequestPathPart(string pathPart)
         {
-            _Snapshot = Factory.TakeSnapshot();
-
-            _AppDomainWrapper = MockHelper.FactoryImplementation<IAppDomainWrapper>();
-            _AllTypes = new List<Type>();
-            _AppDomainWrapper.Setup(r => r.GetAllTypes()).Returns(_AllTypes);
-
-            _ControllerManager = Factory.Resolve<IControllerManager>();
-        }
-
-        [TestCleanup]
-        public void TestCleanup()
-        {
-            Factory.RestoreSnapshot(_Snapshot);
-        }
-
-        [TestMethod]
-        public void DiscoverControllers_Finds_Controllers_Using_AppDomainWrapper()
-        {
-            _AllTypes.Add(typeof(ControllerManagerTests));
-            _AllTypes.Add(typeof(MockController1));
-            _AllTypes.Add(typeof(string));
-
-            var controllerTypes = _ControllerManager.DiscoverControllers();
-
-            _AppDomainWrapper.Verify(r => r.GetAllTypes(), Times.Once());
-            Assert.AreSame(typeof(MockController1), controllerTypes.Single());
+            return NormalisedPart == pathPart;
         }
     }
 }

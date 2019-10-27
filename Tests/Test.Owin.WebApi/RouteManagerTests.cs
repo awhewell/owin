@@ -14,34 +14,56 @@ using System.Linq;
 using System.Text;
 using InterfaceFactory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using Owin.Interface.WebApi;
 
 namespace Test.Owin.WebApi
 {
     [TestClass]
-    public class ControllerManagerTests
+    public class RouteManagerTests
     {
-        class MockController1 : IApiController
+        class ValidRoutes : IApiController
         {
             public IDictionary<string, object> OwinEnvironment { get; set; }
+
+            [Route("path-to-example1")]
+            public void Example1()
+            {
+            }
+
+            public void Example2()
+            {
+            }
         }
 
-        private IClassFactory           _Snapshot;
-        private Mock<IAppDomainWrapper> _AppDomainWrapper;
-        private List<Type>              _AllTypes;
-        private IControllerManager      _ControllerManager;
+        class PrivateMethods : IApiController
+        {
+            public IDictionary<string, object> OwinEnvironment { get; set; }
+
+            [Route("private-route")]
+            private void PrivateRoute()
+            {
+            }
+        }
+
+        class StaticMethods : IApiController
+        {
+            public IDictionary<string, object> OwinEnvironment { get; set; }
+
+            [Route("static-route")]
+            public static void StaticRoute()
+            {
+            }
+        }
+
+        private IClassFactory   _Snapshot;
+        private IRouteManager   _RouteManager;
 
         [TestInitialize]
         public void TestInitialise()
         {
             _Snapshot = Factory.TakeSnapshot();
 
-            _AppDomainWrapper = MockHelper.FactoryImplementation<IAppDomainWrapper>();
-            _AllTypes = new List<Type>();
-            _AppDomainWrapper.Setup(r => r.GetAllTypes()).Returns(_AllTypes);
-
-            _ControllerManager = Factory.Resolve<IControllerManager>();
+            _RouteManager = Factory.Resolve<IRouteManager>();
         }
 
         [TestCleanup]
@@ -51,16 +73,29 @@ namespace Test.Owin.WebApi
         }
 
         [TestMethod]
-        public void DiscoverControllers_Finds_Controllers_Using_AppDomainWrapper()
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void DiscoverRoutes_Throws_If_Passed_Null()
         {
-            _AllTypes.Add(typeof(ControllerManagerTests));
-            _AllTypes.Add(typeof(MockController1));
-            _AllTypes.Add(typeof(string));
+            _RouteManager.DiscoverRoutes(null);
+        }
 
-            var controllerTypes = _ControllerManager.DiscoverControllers();
+        [TestMethod]
+        public void DiscoverRoutes_Returns_Methods_Tagged_With_Route_Attribute()
+        {
+            var routes = _RouteManager.DiscoverRoutes(new Type[] { typeof(ValidRoutes) });
 
-            _AppDomainWrapper.Verify(r => r.GetAllTypes(), Times.Once());
-            Assert.AreSame(typeof(MockController1), controllerTypes.Single());
+            var route = routes.Single();
+            Assert.AreEqual("path-to-example1", route.RouteAttribute.Route);
+            Assert.AreSame(typeof(ValidRoutes).GetMethod(nameof(ValidRoutes.Example1)), route.Method);
+            Assert.AreSame(typeof(ValidRoutes), route.Controller);
+        }
+
+        [TestMethod]
+        public void DiscoverRoutes_Ignores_Static_Methods()
+        {
+            var routes = _RouteManager.DiscoverRoutes(new Type[] { typeof(StaticMethods) });
+
+            Assert.AreEqual(0, routes.Count());
         }
     }
 }

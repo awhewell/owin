@@ -15,19 +15,13 @@ using System.Text;
 namespace Owin.Interface.WebApi
 {
     /// <summary>
-    /// The interface for objects that can find classes that implement <see cref="IApiController"/>
-    /// and instantiate them.
+    /// The interface for objects that can find classes that implement <see cref="IApiController"/>.
     /// </summary>
     public interface IControllerManager
     {
         /// <summary>
-        /// Gets a collection of discovered controller types.
+        /// Returns all public types that implement <see cref="IApiController"/> in all loaded assemblies.
         /// </summary>
-        IEnumerable<Type> ControllerTypes { get; }
-
-        /// <summary>
-        /// Examine all loaded assemblies for controller types.
-        /// </summary>
-        void DiscoverControllers();
+        IEnumerable<Type> DiscoverControllers();
     }
 }
