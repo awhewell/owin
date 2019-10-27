@@ -19,9 +19,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Owin.Interface.Host.HttpLis
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Owin.Interface.WebApi", "Owin.Interface.WebApi\Owin.Interface.WebApi.csproj", "{66C8B8B8-7554-4315-B5CB-EA752A894513}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Owin.WebApi", "Owin.WebApi\Owin.WebApi.csproj", "{B06F8FA6-6301-47EB-BAEA-2E74D89B87C9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Owin.WebApi", "Owin.WebApi\Owin.WebApi.csproj", "{B06F8FA6-6301-47EB-BAEA-2E74D89B87C9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Owin.WebApi", "Tests\Test.Owin.WebApi\Test.Owin.WebApi.csproj", "{CD761F5C-AA6D-44C2-B30F-0782DDD59171}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Owin.WebApi", "Tests\Test.Owin.WebApi\Test.Owin.WebApi.csproj", "{CD761F5C-AA6D-44C2-B30F-0782DDD59171}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6976CC4D-7929-4E37-8EE1-91D7B29B3CC6}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
