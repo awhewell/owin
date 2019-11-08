@@ -4,6 +4,10 @@
     <TargetFramework>netcoreapp3.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
+
+    <RootNamespace>Test.AWhewell.Owin.Host.HttpListener</RootNamespace>
+
+    <AssemblyName>Test.AWhewell.Owin.Host.HttpListener</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

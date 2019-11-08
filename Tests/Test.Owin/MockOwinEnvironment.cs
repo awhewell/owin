@@ -1,4 +1,4 @@
-﻿// Copyright © 2017 onwards, Andrew Whewell
+// Copyright © 2017 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -15,9 +15,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Web;
-using Owin.Interface;
+using AWhewell.Owin.Interface;
 
-namespace Test.Owin
+namespace Test.AWhewell.Owin
 {
     /// <summary>
     /// Exposes a dictionary of OWIN objects that can be used to test middleware.

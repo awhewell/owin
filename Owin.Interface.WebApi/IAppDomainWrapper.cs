@@ -1,4 +1,4 @@
-﻿// Copyright © 2019 onwards, Andrew Whewell
+// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -11,7 +11,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Owin.Interface.WebApi
+namespace AWhewell.Owin.Interface.WebApi
 {
     /// <summary>
     /// A wrapper around AppDomain that the library uses instead of talking directly to AppDomain.

@@ -1,4 +1,4 @@
-﻿// Copyright © 2019 onwards, Andrew Whewell
+// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -10,10 +10,10 @@
 
 using System.Linq;
 using System.Net;
-using Owin.Interface;
-using Owin.Interface.Host.HttpListener.HttpListenerWrapper;
+using AWhewell.Owin.Interface;
+using AWhewell.Owin.Interface.Host.HttpListener.HttpListenerWrapper;
 
-namespace Owin.Host.HttpListener
+namespace AWhewell.Owin.Host.HttpListener
 {
     /// <summary>
     /// Extends <see cref="HeadersWrapper"/> to intercept attempts to set restricted headers

@@ -1,4 +1,4 @@
-﻿// Copyright © 2019 onwards, Andrew Whewell
+// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -11,9 +11,9 @@
 using System;
 using System.Collections.Generic;
 using Moq;
-using Owin.Interface.Host.HttpListener.HttpListenerWrapper;
+using AWhewell.Owin.Interface.Host.HttpListener.HttpListenerWrapper;
 
-namespace Test.Owin.Host.HttpListener
+namespace Test.AWhewell.Owin.Host.HttpListener
 {
     class MockHttpListener : Mock<IHttpListener>
     {

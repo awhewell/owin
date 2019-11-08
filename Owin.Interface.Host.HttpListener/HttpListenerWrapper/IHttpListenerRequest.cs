@@ -1,4 +1,4 @@
-﻿// Copyright © 2019 onwards, Andrew Whewell
+// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -16,7 +16,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Owin.Interface.Host.HttpListener.HttpListenerWrapper
+namespace AWhewell.Owin.Interface.Host.HttpListener.HttpListenerWrapper
 {
     /// <summary>
     /// The interface for objects that wrap an HttpListenerRequest.

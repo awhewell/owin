@@ -1,4 +1,4 @@
-﻿// Copyright © 2019 onwards, Andrew Whewell
+// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -14,9 +14,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using InterfaceFactory;
-using Owin.Interface.WebApi;
+using AWhewell.Owin.Interface.WebApi;
 
-namespace Owin.WebApi
+namespace AWhewell.Owin.WebApi
 {
     /// <summary>
     /// Default implementation of <see cref="IControllerManager"/>.

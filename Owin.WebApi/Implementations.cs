@@ -1,4 +1,4 @@
-﻿// Copyright © 2019 onwards, Andrew Whewell
+// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -10,7 +10,7 @@
 
 using InterfaceFactory;
 
-namespace Owin.WebApi
+namespace AWhewell.Owin.WebApi
 {
     /// <summary>
     /// Registers implementations of interfaces with the interface factory.
@@ -23,11 +23,11 @@ namespace Owin.WebApi
         /// <param name="factory"></param>
         public static void Register(IClassFactory factory)
         {
-            factory.Register<Owin.Interface.WebApi.IAppDomainWrapper, AppDomainWrapper>();
-            factory.Register<Owin.Interface.WebApi.IControllerManager, ControllerManager>();
-            factory.Register<Owin.Interface.WebApi.IRouteManager, RouteManager>();
-            factory.Register<Owin.Interface.WebApi.IRouteMapper, RouteMapper>();
-            factory.Register<Owin.Interface.WebApi.IWebApiMiddleware, WebApiMiddleware>();
+            factory.Register<AWhewell.Owin.Interface.WebApi.IAppDomainWrapper, AppDomainWrapper>();
+            factory.Register<AWhewell.Owin.Interface.WebApi.IControllerManager, ControllerManager>();
+            factory.Register<AWhewell.Owin.Interface.WebApi.IRouteManager, RouteManager>();
+            factory.Register<AWhewell.Owin.Interface.WebApi.IRouteMapper, RouteMapper>();
+            factory.Register<AWhewell.Owin.Interface.WebApi.IWebApiMiddleware, WebApiMiddleware>();
         }
     }
 }

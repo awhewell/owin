@@ -1,4 +1,4 @@
-﻿// Copyright © 2019 onwards, Andrew Whewell
+// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -12,7 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Owin.Interface.Host.HttpListener.HttpListenerWrapper
+namespace AWhewell.Owin.Interface.Host.HttpListener.HttpListenerWrapper
 {
     /// <summary>
     /// The interface for classes that wrap HttpListener. These are used by <see cref="IHostHttpListener"/>,

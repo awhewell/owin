@@ -1,4 +1,4 @@
-﻿// Copyright © 2019 onwards, Andrew Whewell
+// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -12,9 +12,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using InterfaceFactory;
-using Owin.Interface;
+using AWhewell.Owin.Interface;
 
-namespace Owin
+namespace AWhewell.Owin
 {
     /// <summary>
     /// Default implementation of <see cref="IPipelineBuilder"/>.

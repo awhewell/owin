@@ -1,4 +1,4 @@
-﻿// Copyright © 2019 onwards, Andrew Whewell
+// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -14,7 +14,7 @@ using System.Net;
 using System.Runtime.Serialization;
 using System.Text;
 
-namespace Owin.Interface.WebApi
+namespace AWhewell.Owin.Interface.WebApi
 {
     /// <summary>
     /// An exception that can be thrown to force an HTTP response back to the caller.

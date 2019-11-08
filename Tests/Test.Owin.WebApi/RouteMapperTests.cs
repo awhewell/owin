@@ -1,4 +1,4 @@
-﻿// Copyright © 2019 onwards, Andrew Whewell
+// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -17,9 +17,9 @@ using System.Text;
 using System.Threading;
 using InterfaceFactory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Owin.Interface.WebApi;
+using AWhewell.Owin.Interface.WebApi;
 
-namespace Test.Owin.WebApi
+namespace Test.AWhewell.Owin.WebApi
 {
     [TestClass]
     public class RouteMapperTests

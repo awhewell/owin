@@ -1,4 +1,4 @@
-﻿// Copyright © 2019 onwards, Andrew Whewell
+// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -14,10 +14,10 @@ using System.Collections.Specialized;
 using InterfaceFactory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using Owin.Interface;
-using Owin.Interface.Host.HttpListener.HttpListenerWrapper;
+using AWhewell.Owin.Interface;
+using AWhewell.Owin.Interface.Host.HttpListener.HttpListenerWrapper;
 
-namespace Test.Owin.Host.HttpListener
+namespace Test.AWhewell.Owin.Host.HttpListener
 {
     [TestClass]
     public class Environment_RequestHeaders_Tests : EnvironmentHeaders_Agnostic_Tests
