@@ -10,7 +10,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Net;
 using Owin.Interface.WebApi;
 
 namespace Owin.WebApi
@@ -81,6 +83,50 @@ namespace Owin.WebApi
                     if(!failedMatch) {
                         result = route;
                         break;
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        /// <param name="route"></param>
+        /// <param name="pathParts"></param>
+        /// <returns></returns>
+        public object[] BuildRouteParameters(Route route, string[] pathParts)
+        {
+            var parameters = route.Method.GetParameters();
+
+            var result = new object[parameters.Length];
+            for(var parameterIdx = 0;parameterIdx < parameters.Length;++parameterIdx) {
+                var parameter = parameters[parameterIdx];
+                var normalisedName = PathPart.Normalise(parameter.Name);
+
+                for(var pathPartIdx = 0;pathPartIdx < route.PathParts.Length;++pathPartIdx) {
+                    if(route.PathParts[pathPartIdx] is PathPartParameter routePathPart) {
+                        if(pathParts.Length <= pathPartIdx) {
+                            if(parameter.IsOptional) {
+                                result[parameterIdx] = parameter.DefaultValue;
+                            }
+                        } else {
+                            try {
+                                if(parameter.ParameterType == typeof(DateTime)) {
+                                    result[parameterIdx] = DateTime.Parse(pathParts[pathPartIdx], CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+                                } else if(parameter.ParameterType == typeof(DateTimeOffset)) {
+                                    result[parameterIdx]=  DateTimeOffset.Parse(pathParts[pathPartIdx], CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+                                } else {
+                                    result[parameterIdx] = Convert.ChangeType(pathParts[pathPartIdx], parameter.ParameterType, CultureInfo.InvariantCulture);
+                                }
+                            } catch(FormatException) {
+                                throw new HttpResponseException(
+                                    HttpStatusCode.BadRequest,
+                                    $"Cannot convert from \"{pathParts[pathPartIdx]}\" to {parameter.ParameterType}"
+                                );
+                            }
+                        }
                     }
                 }
             }

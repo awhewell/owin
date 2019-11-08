@@ -10,8 +10,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Text;
+using System.Threading;
 using InterfaceFactory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Owin.Interface.WebApi;
@@ -26,7 +29,7 @@ namespace Test.Owin.WebApi
             public IDictionary<string, object> OwinEnvironment { get; set; }
         }
 
-        private IRouteMapper _RouteMapper;
+        private IRouteMapper        _RouteMapper;
 
         [TestInitialize]
         public void TestInitialise()
@@ -92,7 +95,7 @@ namespace Test.Owin.WebApi
 
         public class ApiEntityController : Controller                   { [HttpGet, Route("api/entity")]            public int Method() { return 0; } }
         public class ApiEntityWithIDController : Controller             { [HttpGet, Route("api/entity/{id}")]       public int Method(int id) { return 0; } }
-        public class ApiEntityWithOptionalIDController : Controller     { [HttpGet, Route("api/entity/{id}")]       public int Method(int id = 0) { return 0; } }
+        public class ApiEntityWithOptionalIDController : Controller     { [HttpGet, Route("api/entity/{id}")]       public int Method(int id = -1) { return 0; } }
         public class ApiEntityOptionalThenNotController : Controller    { [HttpGet, Route("api/entity/{id}/{not}")] public int Method(int not, int id = 0) { return 0; } }
 
         [TestMethod]
@@ -117,6 +120,105 @@ namespace Test.Owin.WebApi
                 Assert.IsNull(actual);
             } else {
                 Assert.IsNotNull(actual);
+            }
+        }
+
+        [TestMethod]
+        public void BuildRouteParameters_Extracts_Values_From_Path_Parts()
+        {
+            var route = RouteTests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
+            _RouteMapper.Initialise(new Route[] { route });
+
+            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { "api", "entity", "12" });
+
+            Assert.AreEqual(1, parameters.Length);
+            Assert.IsInstanceOfType(parameters[0], typeof(int));
+            Assert.AreEqual(12, (int)parameters[0]);
+        }
+
+        [TestMethod]
+        public void BuildRouteParameters_Uses_Default_If_Optional_Parameter_Missing()
+        {
+            var route = RouteTests.CreateRoute(typeof(ApiEntityWithOptionalIDController), nameof(ApiEntityWithOptionalIDController.Method));
+            _RouteMapper.Initialise(new Route[] { route });
+
+            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { "api", "entity" });
+
+            Assert.AreEqual(1, parameters.Length);
+            Assert.IsInstanceOfType(parameters[0], typeof(int));
+            Assert.AreEqual(-1, (int)parameters[0]);
+        }
+
+        [TestMethod]
+        public void BuildRouteParameters_Throws_HttpResponseException_When_Parameter_Cannot_Be_Parsed()
+        {
+            var route = RouteTests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
+            _RouteMapper.Initialise(new Route[] { route });
+
+            HttpResponseException exception = null;
+            try {
+                _RouteMapper.BuildRouteParameters(route, new string[] { "api", "entity", "not-an-int" });
+            } catch(HttpResponseException ex) {
+                exception = ex;
+            }
+
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(HttpStatusCode.BadRequest, exception.StatusCode);
+        }
+
+        public class PathPartTypeController : Controller
+        {
+            [HttpGet, Route("string/{param}")]          public int StringPP(string param)                 { return 0; }
+            [HttpGet, Route("int/{param}")]             public int IntPP(int param)                       { return 0; }
+            [HttpGet, Route("n-int/{param}")]           public int NIntPP(int? param)                     { return 0; }
+            [HttpGet, Route("double/{param}")]          public int DoublePP(double param)                 { return 0; }
+            [HttpGet, Route("date/{param}")]            public int DatePP(DateTime param)                 { return 0; }
+            [HttpGet, Route("datetime/{param}")]        public int DateTimePP(DateTime param)             { return 0; }
+            [HttpGet, Route("datetimeoffset/{param}")]  public int DateTimeOffsetPP(DateTimeOffset param) { return 0; }
+        }
+
+        [DataRow(nameof(PathPartTypeController.StringPP),         "",                             "en-GB", "")]
+        [DataRow(nameof(PathPartTypeController.IntPP),            "1",                            "en-GB", "1")]
+        [DataRow(nameof(PathPartTypeController.NIntPP),           "1",                            "en-GB", "1")]
+        [DataRow(nameof(PathPartTypeController.DoublePP),         "1.2",                          "en-GB", "1.2")]
+        [DataRow(nameof(PathPartTypeController.DoublePP),         "1.2",                          "de-DE", "1.2")]
+        [DataRow(nameof(PathPartTypeController.DatePP),           "2019-01-30",                   "en-GB", "2019-01-30")]
+        [DataRow(nameof(PathPartTypeController.DatePP),           "2019-01-02",                   "en-US", "2019-01-02")]
+        [DataRow(nameof(PathPartTypeController.DateTimePP),       "2019-07-01T22:53:47+01:00",    "en-GB", "2019-07-01 21:53:47")]
+        [DataRow(nameof(PathPartTypeController.DateTimePP),       "2019-07-01 22:53:47",          "en-GB", "2019-07-01 22:53:47")]
+        [DataRow(nameof(PathPartTypeController.DateTimeOffsetPP), "2019-07-01T22:53:47+01:00",    "en-GB", "2019-07-01 21:53:47")]
+        [DataRow(nameof(PathPartTypeController.DateTimeOffsetPP), "2019-07-01 22:53:47",          "en-GB", "2019-07-01 22:53:47")]
+        [TestMethod]
+        public void BuildRouteParameters_Parses_Different_Types_From_Path_Parts(string methodName, string pathPart, string culture, string expectedText)
+        {
+            using(new CultureSwap(culture)) {
+                var route = RouteTests.CreateRoute(typeof(PathPartTypeController), methodName);
+                _RouteMapper.Initialise(new Route[] { route });
+
+                var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part, pathPart });
+
+                object expected = expectedText;
+                switch(methodName) {
+                    case nameof(PathPartTypeController.IntPP):
+                    case nameof(PathPartTypeController.NIntPP):
+                        expected = int.Parse(expectedText, NumberStyles.Integer, CultureInfo.InvariantCulture);
+                        break;
+                    case nameof(PathPartTypeController.DoublePP):
+                        expected = double.Parse(expectedText, NumberStyles.Float, CultureInfo.InvariantCulture);
+                        break;
+                    case nameof(PathPartTypeController.DatePP):
+                        expected = DateTime.Parse(expectedText, CultureInfo.InvariantCulture);
+                        break;
+                    case nameof(PathPartTypeController.DateTimePP):
+                        expected = DateTime.Parse(expectedText, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+                        break;
+                    case nameof(PathPartTypeController.DateTimeOffsetPP):
+                        expected = DateTimeOffset.Parse(expectedText, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+                        break;
+                }
+
+                Assert.AreEqual(1, parameters.Length);
+                Assert.AreEqual(expected, parameters[0]);
             }
         }
     }

@@ -20,75 +20,91 @@ namespace Test.Owin
     public class ParserTests
     {
         [TestMethod]
-        [DataRow(null,      null)]
-        [DataRow("",        null)]
-        [DataRow("true",    true)]
-        [DataRow("True",    true)]
-        [DataRow("TRUE",    true)]
-        [DataRow("false",   false)]
-        [DataRow("False",   false)]
-        [DataRow("FALSE",   false)]
-        [DataRow(" true",   true)]
-        [DataRow("true ",   true)]
-        [DataRow(" true ",  true)]
-        [DataRow("0",       null)]
-        [DataRow("1",       null)]
-        [DataRow("yes",     null)]
-        [DataRow("no",      null)]
-        [DataRow("on",      null)]
-        [DataRow("off",     null)]
-        public void ParseBool_Parses_String_Into_Nullable_Bool(string input, bool? expected)
+        [DataRow(null,      "en-GB",    null)]
+        [DataRow("",        "en-GB",    null)]
+        [DataRow("true",    "en-GB",    true)]
+        [DataRow("true",    "de-DE",    true)]
+        [DataRow("True",    "en-GB",    true)]
+        [DataRow("TRUE",    "en-GB",    true)]
+        [DataRow("false",   "en-GB",    false)]
+        [DataRow("false",   "de-DE",    false)]
+        [DataRow("False",   "en-GB",    false)]
+        [DataRow("FALSE",   "en-GB",    false)]
+        [DataRow(" true",   "en-GB",    true)]
+        [DataRow("true ",   "en-GB",    true)]
+        [DataRow(" true ",  "en-GB",    true)]
+        [DataRow("0",       "en-GB",    null)]
+        [DataRow("1",       "en-GB",    null)]
+        [DataRow("yes",     "en-GB",    null)]
+        [DataRow("no",      "en-GB",    null)]
+        [DataRow("on",      "en-GB",    null)]
+        [DataRow("off",     "en-GB",    null)]
+        public void ParseBool_Parses_String_Into_Nullable_Bool(string input, string culture, bool? expected)
         {
-            var actual = Parser.ParseBool(input);
+            using(new CultureSwap(culture)) {
+                var actual = Parser.ParseBool(input);
 
-            if(expected == null) {
-                Assert.IsNull(actual);
-            } else {
-                Assert.AreEqual(expected, actual);
+                if(expected == null) {
+                    Assert.IsNull(actual);
+                } else {
+                    Assert.AreEqual(expected, actual);
+                }
             }
         }
 
         [TestMethod]
-        [DataRow(null,                      null)]
-        [DataRow("",                        null)]
-        [DataRow("-9223372036854775808",    -9223372036854775808)]
-        [DataRow("9223372036854775807",     9223372036854775807)]
-        [DataRow(" 1",                      (long)1)]
-        [DataRow("1 ",                      (long)1)]
-        [DataRow(" 1 ",                     (long)1)]
-        [DataRow("1,234",                   null)]
-        [DataRow("1 234",                   null)]
-        [DataRow("(1)",                     null)]
-        public void ParseInt64_Parses_String_Into_Nullable_Long(string input, long? expected)
+        [DataRow(null,                      "en-GB",    null)]
+        [DataRow("",                        "en-GB",    null)]
+        [DataRow("-9223372036854775808",    "en-GB",    -9223372036854775808)]
+        [DataRow("9223372036854775807",     "en-GB",    9223372036854775807)]
+        [DataRow("-9223372036854775808",    "de-DE",    -9223372036854775808)]
+        [DataRow("9223372036854775807",     "de-DE",    9223372036854775807)]
+        [DataRow(" 1",                      "en-GB",    (long)1)]
+        [DataRow("1 ",                      "en-GB",    (long)1)]
+        [DataRow(" 1 ",                     "en-GB",    (long)1)]
+        [DataRow("1,234",                   "en-GB",    null)]
+        [DataRow("1 234",                   "en-GB",    null)]
+        [DataRow("1,234",                   "de-DE",    null)]
+        [DataRow("1 234",                   "de-DE",    null)]
+        [DataRow("(1)",                     "en-GB",    null)]
+        public void ParseInt64_Parses_String_Into_Nullable_Long(string input, string culture, long? expected)
         {
-            var actual = Parser.ParseInt64(input);
+            using(new CultureSwap(culture)) {
+                var actual = Parser.ParseInt64(input);
 
-            if(expected == null) {
-                Assert.IsNull(actual);
-            } else {
-                Assert.AreEqual(expected, actual);
+                if(expected == null) {
+                    Assert.IsNull(actual);
+                } else {
+                    Assert.AreEqual(expected, actual);
+                }
             }
         }
 
         [TestMethod]
-        [DataRow(null,                      null)]
-        [DataRow("",                        null)]
-        [DataRow("-2147483648",             -2147483648)]
-        [DataRow("2147483647",              2147483647)]
-        [DataRow(" 1",                      1)]
-        [DataRow("1 ",                      1)]
-        [DataRow(" 1 ",                     1)]
-        [DataRow("1,234",                   null)]
-        [DataRow("1 234",                   null)]
-        [DataRow("(1)",                     null)]
-        public void ParseInt32_Parses_String_Into_Nullable_Int(string input, int? expected)
+        [DataRow(null,          "en-GB",    null)]
+        [DataRow("",            "en-GB",    null)]
+        [DataRow("-2147483648", "en-GB",    -2147483648)]
+        [DataRow("2147483647",  "en-GB",    2147483647)]
+        [DataRow("-2147483648", "de-DE",    -2147483648)]
+        [DataRow("2147483647",  "de-DE",    2147483647)]
+        [DataRow(" 1",          "en-GB",    1)]
+        [DataRow("1 ",          "en-GB",    1)]
+        [DataRow(" 1 ",         "en-GB",    1)]
+        [DataRow("1,234",       "en-GB",    null)]
+        [DataRow("1 234",       "en-GB",    null)]
+        [DataRow("1,234",       "de-DE",    null)]
+        [DataRow("1 234",       "de-DE",    null)]
+        [DataRow("(1)",         "en-GB",    null)]
+        public void ParseInt32_Parses_String_Into_Nullable_Int(string input, string culture, int? expected)
         {
-            var actual = Parser.ParseInt32(input);
+            using(new CultureSwap(culture)) {
+                var actual = Parser.ParseInt32(input);
 
-            if(expected == null) {
-                Assert.IsNull(actual);
-            } else {
-                Assert.AreEqual(expected, actual);
+                if(expected == null) {
+                    Assert.IsNull(actual);
+                } else {
+                    Assert.AreEqual(expected, actual);
+                }
             }
         }
     }

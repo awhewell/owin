@@ -10,39 +10,62 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace Owin.Interface.WebApi
 {
     /// <summary>
-    /// The interface for objects that can map incoming requests to controllers, methods and method parameters.
+    /// An exception that can be thrown to force an HTTP response back to the caller.
     /// </summary>
-    public interface IRouteMapper
+    [Serializable]
+    public class HttpResponseException : Exception
     {
         /// <summary>
-        /// Initialises the mapper. This can only be called once.
+        /// Gets the status code to return to the caller.
         /// </summary>
-        /// <param name="routes"></param>
-        void Initialise(IEnumerable<Route> routes);
+        public HttpStatusCode StatusCode { get; } = HttpStatusCode.OK;
 
         /// <summary>
-        /// Returns the single route that matches the method and path parts supplied.
+        /// Creates a new object.
         /// </summary>
-        /// <param name="httpMethod"></param>
-        /// <param name="pathParts"></param>
-        /// <returns></returns>
-        Route FindRouteForPath(string httpMethod, string[] pathParts);
+        public HttpResponseException() : this("") { }
 
         /// <summary>
-        /// Returns the parameters to pass to a route method.
+        /// Creates a new object.
         /// </summary>
-        /// <param name="route"></param>
-        /// <param name="pathParts"></param>
-        /// <returns></returns>
-        /// <remarks>
-        /// If the request cannot be parsed into the parameters expected by the route then an <see cref="HttpResponseException"/>
-        /// is thrown indicating a bad request, with the message describing which parameters could not be parsed.
-        /// </remarks>
-        object[] BuildRouteParameters(Route route, string[] pathParts);
+        /// <param name="message"></param>
+        public HttpResponseException(string message) : base(message) { }
+
+        /// <summary>
+        /// Creates a new object.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="inner"></param>
+        public HttpResponseException(string message, Exception inner) : base(message, inner) { }
+
+        /// <summary>
+        /// Creates a new object.
+        /// </summary>
+        /// <param name="statusCode"></param>
+        public HttpResponseException(HttpStatusCode statusCode) : this(statusCode, "") { }
+
+        /// <summary>
+        /// Creates a new object.
+        /// </summary>
+        /// <param name="statusCode"></param>
+        /// <param name="message"></param>
+        public HttpResponseException(HttpStatusCode statusCode, string message) : base(message)
+        {
+            StatusCode = statusCode;
+        }
+
+        /// <summary>
+        /// Creates a new object.
+        /// </summary>
+        /// <param name="info"></param>
+        /// <param name="context"></param>
+        protected HttpResponseException(SerializationInfo info, System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 }
