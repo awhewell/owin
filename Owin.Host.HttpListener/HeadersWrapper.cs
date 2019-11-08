@@ -13,7 +13,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using AWhewell.Owin.Interface;
+using AWhewell.Owin.Utility;
 
 namespace AWhewell.Owin.Host.HttpListener
 {

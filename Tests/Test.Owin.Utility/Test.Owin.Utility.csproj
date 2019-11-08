@@ -1,13 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-
     <IsPackable>false</IsPackable>
-
-    <RootNamespace>Test.AWhewell.Owin</RootNamespace>
-
-    <AssemblyName>Test.AWhewell.Owin</AssemblyName>
+    <RootNamespace>Test.AWhewell.Owin.Utility</RootNamespace>
+    <AssemblyName>Test.AWhewell.Owin.Utility</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,9 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Owin.Interface\Owin.Interface.csproj" />
     <ProjectReference Include="..\..\Owin.Utility\Owin.Utility.csproj" />
-    <ProjectReference Include="..\..\Owin\Owin.csproj" />
+    <ProjectReference Include="..\Test.Owin\Test.Owin.csproj" />
   </ItemGroup>
 
 </Project>

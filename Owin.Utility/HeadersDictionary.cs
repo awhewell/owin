@@ -13,7 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace AWhewell.Owin.Interface
+namespace AWhewell.Owin.Utility
 {
     /// <summary>
     /// A dictionary that follows the OWIN spec for representing headers and provides methods

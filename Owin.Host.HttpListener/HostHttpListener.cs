@@ -12,9 +12,10 @@ using System;
 using System.IO;
 using System.Net;
 using System.Threading;
-using InterfaceFactory;
 using AWhewell.Owin.Interface;
 using AWhewell.Owin.Interface.Host.HttpListener.HttpListenerWrapper;
+using AWhewell.Owin.Utility;
+using InterfaceFactory;
 
 namespace AWhewell.Owin.Host.HttpListener
 {

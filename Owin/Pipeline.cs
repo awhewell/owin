@@ -14,6 +14,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using AWhewell.Owin.Interface;
+using AWhewell.Owin.Utility;
 
 namespace AWhewell.Owin
 {

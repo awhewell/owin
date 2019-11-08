@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Owin.Interface\Owin.Interface.csproj" />
+    <ProjectReference Include="..\Owin.Utility\Owin.Utility.csproj" />
   </ItemGroup>
 
 </Project>

@@ -12,10 +12,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using AWhewell.Owin.Utility;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using AWhewell.Owin.Interface;
 
-namespace Test.AWhewell.Owin
+namespace Test.AWhewell.Owin.Utility
 {
     public class OwinDictionary_Agnostic_Tests
     {

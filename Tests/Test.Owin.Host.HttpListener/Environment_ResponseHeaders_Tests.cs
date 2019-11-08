@@ -12,11 +12,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using AWhewell.Owin.Interface;
+using AWhewell.Owin.Interface.Host.HttpListener.HttpListenerWrapper;
+using AWhewell.Owin.Utility;
 using InterfaceFactory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using AWhewell.Owin.Interface;
-using AWhewell.Owin.Interface.Host.HttpListener.HttpListenerWrapper;
+using Test.AWhewell.Owin.Utility;
 
 namespace Test.AWhewell.Owin.Host.HttpListener
 {

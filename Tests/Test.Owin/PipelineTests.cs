@@ -10,12 +10,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
+using AWhewell.Owin.Interface;
+using AWhewell.Owin.Utility;
 using InterfaceFactory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using AWhewell.Owin.Interface;
 
 namespace Test.AWhewell.Owin
 {

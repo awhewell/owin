@@ -10,57 +10,48 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Collections.ObjectModel;
+using AWhewell.Owin.Utility;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using AWhewell.Owin.Interface;
 
-namespace Test.AWhewell.Owin
+namespace Test.AWhewell.Owin.Utility
 {
     [TestClass]
-    public class HeadersDictionary_DictionaryCtor_Tests : HeadersDictionary_Agnostic_Tests
+    public class OwinDictionary_WrappedDictionary_Tests : OwinDictionary_Agnostic_Tests
     {
-        private Dictionary<string, string[]> _WrappedDictionary;
-
         [TestInitialize]
         public void TestInitialise()
         {
-            _WrappedDictionary = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
-            _Headers = new HeadersDictionary(_WrappedDictionary);
-        }
-
-        protected override void Reset_To_RawStringArray()
-        {
-            _WrappedDictionary = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase) {
-                { _Key, _RawStringArray },
-            };
-            _Headers = new HeadersDictionary(_WrappedDictionary);
+            _Dictionary = new OwinDictionary<object>();
         }
 
         [TestMethod]
-        public void Wrapper_Ctor_Keys_Use_Whatever_Comparison_The_Original_Dictionary_Has()
+        public void Ctor_Can_Accept_Existing_Dictionary_As_Backing_Store()
         {
-            var existingDictionary = new Dictionary<string, string[]>(StringComparer.Ordinal);
-            _Headers = new HeadersDictionary(existingDictionary);
+            var existingDictionary = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            _Dictionary = new OwinDictionary<object>(existingDictionary);
 
-            _Headers.Add("one", new string[] { "value" });
+            _Dictionary["a"] = 1;
 
-            Assert.IsNull(_Headers["ONE"]);
+            Assert.AreEqual(1, _Dictionary["a"]);
+            Assert.AreEqual(1, _Dictionary["A"]);
         }
 
         [TestMethod]
-        public void Wrapper_Ctor_Accepts_Null_Wrapped_Dictionary()
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void Ctor_Throws_If_Existing_Dictionary_Is_Null()
         {
-            _Headers = new HeadersDictionary(null);
-            Assert.AreEqual(0, _Headers.Count);
+            _Dictionary = new OwinDictionary<object>((IDictionary<string, object>)null);
         }
 
         [TestMethod]
-        public void Wrapper_Ctor_Converts_Null_Wrapped_Dictionary_To_Case_Insensitive_Dictionary()
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void Ctor_Throws_If_Existing_Dictionary_Is_ReadOnly()
         {
-            _Headers = new HeadersDictionary(null);
-            _Headers.Add("one", new string[] { "value" });
-
-            Assert.AreEqual("value", _Headers["ONE"]);
+            // When the OWIN spec talks about dictionaries they are always mutable.
+            var wrappedDictionary = new Dictionary<string, object>();
+            var readonlyDictionary = new ReadOnlyDictionary<string, object>(wrappedDictionary);
+            _Dictionary = new OwinDictionary<object>(readonlyDictionary);
         }
     }
 }

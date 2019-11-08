@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Owin.Interface.Host.HttpListener\Owin.Interface.Host.HttpListener.csproj" />
     <ProjectReference Include="..\Owin.Interface\Owin.Interface.csproj" />
+    <ProjectReference Include="..\Owin.Utility\Owin.Utility.csproj" />
   </ItemGroup>
 
 </Project>

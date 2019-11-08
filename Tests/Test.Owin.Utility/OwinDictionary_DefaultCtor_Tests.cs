@@ -8,18 +8,13 @@
 //
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
+using AWhewell.Owin.Utility;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using AWhewell.Owin.Interface;
 
-namespace Test.AWhewell.Owin
+namespace Test.AWhewell.Owin.Utility
 {
     [TestClass]
-    public class OwinDictionary_WrappedDictionary_Tests : OwinDictionary_Agnostic_Tests
+    public class OwinDictionary_DefaultCtor_Tests : OwinDictionary_Agnostic_Tests
     {
         [TestInitialize]
         public void TestInitialise()
@@ -28,32 +23,53 @@ namespace Test.AWhewell.Owin
         }
 
         [TestMethod]
-        public void Ctor_Can_Accept_Existing_Dictionary_As_Backing_Store()
+        public void Ctor_Is_Case_Sensitive_By_Default()
         {
-            var existingDictionary = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-            _Dictionary = new OwinDictionary<object>(existingDictionary);
-
             _Dictionary["a"] = 1;
 
-            Assert.AreEqual(1, _Dictionary["a"]);
-            Assert.AreEqual(1, _Dictionary["A"]);
+            Assert.AreEqual(1,    _Dictionary["a"]);
+            Assert.AreEqual(null, _Dictionary["A"]);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void Ctor_Throws_If_Existing_Dictionary_Is_Null()
+        public void Keys_Are_Case_Sensitive_By_Default_When_Reading()
         {
-            _Dictionary = new OwinDictionary<object>((IDictionary<string, object>)null);
+            _Dictionary.Add("A", 1);
+
+            Assert.IsNull(_Dictionary["a"]);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public void Ctor_Throws_If_Existing_Dictionary_Is_ReadOnly()
+        public void Keys_Are_Case_Sensitive_By_Default_When_Writing()
         {
-            // When the OWIN spec talks about dictionaries they are always mutable.
-            var wrappedDictionary = new Dictionary<string, object>();
-            var readonlyDictionary = new ReadOnlyDictionary<string, object>(wrappedDictionary);
-            _Dictionary = new OwinDictionary<object>(readonlyDictionary);
+            _Dictionary.Add("A", 1);
+            _Dictionary.Add("a", 2);
+
+            Assert.AreEqual(1, (int)_Dictionary["A"]);
+            Assert.AreEqual(2, (int)_Dictionary["a"]);
+        }
+
+        [TestMethod]
+        public void Keys_Can_Be_Case_Insensitive_When_Reading()
+        {
+            _Dictionary = new OwinDictionary<object>(caseSensitive: false);
+
+            _Dictionary.Add("A", 1);
+
+            Assert.AreEqual(_Dictionary["a"], 1);
+        }
+
+        [TestMethod]
+        public void Keys_Can_Be_Case_Insensitive_When_Writing()
+        {
+            _Dictionary = new OwinDictionary<object>(caseSensitive: false);
+
+            _Dictionary["a"] = 1;
+            _Dictionary["A"] = 2;
+
+            Assert.AreEqual(1, _Dictionary.Count);
+            Assert.AreEqual(2, (int)_Dictionary["a"]);
+            Assert.AreEqual(2, (int)_Dictionary["A"]);
         }
     }
 }

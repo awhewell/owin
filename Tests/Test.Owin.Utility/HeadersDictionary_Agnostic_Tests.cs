@@ -11,11 +11,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using AWhewell.Owin.Utility;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using AWhewell.Owin.Interface;
 
-namespace Test.AWhewell.Owin
+namespace Test.AWhewell.Owin.Utility
 {
     // Some of these tests are cribbed pretty heavily from Microsoft.Owin's header tests. We want
     // to exhibit the same behaviour for cross-compatability, it makes sense to make sure the

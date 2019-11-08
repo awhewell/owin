@@ -15,11 +15,12 @@ using System.Linq;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
+using AWhewell.Owin.Interface;
+using AWhewell.Owin.Interface.Host.HttpListener.HttpListenerWrapper;
+using AWhewell.Owin.Utility;
 using InterfaceFactory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using AWhewell.Owin.Interface;
-using AWhewell.Owin.Interface.Host.HttpListener.HttpListenerWrapper;
 
 namespace Test.AWhewell.Owin.Host.HttpListener
 {

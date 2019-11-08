@@ -12,7 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace AWhewell.Owin.Interface
+namespace AWhewell.Owin.Utility
 {
     /// <summary>
     /// A group of handy parser methods.

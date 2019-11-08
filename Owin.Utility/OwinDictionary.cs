@@ -12,7 +12,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace AWhewell.Owin.Interface
+namespace AWhewell.Owin.Utility
 {
     /// <summary>
     /// A dictionary with a case sensitive string key whose indexed get returns default(TValue)

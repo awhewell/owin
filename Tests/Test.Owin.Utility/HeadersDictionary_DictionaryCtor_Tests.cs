@@ -9,72 +9,57 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
+using AWhewell.Owin.Utility;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using AWhewell.Owin.Interface;
 
-namespace Test.AWhewell.Owin
+namespace Test.AWhewell.Owin.Utility
 {
     [TestClass]
-    public class OwinDictionary_DefaultCtor_Tests : OwinDictionary_Agnostic_Tests
+    public class HeadersDictionary_DictionaryCtor_Tests : HeadersDictionary_Agnostic_Tests
     {
+        private Dictionary<string, string[]> _WrappedDictionary;
+
         [TestInitialize]
         public void TestInitialise()
         {
-            _Dictionary = new OwinDictionary<object>();
+            _WrappedDictionary = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+            _Headers = new HeadersDictionary(_WrappedDictionary);
+        }
+
+        protected override void Reset_To_RawStringArray()
+        {
+            _WrappedDictionary = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase) {
+                { _Key, _RawStringArray },
+            };
+            _Headers = new HeadersDictionary(_WrappedDictionary);
         }
 
         [TestMethod]
-        public void Ctor_Is_Case_Sensitive_By_Default()
+        public void Wrapper_Ctor_Keys_Use_Whatever_Comparison_The_Original_Dictionary_Has()
         {
-            _Dictionary["a"] = 1;
+            var existingDictionary = new Dictionary<string, string[]>(StringComparer.Ordinal);
+            _Headers = new HeadersDictionary(existingDictionary);
 
-            Assert.AreEqual(1,    _Dictionary["a"]);
-            Assert.AreEqual(null, _Dictionary["A"]);
+            _Headers.Add("one", new string[] { "value" });
+
+            Assert.IsNull(_Headers["ONE"]);
         }
 
         [TestMethod]
-        public void Keys_Are_Case_Sensitive_By_Default_When_Reading()
+        public void Wrapper_Ctor_Accepts_Null_Wrapped_Dictionary()
         {
-            _Dictionary.Add("A", 1);
-
-            Assert.IsNull(_Dictionary["a"]);
+            _Headers = new HeadersDictionary(null);
+            Assert.AreEqual(0, _Headers.Count);
         }
 
         [TestMethod]
-        public void Keys_Are_Case_Sensitive_By_Default_When_Writing()
+        public void Wrapper_Ctor_Converts_Null_Wrapped_Dictionary_To_Case_Insensitive_Dictionary()
         {
-            _Dictionary.Add("A", 1);
-            _Dictionary.Add("a", 2);
+            _Headers = new HeadersDictionary(null);
+            _Headers.Add("one", new string[] { "value" });
 
-            Assert.AreEqual(1, (int)_Dictionary["A"]);
-            Assert.AreEqual(2, (int)_Dictionary["a"]);
-        }
-
-        [TestMethod]
-        public void Keys_Can_Be_Case_Insensitive_When_Reading()
-        {
-            _Dictionary = new OwinDictionary<object>(caseSensitive: false);
-
-            _Dictionary.Add("A", 1);
-
-            Assert.AreEqual(_Dictionary["a"], 1);
-        }
-
-        [TestMethod]
-        public void Keys_Can_Be_Case_Insensitive_When_Writing()
-        {
-            _Dictionary = new OwinDictionary<object>(caseSensitive: false);
-
-            _Dictionary["a"] = 1;
-            _Dictionary["A"] = 2;
-
-            Assert.AreEqual(1, _Dictionary.Count);
-            Assert.AreEqual(2, (int)_Dictionary["a"]);
-            Assert.AreEqual(2, (int)_Dictionary["A"]);
+            Assert.AreEqual("value", _Headers["ONE"]);
         }
     }
 }

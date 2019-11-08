@@ -22,6 +22,8 @@
     <ProjectReference Include="..\..\Owin.Host.HttpListener\Owin.Host.HttpListener.csproj" />
     <ProjectReference Include="..\..\Owin.Interface.Host.HttpListener\Owin.Interface.Host.HttpListener.csproj" />
     <ProjectReference Include="..\..\Owin.Interface\Owin.Interface.csproj" />
+    <ProjectReference Include="..\..\Owin.Utility\Owin.Utility.csproj" />
+    <ProjectReference Include="..\Test.Owin.Utility\Test.Owin.Utility.csproj" />
     <ProjectReference Include="..\Test.Owin\Test.Owin.csproj" />
   </ItemGroup>
 

@@ -10,8 +10,8 @@
 
 using System.Linq;
 using System.Net;
-using AWhewell.Owin.Interface;
 using AWhewell.Owin.Interface.Host.HttpListener.HttpListenerWrapper;
+using AWhewell.Owin.Utility;
 
 namespace AWhewell.Owin.Host.HttpListener
 {

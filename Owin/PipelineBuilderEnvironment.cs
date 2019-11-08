@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AWhewell.Owin.Interface;
+using AWhewell.Owin.Utility;
 
 namespace AWhewell.Owin
 {
