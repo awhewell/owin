@@ -1,4 +1,4 @@
-// Copyright © 2019 onwards, Andrew Whewell
+﻿// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -12,39 +12,30 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace AWhewell.Owin.Interface.WebApi
+namespace AWhewell.Owin.Utility
 {
     /// <summary>
-    /// Creates a new object.
+    /// Settings that influence the operation of <see cref="Parser.ParseType"/>.
     /// </summary>
-    public class PathPartParameter : PathPart
+    public class ParserOptions
     {
-        /// <summary>
-        /// Gets the <see cref="ExpectAttribute"/> that the parameter has been tagged with, if any.
-        /// </summary>
-        public ExpectAttribute Expect { get; }
-
-
-        /// <summary>
-        /// Creates a new object.
-        /// </summary>
-        /// <param name="part"></param>
-        /// <param name="normalisedPart"></param>
-        /// <param name="isOptional"></param>
-        /// <param name="expect"></param>
-        internal PathPartParameter(string part, string normalisedPart, bool isOptional, ExpectAttribute expect) : base(part, normalisedPart, isOptional)
+        public enum ByteArrayFormat
         {
-            Expect = expect;
+            /// <summary>
+            /// The bytes are encoded as a MIME64 string.
+            /// </summary>
+            Mime64,
+
+            /// <summary>
+            /// Each byte is encoded as a two digit hex string with no intervening whitespace
+            /// and an optional case-sensitive 0x prefix.
+            /// </summary>
+            HexString,
         }
 
         /// <summary>
-        /// See base docs.
+        /// Gets or sets the format to assume when parsing strings into byte arrays.
         /// </summary>
-        /// <param name="pathPart"></param>
-        /// <returns></returns>
-        public override bool MatchesRequestPathPart(string pathPart)
-        {
-            return pathPart != null;
-        }
+        public ByteArrayFormat ByteArray { get; set; } = ByteArrayFormat.Mime64;
     }
 }

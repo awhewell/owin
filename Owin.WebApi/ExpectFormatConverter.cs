@@ -1,4 +1,4 @@
-// Copyright © 2019 onwards, Andrew Whewell
+﻿// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -11,40 +11,28 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using AWhewell.Owin.Interface.WebApi;
+using AWhewell.Owin.Utility;
 
-namespace AWhewell.Owin.Interface.WebApi
+namespace AWhewell.Owin.WebApi
 {
     /// <summary>
-    /// Creates a new object.
+    /// Converts various <see cref="ExpectFormat"/> formats to parser options etc.
     /// </summary>
-    public class PathPartParameter : PathPart
+    static class ExpectFormatConverter
     {
-        /// <summary>
-        /// Gets the <see cref="ExpectAttribute"/> that the parameter has been tagged with, if any.
-        /// </summary>
-        public ExpectAttribute Expect { get; }
+        private static ParserOptions _HexString =   new ParserOptions() { ByteArray = ParserOptions.ByteArrayFormat.HexString, };
+        private static ParserOptions _Mime64 =      new ParserOptions() { ByteArray = ParserOptions.ByteArrayFormat.Mime64, };
 
-
-        /// <summary>
-        /// Creates a new object.
-        /// </summary>
-        /// <param name="part"></param>
-        /// <param name="normalisedPart"></param>
-        /// <param name="isOptional"></param>
-        /// <param name="expect"></param>
-        internal PathPartParameter(string part, string normalisedPart, bool isOptional, ExpectAttribute expect) : base(part, normalisedPart, isOptional)
+        public static ParserOptions ToParserOptions(ExpectFormat? expectFormat)
         {
-            Expect = expect;
-        }
-
-        /// <summary>
-        /// See base docs.
-        /// </summary>
-        /// <param name="pathPart"></param>
-        /// <returns></returns>
-        public override bool MatchesRequestPathPart(string pathPart)
-        {
-            return pathPart != null;
+            switch(expectFormat) {
+                case ExpectFormat.HexString:    return _HexString;
+                case ExpectFormat.Mime64:       return _Mime64;
+                case ExpectFormat.Default:
+                case null:                      return null;
+                default:                        throw new NotImplementedException();
+            }
         }
     }
 }

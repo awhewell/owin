@@ -1,4 +1,4 @@
-// Copyright © 2019 onwards, Andrew Whewell
+﻿// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -15,36 +15,26 @@ using System.Text;
 namespace AWhewell.Owin.Interface.WebApi
 {
     /// <summary>
-    /// Creates a new object.
+    /// An enumeration of the different formats that can be carried by an <see cref="ExpectAttribute"/>
+    /// attribute.
     /// </summary>
-    public class PathPartParameter : PathPart
+    public enum ExpectFormat
     {
         /// <summary>
-        /// Gets the <see cref="ExpectAttribute"/> that the parameter has been tagged with, if any.
+        /// Use the default format for the associated property (or whatever) type.
         /// </summary>
-        public ExpectAttribute Expect { get; }
-
-
-        /// <summary>
-        /// Creates a new object.
-        /// </summary>
-        /// <param name="part"></param>
-        /// <param name="normalisedPart"></param>
-        /// <param name="isOptional"></param>
-        /// <param name="expect"></param>
-        internal PathPartParameter(string part, string normalisedPart, bool isOptional, ExpectAttribute expect) : base(part, normalisedPart, isOptional)
-        {
-            Expect = expect;
-        }
+        Default,
 
         /// <summary>
-        /// See base docs.
+        /// Tells the parser that the tagged byte array will be sent as a MIME64 string. This is the default
+        /// format for byte arrays.
         /// </summary>
-        /// <param name="pathPart"></param>
-        /// <returns></returns>
-        public override bool MatchesRequestPathPart(string pathPart)
-        {
-            return pathPart != null;
-        }
+        Mime64,
+
+        /// <summary>
+        /// Tells the parser that the tagged byte array will be sent as a hex string (where each byte is a two
+        /// digit hex string with no intervening white space and an optional case-sensitive 0x prefix).
+        /// </summary>
+        HexString,
     }
 }

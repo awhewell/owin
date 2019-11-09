@@ -14,6 +14,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using AWhewell.Owin.Interface.WebApi;
+using AWhewell.Owin.Utility;
 
 namespace AWhewell.Owin.WebApi
 {
@@ -112,20 +113,18 @@ namespace AWhewell.Owin.WebApi
                                 result[parameterIdx] = parameter.DefaultValue;
                             }
                         } else {
-                            try {
-                                if(parameter.ParameterType == typeof(DateTime)) {
-                                    result[parameterIdx] = DateTime.Parse(pathParts[pathPartIdx], CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
-                                } else if(parameter.ParameterType == typeof(DateTimeOffset)) {
-                                    result[parameterIdx]=  DateTimeOffset.Parse(pathParts[pathPartIdx], CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
-                                } else {
-                                    result[parameterIdx] = Convert.ChangeType(pathParts[pathPartIdx], parameter.ParameterType, CultureInfo.InvariantCulture);
-                                }
-                            } catch(FormatException) {
+                            result[parameterIdx] =
+                                Parser.ParseType(
+                                    parameter.ParameterType,
+                                    pathParts[pathPartIdx],
+                                    ExpectFormatConverter.ToParserOptions(routePathPart.Expect?.ExpectFormat)
+                                )
+                                ??
                                 throw new HttpResponseException(
                                     HttpStatusCode.BadRequest,
                                     $"Cannot convert from \"{pathParts[pathPartIdx]}\" to {parameter.ParameterType}"
-                                );
-                            }
+                                )
+                            ;
                         }
                     }
                 }

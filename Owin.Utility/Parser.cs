@@ -10,13 +10,18 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace AWhewell.Owin.Utility
 {
     /// <summary>
-    /// A group of handy parser methods.
+    /// A string parser.
     /// </summary>
+    /// <remarks>
+    /// This only supports invariant culture values. It is intended to be faster than
+    /// TypeDescriptor.GetConverter().ConvertFrom() for common types.
+    /// </remarks>
     public static class Parser
     {
         /// <summary>
@@ -29,7 +34,97 @@ namespace AWhewell.Owin.Utility
             switch((text ?? "").ToLower().Trim()) {
                 case "true":    return true;
                 case "false":   return false;
+                case "on":      return true;
+                case "off":     return false;
+                case "yes":     return true;
+                case "no":      return false;
+                case "1":       return true;
+                case "0":       return false;
                 default:        return null;
+            }
+        }
+
+        /// <summary>
+        /// Extracts an unsigned byte from the text or null if no byte could be extracted.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static byte? ParseByte(string text)
+        {
+            if(byte.TryParse(text, out var result)) {
+                return result;
+            } else {
+                return (byte?)null;
+            }
+        }
+
+        /// <summary>
+        /// Extracts a single character from the text or null if no char could be extracted.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static char? ParseChar(string text)
+        {
+            if(char.TryParse(text, out var result)) {
+                return result;
+            } else {
+                return (char?)null;
+            }
+        }
+
+        /// <summary>
+        /// Extracts a 16-bit integer from the text or null of no short could be extracted.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static Int16? ParseInt16(string text)
+        {
+            if(Int16.TryParse(text, out var result)) {
+                return result;
+            } else {
+                return (Int16?)null;
+            }
+        }
+
+        /// <summary>
+        /// Extracts an unsigned 16-bit integer from the text or null of no unsigned short could be extracted.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static UInt16? ParseUInt16(string text)
+        {
+            if(UInt16.TryParse(text, out var result)) {
+                return result;
+            } else {
+                return (UInt16?)null;
+            }
+        }
+
+        /// <summary>
+        /// Extracts an integer from the text or null if no int could be extracted.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static Int32? ParseInt32(string text)
+        {
+            if(Int32.TryParse(text, out var result)) {
+                return result;
+            } else {
+                return (Int32?)null;
+            }
+        }
+
+        /// <summary>
+        /// Extracts an unsigned integer from the text or null if no unsigned int could be extracted.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static UInt32? ParseUInt32(string text)
+        {
+            if(UInt32.TryParse(text, out var result)) {
+                return result;
+            } else {
+                return (UInt32?)null;
             }
         }
 
@@ -38,27 +133,217 @@ namespace AWhewell.Owin.Utility
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static long? ParseInt64(string text)
+        public static Int64? ParseInt64(string text)
         {
-            if(long.TryParse(text, out var result)) {
+            if(Int64.TryParse(text, out var result)) {
                 return result;
             } else {
-                return (long?)null;
+                return (Int64?)null;
             }
         }
 
         /// <summary>
-        /// Extracts an integer from the text or null if no long could be extracted.
+        /// Extracts an unsigned long from the text or null if no ulong could be extracted.
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static int? ParseInt32(string text)
+        public static UInt64? ParseUInt64(string text)
         {
-            if(int.TryParse(text, out var result)) {
+            if(UInt64.TryParse(text, out var result)) {
                 return result;
             } else {
-                return (int?)null;
+                return (UInt64?)null;
             }
+        }
+
+        /// <summary>
+        /// Extracts a floating point number from the text or null if no float could be extracted.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static float? ParseFloat(string text)
+        {
+            if(float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var result)) {
+                return result;
+            } else {
+                return (float?)null;
+            }
+        }
+
+        /// <summary>
+        /// Extracts a double-precision floating point number from the text or null if no double could be extracted.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static double? ParseDouble(string text)
+        {
+            if(double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var result)) {
+                return result;
+            } else {
+                return (double?)null;
+            }
+        }
+
+        /// <summary>
+        /// Extracts a decimal floating point number from the text or null if no decimal could be extracted.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static decimal? ParseDecimal(string text)
+        {
+            if(decimal.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var result)) {
+                return result;
+            } else {
+                return (decimal?)null;
+            }
+        }
+
+        /// <summary>
+        /// Extracts a date time from the text or null if no date time could be extracted.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static DateTime? ParseDateTime(string text)
+        {
+            if(DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.None, out var result)) {
+                return result;
+            } else {
+                return (DateTime?)null;
+            }
+        }
+
+        /// <summary>
+        /// Extracts a date time offset from the text or null if no date time offset could be extracted.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static DateTimeOffset? ParseDateTimeOffset(string text)
+        {
+            if(DateTimeOffset.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.None, out var result)) {
+                return result;
+            } else {
+                return (DateTimeOffset?)null;
+            }
+        }
+
+        /// <summary>
+        /// Extracts a GUID from the text or null if no GUID could be extracted.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static Guid? ParseGuid(string text)
+        {
+            if(Guid.TryParse(text, out var result)) {
+                return result;
+            } else {
+                return (Guid?)null;
+            }
+        }
+
+        /// <summary>
+        /// Extracts a byte array from the text or null if no byte array could be extracted.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static byte[] ParseHexBytes(string text)
+        {
+            byte[] result = null;
+
+            if(text != null && text.Length % 2 == 0) {
+                var textStart = text.StartsWith("0x") ? 2 : 0;
+                var textLength = text.Length - textStart;
+
+                result = new byte[textLength / 2];
+                try {
+                    for(int arrayIdx = 0, textIdx = textStart;arrayIdx < result.Length;++arrayIdx, textIdx += 2) {
+                        result[arrayIdx] = Convert.ToByte(text.Substring(textIdx, 2), 16);
+                    }
+                } catch(FormatException) {
+                    result = null;
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Extracts a byte array from the MIME64 encoded string passed across or null if no byte array could be extracted.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static byte[] ParseMime64Bytes(string text)
+        {
+            byte[] result = null;
+
+            if(text != null) {
+                try {
+                    result = Convert.FromBase64String(text);
+                } catch(FormatException) {
+                    result = null;
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Parses the <paramref name="text"/> into an object of type <paramref name="type"/>. If the
+        /// text cannot be parsed then null is returned.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="text"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// This should be faster than TypeDescriptor.GetConverter().ConvertFrom() for the stock types.
+        /// </remarks>
+        public static object ParseType(Type type, string text, ParserOptions options = null)
+        {
+            object result = null;
+
+            if(type == typeof(string)) {
+                result = text;
+            } else if(!String.IsNullOrWhiteSpace(text)) {
+                if(type == typeof(bool)) {
+                    result = ParseBool(text);
+                } else if(type == typeof(byte) || type == typeof(byte?)) {
+                    result = ParseByte(text);
+                } else if(type == typeof(char) || type == typeof(char?)) {
+                    result = ParseChar(text);
+                } else if(type == typeof(Int16) || type == typeof(Int16?)) {
+                    result = ParseInt16(text);
+                } else if(type == typeof(UInt16) || type == typeof(UInt16?)) {
+                    result = ParseUInt16(text);
+                } else if(type == typeof(Int32) || type == typeof(Int32?)) {
+                    result = ParseInt32(text);
+                } else if(type == typeof(UInt32) || type == typeof(UInt32?)) {
+                    result = ParseUInt32(text);
+                } else if(type == typeof(Int64) || type == typeof(Int64?)) {
+                    result = ParseInt64(text);
+                } else if(type == typeof(UInt64) || type == typeof(UInt64?)) {
+                    result = ParseUInt64(text);
+                } else if(type == typeof(float) || type == typeof(float?)) {
+                    result = ParseFloat(text);
+                } else if(type == typeof(double) || type == typeof(double?)) {
+                    result = ParseDouble(text);
+                } else if(type == typeof(decimal) || type == typeof(decimal?)) {
+                    result = ParseDecimal(text);
+                } else if(type == typeof(DateTime) || type == typeof(DateTime?)) {
+                    result = ParseDateTime(text);
+                } else if(type == typeof(DateTimeOffset) || type == typeof(DateTimeOffset?)) {
+                    result = ParseDateTimeOffset(text);
+                } else if(type == typeof(Guid) || type == typeof(Guid?)) {
+                    result = ParseGuid(text);
+                } else if(type == typeof(byte[])) {
+                    if(options?.ByteArray == ParserOptions.ByteArrayFormat.HexString) {
+                        result = ParseHexBytes(text);
+                    } else {
+                        result = ParseMime64Bytes(text);
+                    }
+                }
+            }
+
+            return result;
         }
     }
 }

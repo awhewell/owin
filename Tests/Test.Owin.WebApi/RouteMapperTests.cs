@@ -166,30 +166,35 @@ namespace Test.AWhewell.Owin.WebApi
             Assert.AreEqual(HttpStatusCode.BadRequest, exception.StatusCode);
         }
 
+        // The expectation is that the implementation uses Owin.Utility.Parser to parse the path part string into the
+        // correct type. There are a lot of tests on Parser to make sure it copes with various possible inputs, it would
+        // be a lot of effort to reproduce them all here. These tests just cover the basics re. types and corner cases.
         public class PathPartTypeController : Controller
         {
-            [HttpGet, Route("string/{param}")]          public int StringPP(string param)                 { return 0; }
-            [HttpGet, Route("int/{param}")]             public int IntPP(int param)                       { return 0; }
-            [HttpGet, Route("n-int/{param}")]           public int NIntPP(int? param)                     { return 0; }
-            [HttpGet, Route("double/{param}")]          public int DoublePP(double param)                 { return 0; }
-            [HttpGet, Route("date/{param}")]            public int DatePP(DateTime param)                 { return 0; }
-            [HttpGet, Route("datetime/{param}")]        public int DateTimePP(DateTime param)             { return 0; }
-            [HttpGet, Route("datetimeoffset/{param}")]  public int DateTimeOffsetPP(DateTimeOffset param) { return 0; }
+            [HttpGet, Route("string/{param}")]          public int StringPP(string param)                                           { return 0; }
+            [HttpGet, Route("int/{param}")]             public int IntPP(int param)                                                 { return 0; }
+            [HttpGet, Route("n-int/{param}")]           public int NIntPP(int? param)                                               { return 0; }
+            [HttpGet, Route("double/{param}")]          public int DoublePP(double param)                                           { return 0; }
+            [HttpGet, Route("datetime/{param}")]        public int DateTimePP(DateTime param)                                       { return 0; }
+            [HttpGet, Route("datetimeoffset/{param}")]  public int DateTimeOffsetPP(DateTimeOffset param)                           { return 0; }
+            [HttpGet, Route("default-bytes/{param}")]   public int DefaultByteArrayPP(byte[] param)                                 { return 0; }
+            [HttpGet, Route("hex-bytes/{param}")]       public int HexByteArrayPP([Expect(ExpectFormat.HexString)] byte[] param)    { return 0; }
+            [HttpGet, Route("mime64-bytes/{param}")]    public int Mime64ByteArrayPP([Expect(ExpectFormat.Mime64)] byte[] param)    { return 0; }
+
         }
 
-        [DataRow(nameof(PathPartTypeController.StringPP),         "",                             "en-GB", "")]
-        [DataRow(nameof(PathPartTypeController.IntPP),            "1",                            "en-GB", "1")]
-        [DataRow(nameof(PathPartTypeController.NIntPP),           "1",                            "en-GB", "1")]
-        [DataRow(nameof(PathPartTypeController.DoublePP),         "1.2",                          "en-GB", "1.2")]
-        [DataRow(nameof(PathPartTypeController.DoublePP),         "1.2",                          "de-DE", "1.2")]
-        [DataRow(nameof(PathPartTypeController.DatePP),           "2019-01-30",                   "en-GB", "2019-01-30")]
-        [DataRow(nameof(PathPartTypeController.DatePP),           "2019-01-02",                   "en-US", "2019-01-02")]
-        [DataRow(nameof(PathPartTypeController.DateTimePP),       "2019-07-01T22:53:47+01:00",    "en-GB", "2019-07-01 21:53:47")]
-        [DataRow(nameof(PathPartTypeController.DateTimePP),       "2019-07-01 22:53:47",          "en-GB", "2019-07-01 22:53:47")]
-        [DataRow(nameof(PathPartTypeController.DateTimeOffsetPP), "2019-07-01T22:53:47+01:00",    "en-GB", "2019-07-01 21:53:47")]
-        [DataRow(nameof(PathPartTypeController.DateTimeOffsetPP), "2019-07-01 22:53:47",          "en-GB", "2019-07-01 22:53:47")]
+        [DataRow(nameof(PathPartTypeController.StringPP),           "",                             "en-GB", "")]
+        [DataRow(nameof(PathPartTypeController.IntPP),              "1",                            "en-GB", 1)]
+        [DataRow(nameof(PathPartTypeController.NIntPP),             "1",                            "en-GB", 1)]
+        [DataRow(nameof(PathPartTypeController.DoublePP),           "1.2",                          "en-GB", 1.2)]
+        [DataRow(nameof(PathPartTypeController.DoublePP),           "1.2",                          "de-DE", 1.2)]
+        [DataRow(nameof(PathPartTypeController.DateTimePP),         "2019-07-01T22:53:47+00:00",    "en-GB", "2019-07-01T22:53:47+00:00")]
+        [DataRow(nameof(PathPartTypeController.DateTimeOffsetPP),   "2019-07-01T22:53:47+00:00",    "en-US", "2019-07-01T22:53:47+00:00")]
+        [DataRow(nameof(PathPartTypeController.DefaultByteArrayPP), "0x01",                         "en-GB", new byte[] { 211, 29, 53 })]
+        [DataRow(nameof(PathPartTypeController.HexByteArrayPP),     "0x01",                         "en-GB", new byte[] { 1 })]
+        [DataRow(nameof(PathPartTypeController.Mime64ByteArrayPP),  "0x01",                         "en-GB", new byte[] { 211, 29, 53 })]
         [TestMethod]
-        public void BuildRouteParameters_Parses_Different_Types_From_Path_Parts(string methodName, string pathPart, string culture, string expectedText)
+        public void BuildRouteParameters_Parses_Different_Types_From_Path_Parts(string methodName, string pathPart, string culture, object rawExpected)
         {
             using(new CultureSwap(culture)) {
                 var route = RouteTests.CreateRoute(typeof(PathPartTypeController), methodName);
@@ -197,28 +202,24 @@ namespace Test.AWhewell.Owin.WebApi
 
                 var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part, pathPart });
 
-                object expected = expectedText;
+                object expected = rawExpected;
                 switch(methodName) {
-                    case nameof(PathPartTypeController.IntPP):
-                    case nameof(PathPartTypeController.NIntPP):
-                        expected = int.Parse(expectedText, NumberStyles.Integer, CultureInfo.InvariantCulture);
-                        break;
-                    case nameof(PathPartTypeController.DoublePP):
-                        expected = double.Parse(expectedText, NumberStyles.Float, CultureInfo.InvariantCulture);
-                        break;
-                    case nameof(PathPartTypeController.DatePP):
-                        expected = DateTime.Parse(expectedText, CultureInfo.InvariantCulture);
-                        break;
                     case nameof(PathPartTypeController.DateTimePP):
-                        expected = DateTime.Parse(expectedText, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+                        expected = DateTime.Parse((string)rawExpected, CultureInfo.InvariantCulture);
                         break;
                     case nameof(PathPartTypeController.DateTimeOffsetPP):
-                        expected = DateTimeOffset.Parse(expectedText, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+                        expected = DateTimeOffset.Parse((string)rawExpected, CultureInfo.InvariantCulture);
                         break;
                 }
 
                 Assert.AreEqual(1, parameters.Length);
-                Assert.AreEqual(expected, parameters[0]);
+                var actual = parameters[0];
+                if(actual is byte[] byteArray) {
+                    var expectedByteArray = (byte[])expected;
+                    Assert.IsTrue(expectedByteArray.SequenceEqual(byteArray));
+                } else {
+                    Assert.AreEqual(expected, parameters[0]);
+                }
             }
         }
     }

@@ -1,4 +1,4 @@
-// Copyright © 2019 onwards, Andrew Whewell
+﻿// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -15,36 +15,24 @@ using System.Text;
 namespace AWhewell.Owin.Interface.WebApi
 {
     /// <summary>
-    /// Creates a new object.
+    /// Tags parameters where an incoming format needs to be explicitly declared - e.g.
+    /// where the parameter type alone does not imply a single format.
     /// </summary>
-    public class PathPartParameter : PathPart
+    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
+    public class ExpectAttribute : Attribute
     {
         /// <summary>
-        /// Gets the <see cref="ExpectAttribute"/> that the parameter has been tagged with, if any.
+        /// Gets the expected format for the tagged parameter etc.
         /// </summary>
-        public ExpectAttribute Expect { get; }
-
+        public ExpectFormat ExpectFormat { get; }
 
         /// <summary>
         /// Creates a new object.
         /// </summary>
-        /// <param name="part"></param>
-        /// <param name="normalisedPart"></param>
-        /// <param name="isOptional"></param>
-        /// <param name="expect"></param>
-        internal PathPartParameter(string part, string normalisedPart, bool isOptional, ExpectAttribute expect) : base(part, normalisedPart, isOptional)
+        /// <param name="expectFormat"></param>
+        public ExpectAttribute(ExpectFormat expectFormat)
         {
-            Expect = expect;
-        }
-
-        /// <summary>
-        /// See base docs.
-        /// </summary>
-        /// <param name="pathPart"></param>
-        /// <returns></returns>
-        public override bool MatchesRequestPathPart(string pathPart)
-        {
-            return pathPart != null;
+            ExpectFormat = expectFormat;
         }
     }
 }

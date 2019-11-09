@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Owin.Interface.WebApi\Owin.Interface.WebApi.csproj" />
+    <ProjectReference Include="..\Owin.Utility\Owin.Utility.csproj" />
   </ItemGroup>
 
 </Project>
