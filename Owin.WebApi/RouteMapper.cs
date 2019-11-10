@@ -178,7 +178,7 @@ namespace AWhewell.Owin.WebApi
                             Parser.ParseType(
                                 methodParameter.ParameterType,
                                 pathParts[routePathPartIdx],
-                                ExpectFormatConverter.ToParserOptions(routePathPart.Expect?.ExpectFormat)
+                                ExpectFormatConverter.ToParserOptions(methodParameter.Expect?.ExpectFormat)
                             )
                             ??
                             throw new HttpResponseException(

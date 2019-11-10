@@ -46,6 +46,11 @@ namespace AWhewell.Owin.Interface.WebApi
         public object DefaultValue { get; }
 
         /// <summary>
+        /// Gets the <see cref="ExpectAttribute"/> that the parameter has been tagged with, if any.
+        /// </summary>
+        public ExpectAttribute Expect { get; }
+
+        /// <summary>
         /// Creates a new object.
         /// </summary>
         /// <param name="parameterInfo"></param>
@@ -56,6 +61,7 @@ namespace AWhewell.Owin.Interface.WebApi
             ParameterType =     parameterInfo.ParameterType;
             IsOptional =        parameterInfo.IsOptional;
             DefaultValue =      parameterInfo.DefaultValue;
+            Expect =            (ExpectAttribute)parameterInfo.GetCustomAttribute(typeof(ExpectAttribute));
         }
 
         /// <summary>

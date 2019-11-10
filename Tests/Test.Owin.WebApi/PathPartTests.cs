@@ -121,20 +121,5 @@ namespace Test.AWhewell.Owin.WebApi
         public void ParameterIsOptionalExampleParameters(string not_optional, string optional = null)
         {
         }
-
-        [TestMethod]
-        [DataRow("{no_expect_parameter}",   null)]
-        [DataRow("{expect_hex_string}",     ExpectFormat.HexString)]
-        public void Parameter_Expect_Correctly_Set(string ctorPathPart, ExpectFormat? expectFormat)
-        {
-            var methodInfo = GetType().GetMethod(nameof(ParameterExpectExampleParameters));
-            var pathPart = (PathPartParameter)PathPart.Create(ctorPathPart, methodInfo);
-
-            Assert.AreEqual(expectFormat, pathPart.Expect?.ExpectFormat);
-        }
-
-        public void ParameterExpectExampleParameters(byte[] no_expect_parameter, [Expect(ExpectFormat.HexString)] byte[] expect_hex_string)
-        {
-        }
     }
 }

@@ -21,17 +21,19 @@ namespace Test.AWhewell.Owin.WebApi
     [TestClass]
     public class MethodParameterTests
     {
-        private void ExampleMethod(string stringParameter, int optionalInt = 123) { ; }
+        private void ExampleMethod(string stringParameter, [Expect(ExpectFormat.HexString)] byte[] byteArrayWithExpect, int optionalInt = 123) { ; }
 
         private ParameterInfo _ExampleMethod_stringParameter;
         private ParameterInfo _ExampleMethod_optionalInt;
+        private ParameterInfo _ExampleMethod_byteArrayWithExpect;
 
         [TestInitialize]
         public void TestInitialise()
         {
             var example1Method = GetType().GetMethod(nameof(ExampleMethod), BindingFlags.NonPublic | BindingFlags.Instance);
-            _ExampleMethod_stringParameter = example1Method.GetParameters().Single(r => r.Name == "stringParameter");
-            _ExampleMethod_optionalInt =     example1Method.GetParameters().Single(r => r.Name == "optionalInt");
+            _ExampleMethod_stringParameter =     example1Method.GetParameters().Single(r => r.Name == "stringParameter");
+            _ExampleMethod_optionalInt =         example1Method.GetParameters().Single(r => r.Name == "optionalInt");
+            _ExampleMethod_byteArrayWithExpect = example1Method.GetParameters().Single(r => r.Name == "byteArrayWithExpect");
         }
 
         [TestMethod]
@@ -43,6 +45,7 @@ namespace Test.AWhewell.Owin.WebApi
             Assert.AreEqual(typeof(string), param.ParameterType);
             Assert.AreEqual(false, param.IsOptional);
             Assert.AreEqual(System.DBNull.Value, param.DefaultValue);
+            Assert.IsNull(param.Expect);
         }
 
         [TestMethod]
@@ -54,6 +57,19 @@ namespace Test.AWhewell.Owin.WebApi
             Assert.AreEqual(typeof(int), param.ParameterType);
             Assert.AreEqual(true, param.IsOptional);
             Assert.AreEqual(123, param.DefaultValue);
+            Assert.IsNull(param.Expect);
+        }
+
+        [TestMethod]
+        public void MethodParameter_Ctor_Fills_Expect_Property_Correctly()
+        {
+            var param = new MethodParameter(_ExampleMethod_byteArrayWithExpect);
+            Assert.AreEqual("byteArrayWithExpect", param.Name);
+            Assert.AreEqual(PathPart.Normalise(param.Name), param.NormalisedName);
+            Assert.AreEqual(typeof(byte[]), param.ParameterType);
+            Assert.AreEqual(false, param.IsOptional);
+            Assert.AreEqual(System.DBNull.Value, param.DefaultValue);
+            Assert.AreEqual(ExpectFormat.HexString, param.Expect.ExpectFormat);
         }
     }
 }

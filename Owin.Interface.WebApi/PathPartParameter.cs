@@ -20,21 +20,14 @@ namespace AWhewell.Owin.Interface.WebApi
     public class PathPartParameter : PathPart
     {
         /// <summary>
-        /// Gets the <see cref="ExpectAttribute"/> that the parameter has been tagged with, if any.
-        /// </summary>
-        public ExpectAttribute Expect { get; }
-
-
-        /// <summary>
         /// Creates a new object.
         /// </summary>
         /// <param name="part"></param>
         /// <param name="normalisedPart"></param>
         /// <param name="isOptional"></param>
-        /// <param name="expect"></param>
-        internal PathPartParameter(string part, string normalisedPart, bool isOptional, ExpectAttribute expect) : base(part, normalisedPart, isOptional)
+        internal PathPartParameter(string part, string normalisedPart, bool isOptional) : base(part, normalisedPart, isOptional)
         {
-            Expect = expect;
+            ;
         }
 
         /// <summary>

@@ -71,7 +71,6 @@ namespace AWhewell.Owin.Interface.WebApi
 
             var parameterName = match.Success ? Normalise(match.Groups["name"].Value) : null;
             var methodParameter = parameterName == null ? null : methodInfo.GetParameters().FirstOrDefault(r => Normalise(r.Name) == parameterName);
-            var expectAttribute = methodParameter == null ? null : (ExpectAttribute)methodParameter.GetCustomAttribute(typeof(ExpectAttribute));
 
             if(parameterName == null || methodParameter == null) {
                 return new PathPartText(part, Normalise(part));
@@ -79,8 +78,7 @@ namespace AWhewell.Owin.Interface.WebApi
                 return new PathPartParameter(
                     part,
                     Normalise(match.Groups["name"].Value),
-                    methodParameter.IsOptional,
-                    expectAttribute
+                    methodParameter.IsOptional
                 );
             }
         }
