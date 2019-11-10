@@ -11,6 +11,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 
 namespace AWhewell.Owin.Interface.WebApi
 {
@@ -20,6 +21,16 @@ namespace AWhewell.Owin.Interface.WebApi
     public class Route
     {
         /// <summary>
+        /// The next value to assign to <see cref="ID"/>.
+        /// </summary>
+        private static long _NextID;
+
+        /// <summary>
+        /// Gets an internal identifier for the route. These stay constant over the lifetime of the route object.
+        /// </summary>
+        public long ID { get; }
+
+        /// <summary>
         /// Gets the controller that exposes the route.
         /// </summary>
         public Type Controller { get; }
@@ -28,6 +39,11 @@ namespace AWhewell.Owin.Interface.WebApi
         /// Gets the method that handles the route.
         /// </summary>
         public MethodInfo Method { get; }
+
+        /// <summary>
+        /// Gets all of the parameters to the method in the order that they are passed.
+        /// </summary>
+        public MethodParameter[] MethodParameters { get; }
 
         /// <summary>
         /// Gets the attribute that denotes the controller and method as an API endpoint.
@@ -59,15 +75,20 @@ namespace AWhewell.Owin.Interface.WebApi
             Method = method;
             RouteAttribute = routeAttribute;
 
+            MethodParameters = ExtractMethodParameters(method);
             HttpMethod = ExtractHttpMethod(method);
             PathParts = ExtractPathParts(method, routeAttribute);
+
+            ID = Interlocked.Increment(ref _NextID);
         }
 
-        /// <summary>
-        /// See <see cref="HttpMethod"/>.
-        /// </summary>
-        /// <param name="method"></param>
-        /// <returns></returns>
+        private MethodParameter[] ExtractMethodParameters(MethodInfo method)
+        {
+            return method.GetParameters()
+                .Select(r => new MethodParameter(r))
+                .ToArray();
+        }
+
         private string ExtractHttpMethod(MethodInfo method)
         {
             string result = null;
@@ -94,12 +115,6 @@ namespace AWhewell.Owin.Interface.WebApi
             return result ?? "POST";
         }
 
-        /// <summary>
-        /// See <see cref="PathParts"/>.
-        /// </summary>
-        /// <param name="method"></param>
-        /// <param name="routeAttribute"></param>
-        /// <returns></returns>
         private PathPart[] ExtractPathParts(MethodInfo method, RouteAttribute routeAttribute)
         {
             PathPart[] result = null;

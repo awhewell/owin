@@ -142,5 +142,51 @@ namespace Test.AWhewell.Owin.WebApi
                 }
             }
         }
+
+        [TestMethod]
+        public void Route_Ctor_Assigns_A_New_ID_For_Each_New_Object()
+        {
+            var route1 = CreateRoute(typeof(NullRoute), nameof(NullRoute.Method));
+            var route2 = CreateRoute(typeof(EmptyRoute), nameof(EmptyRoute.Method));
+
+            Assert.AreNotEqual(0, route1.ID);
+            Assert.AreNotEqual(0, route2.ID);
+            Assert.AreNotEqual(route1.ID, route2.ID);
+        }
+
+        [TestMethod]
+        public void Route_Ctor_Assigns_Different_ID_Even_If_Routes_Are_For_Same_Method()
+        {
+            var route1 = CreateRoute(typeof(NullRoute), nameof(NullRoute.Method));
+            var route2 = CreateRoute(typeof(NullRoute), nameof(NullRoute.Method));
+
+            Assert.AreNotEqual(route1.ID, route2.ID);
+        }
+
+        public class MethodParametersController : Controller
+        {
+            [HttpGet, Route("no-params")] public int NoParams() { return 1; }
+
+            [HttpGet, Route("three-params")] public int ThreeParams(string p1, int p2, byte p3) { return 1; }
+        }
+
+        [TestMethod]
+        public void Route_Ctor_Fills_MethodParameters_Correctly_For_Routes_With_No_Parameters()
+        {
+            var route = CreateRoute(typeof(MethodParametersController), nameof(MethodParametersController.NoParams));
+
+            Assert.AreEqual(0, route.MethodParameters.Length);
+        }
+
+        [TestMethod]
+        public void Route_Ctor_Fills_MethodParameters_Correctly_For_Routes_With_Parameters()
+        {
+            var route = CreateRoute(typeof(MethodParametersController), nameof(MethodParametersController.ThreeParams));
+
+            Assert.AreEqual(3, route.MethodParameters.Length);
+            Assert.AreEqual("p1", route.MethodParameters[0].Name);
+            Assert.AreEqual("p2", route.MethodParameters[1].Name);
+            Assert.AreEqual("p3", route.MethodParameters[2].Name);
+        }
     }
 }

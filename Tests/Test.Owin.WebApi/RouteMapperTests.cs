@@ -30,10 +30,12 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         private IRouteMapper        _RouteMapper;
+        private MockOwinEnvironment _Environment;
 
         [TestInitialize]
         public void TestInitialise()
         {
+            _Environment = new MockOwinEnvironment();
             _RouteMapper = Factory.Resolve<IRouteMapper>();
         }
 
@@ -124,12 +126,54 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void BuildRouteParameters_Throws_If_Route_Is_Null()
+        {
+            var route = RouteTests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
+            _RouteMapper.Initialise(new Route[] { route });
+
+            _RouteMapper.BuildRouteParameters(null, new string[] { "api", "entity", "1" }, _Environment.Environment);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void BuildRouteParameters_Throws_If_PathParts_Is_Null()
+        {
+            var route = RouteTests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
+            _RouteMapper.Initialise(new Route[] { route });
+
+            _RouteMapper.BuildRouteParameters(route, null, _Environment.Environment);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void BuildRouteParameters_Throws_If_Environment_Is_Null()
+        {
+            var route = RouteTests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
+            _RouteMapper.Initialise(new Route[] { route });
+
+            _RouteMapper.BuildRouteParameters(route, new string[] { "api", "entity", "1" }, null);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(HttpResponseException))]
+        public void BuildRouteParameters_Throws_If_Route_Was_Not_Initialised()
+        {
+            var initialisedRoute = RouteTests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
+            var uninitialisedRoute = RouteTests.CreateRoute(typeof(ApiEntityWithOptionalIDController), nameof(ApiEntityWithOptionalIDController.Method));
+
+            _RouteMapper.Initialise(new Route[] { initialisedRoute });
+
+            _RouteMapper.BuildRouteParameters(uninitialisedRoute, new string[] { "api", "entity", "1" }, _Environment.Environment);
+        }
+
+        [TestMethod]
         public void BuildRouteParameters_Extracts_Values_From_Path_Parts()
         {
             var route = RouteTests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
             _RouteMapper.Initialise(new Route[] { route });
 
-            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { "api", "entity", "12" });
+            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { "api", "entity", "12" }, _Environment.Environment);
 
             Assert.AreEqual(1, parameters.Length);
             Assert.IsInstanceOfType(parameters[0], typeof(int));
@@ -142,7 +186,7 @@ namespace Test.AWhewell.Owin.WebApi
             var route = RouteTests.CreateRoute(typeof(ApiEntityWithOptionalIDController), nameof(ApiEntityWithOptionalIDController.Method));
             _RouteMapper.Initialise(new Route[] { route });
 
-            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { "api", "entity" });
+            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { "api", "entity" }, _Environment.Environment);
 
             Assert.AreEqual(1, parameters.Length);
             Assert.IsInstanceOfType(parameters[0], typeof(int));
@@ -157,7 +201,7 @@ namespace Test.AWhewell.Owin.WebApi
 
             HttpResponseException exception = null;
             try {
-                _RouteMapper.BuildRouteParameters(route, new string[] { "api", "entity", "not-an-int" });
+                _RouteMapper.BuildRouteParameters(route, new string[] { "api", "entity", "not-an-int" }, _Environment.Environment);
             } catch(HttpResponseException ex) {
                 exception = ex;
             }
@@ -200,7 +244,7 @@ namespace Test.AWhewell.Owin.WebApi
                 var route = RouteTests.CreateRoute(typeof(PathPartTypeController), methodName);
                 _RouteMapper.Initialise(new Route[] { route });
 
-                var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part, pathPart });
+                var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part, pathPart }, _Environment.Environment);
 
                 object expected = rawExpected;
                 switch(methodName) {
@@ -221,6 +265,61 @@ namespace Test.AWhewell.Owin.WebApi
                     Assert.AreEqual(expected, parameters[0]);
                 }
             }
+        }
+
+        public class MultipleParameterController : Controller
+        {
+            [HttpGet, Route("multiple/{stringValue}/{intValue}")]
+            public int Method(string stringValue, int intValue) { return 0; }
+        }
+
+        [TestMethod]
+        public void BuildRouteParameters_Can_Fill_Multiple_Parameters()
+        {
+            var route = RouteTests.CreateRoute(typeof(MultipleParameterController), nameof(MultipleParameterController.Method));
+            _RouteMapper.Initialise(new Route[] { route });
+
+            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part, "string-value", "55" }, _Environment.Environment);
+
+            Assert.AreEqual(2, parameters.Length);
+            Assert.AreEqual("string-value", parameters[0]);
+            Assert.AreEqual(55, parameters[1]);
+        }
+
+        public class OwinEnvController : Controller
+        {
+            [HttpGet, Route("static-env")]
+            public static int JustEnvironment(IDictionary<string, object> env) { return 0; }
+
+            [HttpGet, Route("not-static-env")]
+            public int NotStatic(IDictionary<string, object> env) { return 0; }
+        }
+
+        [TestMethod]
+        public void BuildRouteParameters_Can_Inject_Owin_Environment_To_Static_Route_Method()
+        {
+            var route = RouteTests.CreateRoute(typeof(OwinEnvController), nameof(OwinEnvController.JustEnvironment));
+            _RouteMapper.Initialise(new Route[] { route });
+
+            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+
+            Assert.AreEqual(1, parameters.Length);
+            Assert.AreSame(_Environment.Environment, parameters[0]);
+        }
+
+        [TestMethod]
+        public void BuildRouteParameters_Does_Not_Inject_Owin_Environment_To_Instance_Route_Method()
+        {
+            // THIS WILL EVENTUALLY CHANGE. When the code is written to throw a bad request response when a parameter
+            // cannot be filled this method should trigger that.
+
+            var route = RouteTests.CreateRoute(typeof(OwinEnvController), nameof(OwinEnvController.NotStatic));
+            _RouteMapper.Initialise(new Route[] { route });
+
+            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+
+            Assert.AreEqual(1, parameters.Length);
+            Assert.AreNotSame(_Environment.Environment, parameters[0]);
         }
     }
 }

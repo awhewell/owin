@@ -10,7 +10,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Net;
 using AWhewell.Owin.Interface.WebApi;
@@ -24,7 +23,7 @@ namespace AWhewell.Owin.WebApi
     class RouteMapper : IRouteMapper
     {
         // The routes that the mapper was initialised with. These do not change over the lifetime of the object.
-        private Route[] _Routes;
+        private Dictionary<long, Route> _Routes;
 
         /// <summary>
         /// See interface docs.
@@ -39,7 +38,12 @@ namespace AWhewell.Owin.WebApi
                 throw new InvalidOperationException($"You cannot call {nameof(Initialise)} twice");
             }
 
-            _Routes = routes.ToArray();
+            _Routes = new Dictionary<long, Route>();
+            foreach(var route in routes) {
+                if(!_Routes.ContainsKey(route.ID)) {
+                    _Routes.Add(route.ID, route);
+                }
+            }
         }
 
         /// <summary>
@@ -64,7 +68,7 @@ namespace AWhewell.Owin.WebApi
             }
 
             Route result = null;
-            foreach(var route in _Routes) {
+            foreach(var route in _Routes.Values) {
                 if(route.HttpMethod == httpMethod && route.PathParts.Length >= requestPathParts.Length) {
                     var failedMatch = false;
 
@@ -96,41 +100,97 @@ namespace AWhewell.Owin.WebApi
         /// </summary>
         /// <param name="route"></param>
         /// <param name="pathParts"></param>
+        /// <param name="owinEnvironment"></param>
         /// <returns></returns>
-        public object[] BuildRouteParameters(Route route, string[] pathParts)
+        public object[] BuildRouteParameters(Route route, string[] pathParts, IDictionary<string, object> owinEnvironment)
         {
-            var parameters = route.Method.GetParameters();
+            if(route == null) {
+                throw new ArgumentNullException(nameof(route));
+            }
+            if(pathParts == null) {
+                throw new ArgumentNullException(nameof(pathParts));
+            }
+            if(owinEnvironment == null) {
+                throw new ArgumentNullException(nameof(owinEnvironment));
+            }
 
-            var result = new object[parameters.Length];
-            for(var parameterIdx = 0;parameterIdx < parameters.Length;++parameterIdx) {
-                var parameter = parameters[parameterIdx];
-                var normalisedName = PathPart.Normalise(parameter.Name);
+            CheckRouteIsValid(route);
 
-                for(var pathPartIdx = 0;pathPartIdx < route.PathParts.Length;++pathPartIdx) {
-                    if(route.PathParts[pathPartIdx] is PathPartParameter routePathPart) {
-                        if(pathParts.Length <= pathPartIdx) {
-                            if(parameter.IsOptional) {
-                                result[parameterIdx] = parameter.DefaultValue;
-                            }
-                        } else {
-                            result[parameterIdx] =
-                                Parser.ParseType(
-                                    parameter.ParameterType,
-                                    pathParts[pathPartIdx],
-                                    ExpectFormatConverter.ToParserOptions(routePathPart.Expect?.ExpectFormat)
-                                )
-                                ??
-                                throw new HttpResponseException(
-                                    HttpStatusCode.BadRequest,
-                                    $"Cannot convert from \"{pathParts[pathPartIdx]}\" to {parameter.ParameterType}"
-                                )
-                            ;
-                        }
-                    }
+            var methodParameters = route.MethodParameters;;
+
+            var result = new object[methodParameters.Length];
+            object parameterValue;
+            bool filledParameter;
+
+            for(var paramIdx = 0;paramIdx < methodParameters.Length;++paramIdx) {
+                var methodParameter = methodParameters[paramIdx];
+                parameterValue = null;
+
+                filledParameter = UseInjectedValueForParameter(ref parameterValue, methodParameter, route, owinEnvironment);
+                if(!filledParameter) {
+                    filledParameter = ExtractParameterFromRequestPathParts(ref parameterValue, methodParameter, route, pathParts);
+                }
+
+                if(filledParameter) {
+                    result[paramIdx] = parameterValue;
                 }
             }
 
             return result;
+        }
+
+        private void CheckRouteIsValid(Route route)
+        {
+            if(!_Routes.ContainsKey(route.ID)) {
+                throw new HttpResponseException(
+                    HttpStatusCode.BadRequest,
+                    $"The {route.HttpMethod} {String.Join("/", route.PathParts.Select(r => r.Part))} route is no longer being serviced"
+                );
+            }
+        }
+
+        private bool UseInjectedValueForParameter(ref object parameterValue, MethodParameter methodParameter, Route route, IDictionary<string, object> owinEnvironment)
+        {
+            var filled = false;
+
+            if(route.Method.IsStatic && methodParameter.ParameterType == typeof(IDictionary<string, object>)) {
+                filled = true;
+                parameterValue = owinEnvironment;
+            }
+
+            return filled;
+        }
+
+        private bool ExtractParameterFromRequestPathParts(ref object parameterValue, MethodParameter methodParameter, Route route, string[] pathParts)
+        {
+            var filled = false;
+
+            for(var routePathPartIdx = 0;routePathPartIdx < route.PathParts.Length;++routePathPartIdx) {
+                if(route.PathParts[routePathPartIdx] is PathPartParameter routePathPart && routePathPart.NormalisedPart == methodParameter.NormalisedName) {
+                    if(pathParts.Length <= routePathPartIdx) {
+                        if(methodParameter.IsOptional) {
+                            filled = true;
+                            parameterValue = methodParameter.DefaultValue;
+                        }
+                    } else {
+                        filled = true;
+                        parameterValue =
+                            Parser.ParseType(
+                                methodParameter.ParameterType,
+                                pathParts[routePathPartIdx],
+                                ExpectFormatConverter.ToParserOptions(routePathPart.Expect?.ExpectFormat)
+                            )
+                            ??
+                            throw new HttpResponseException(
+                                HttpStatusCode.BadRequest,
+                                $"Cannot convert from \"{pathParts[routePathPartIdx]}\" to {methodParameter.ParameterType}"
+                            )
+                        ;
+                    }
+                }
+            }
+
+            return filled;
         }
     }
 }

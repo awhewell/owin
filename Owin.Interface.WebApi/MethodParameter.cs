@@ -1,4 +1,4 @@
-// Copyright © 2019 onwards, Andrew Whewell
+﻿// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -10,40 +10,58 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 
 namespace AWhewell.Owin.Interface.WebApi
 {
     /// <summary>
-    /// The interface for objects that can map incoming requests to controllers, methods and method parameters.
+    /// A cache of information about a method's parameter.
     /// </summary>
-    public interface IRouteMapper
+    public class MethodParameter
     {
         /// <summary>
-        /// Initialises the mapper. This can only be called once.
+        /// Get the parameters name.
         /// </summary>
-        /// <param name="routes"></param>
-        void Initialise(IEnumerable<Route> routes);
+        public string Name { get; }
 
         /// <summary>
-        /// Returns the single route that matches the method and path parts supplied.
+        /// Gets the parameter's name normalised as per <see cref="PathPart.Normalise(string)"/>.
         /// </summary>
-        /// <param name="httpMethod"></param>
-        /// <param name="pathParts"></param>
-        /// <returns></returns>
-        Route FindRouteForPath(string httpMethod, string[] pathParts);
+        public string NormalisedName { get; }
 
         /// <summary>
-        /// Returns the parameters to pass to a route method.
+        /// Gets the parameter's type.
         /// </summary>
-        /// <param name="route"></param>
-        /// <param name="pathParts"></param>
-        /// <param name="owinEnvironment"></param>
+        public Type ParameterType { get; }
+
+        /// <summary>
+        /// Gets a value indicating that the parameter is optional.
+        /// </summary>
+        public bool IsOptional { get; }
+
+        /// <summary>
+        /// Gets the parameter's default value.
+        /// </summary>
+        public object DefaultValue { get; }
+
+        /// <summary>
+        /// Creates a new object.
+        /// </summary>
+        /// <param name="parameterInfo"></param>
+        public MethodParameter(ParameterInfo parameterInfo)
+        {
+            Name =              parameterInfo.Name;
+            NormalisedName =    PathPart.Normalise(parameterInfo.Name);
+            ParameterType =     parameterInfo.ParameterType;
+            IsOptional =        parameterInfo.IsOptional;
+            DefaultValue =      parameterInfo.DefaultValue;
+        }
+
+        /// <summary>
+        /// See base docs.
+        /// </summary>
         /// <returns></returns>
-        /// <remarks>
-        /// If the request cannot be parsed into the parameters expected by the route then an <see cref="HttpResponseException"/>
-        /// is thrown indicating a bad request, with the message describing which parameters could not be parsed.
-        /// </remarks>
-        object[] BuildRouteParameters(Route route, string[] pathParts, IDictionary<string, object> owinEnvironment);
+        public override string ToString() => !IsOptional ? $"{ParameterType} {Name}" : $"{ParameterType} {Name} = {DefaultValue}";
     }
 }
