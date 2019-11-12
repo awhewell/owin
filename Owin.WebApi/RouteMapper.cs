@@ -74,10 +74,11 @@ namespace AWhewell.Owin.WebApi
 
                     for(var i = 0;i < route.PathParts.Length;++i) {
                         var routePathPart = route.PathParts[i];
+                        var pathPartParameter = routePathPart as PathPartParameter;
                         var requestPathPart = requestPathParts.Length > i ? requestPathParts[i] : null;
 
                         if(requestPathPart == null) {
-                            failedMatch = !routePathPart.IsOptional;
+                            failedMatch = !(pathPartParameter?.MethodParameter.IsOptional ?? false);
                         } else {
                             if(!routePathPart.MatchesRequestPathPart(requestPathPart)) {
                                 failedMatch = true;

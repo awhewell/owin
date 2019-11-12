@@ -77,7 +77,7 @@ namespace AWhewell.Owin.Interface.WebApi
 
             MethodParameters = ExtractMethodParameters(method);
             HttpMethod = ExtractHttpMethod(method);
-            PathParts = ExtractPathParts(method, routeAttribute);
+            PathParts = ExtractPathParts(MethodParameters, routeAttribute);
 
             ID = Interlocked.Increment(ref _NextID);
         }
@@ -115,7 +115,7 @@ namespace AWhewell.Owin.Interface.WebApi
             return result ?? "POST";
         }
 
-        private PathPart[] ExtractPathParts(MethodInfo method, RouteAttribute routeAttribute)
+        private PathPart[] ExtractPathParts(MethodParameter[] methodParameters, RouteAttribute routeAttribute)
         {
             PathPart[] result = null;
 
@@ -123,7 +123,7 @@ namespace AWhewell.Owin.Interface.WebApi
                 var unescaped = Uri.UnescapeDataString(routeAttribute.Route);
                 result = unescaped
                     .Split('/')
-                    .Select(r => PathPart.Create(r, method))
+                    .Select(r => PathPart.Create(r, methodParameters))
                     .ToArray();
             }
 

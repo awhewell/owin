@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AWhewell.Owin.Interface.WebApi;
+using System.Linq;
 
 namespace Test.AWhewell.Owin.WebApi
 {
@@ -21,7 +22,7 @@ namespace Test.AWhewell.Owin.WebApi
     {
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void Create_Throws_If_Method_Is_Null()
+        public void Create_Throws_If_MethodParameters_Is_Null()
         {
             PathPart.Create("whatever", null);
         }
@@ -51,14 +52,19 @@ namespace Test.AWhewell.Owin.WebApi
         public void Create_Fills_Properties(string inputText, Type expectedType, string part, string normalisedPart)
         {
             var methodInfo = GetType().GetMethod(nameof(ValidExampleParameterNames));
-            var actual = PathPart.Create(inputText, methodInfo);
+            var methodParameters = MethodParameterTests.CreateMethodParameters(methodInfo);
+
+            var actual = PathPart.Create(inputText, methodParameters);
 
             Assert.IsInstanceOfType(actual, expectedType);      // they got the parameters the wrong way round... all other calls are expected then actual
             Assert.AreEqual(part, actual.Part);
             Assert.AreEqual(normalisedPart, actual.NormalisedPart);
 
-            // All of the parameter examples are mandatory, none are optional parameters
-            Assert.IsFalse(actual.IsOptional);
+            if(expectedType == typeof(PathPartParameter)) {
+                var expectedMethodParameter = methodParameters.First(r => r.NormalisedName == normalisedPart);
+                var actualPathPartParameter = (PathPartParameter)actual;
+                Assert.AreSame(expectedMethodParameter, actualPathPartParameter.MethodParameter);
+            }
         }
 
         public void ValidExampleParameterNames(string a, string a1, string _, string _abc123, string ABC_123)
@@ -96,7 +102,8 @@ namespace Test.AWhewell.Owin.WebApi
         public void MatchesRequestPathPart_Returns_Correct_Response(string ctorPathPart, string matchPathPart, bool expected)
         {
             var methodInfo = GetType().GetMethod(nameof(MatchesRequestPathPartExampleParameters));
-            var pathPart = PathPart.Create(ctorPathPart, methodInfo);
+            var methodParameters = MethodParameterTests.CreateMethodParameters(methodInfo);
+            var pathPart = PathPart.Create(ctorPathPart, methodParameters);
 
             var actual = pathPart.MatchesRequestPathPart(matchPathPart);
 
@@ -104,21 +111,6 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         public void MatchesRequestPathPartExampleParameters(string api, string id)
-        {
-        }
-
-        [TestMethod]
-        [DataRow("{not_optional}",  false)]
-        [DataRow("{optional}",      true)]
-        public void Parameter_IsOptional_Correctly_Set(string ctorPathPart, bool expected)
-        {
-            var methodInfo = GetType().GetMethod(nameof(ParameterIsOptionalExampleParameters));
-            var pathPart = (PathPartParameter)PathPart.Create(ctorPathPart, methodInfo);
-
-            Assert.AreEqual(expected, pathPart.IsOptional);
-        }
-
-        public void ParameterIsOptionalExampleParameters(string not_optional, string optional = null)
         {
         }
     }

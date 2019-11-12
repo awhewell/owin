@@ -9,6 +9,7 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -36,41 +37,33 @@ namespace AWhewell.Owin.Interface.WebApi
         public string NormalisedPart { get; }
 
         /// <summary>
-        /// True if the path part is optional.
-        /// </summary>
-        public bool IsOptional { get; }
-
-        /// <summary>
         /// Creates a new object.
         /// </summary>
         /// <param name="part"></param>
         /// <param name="normalisedPart"></param>
-        /// <param name="isOptional"></param>
-        /// <param name="expect"></param>
-        protected PathPart(string part, string normalisedPart, bool isOptional = false)
+        protected PathPart(string part, string normalisedPart)
         {
             Part = part;
             NormalisedPart = normalisedPart;
-            IsOptional = isOptional;
         }
 
         /// <summary>
         /// Creates a new path part.
         /// </summary>
         /// <param name="pathPart"></param>
-        /// <param name="methodInfo"></param>
+        /// <param name="methodParameters"></param>
         /// <returns></returns>
-        public static PathPart Create(string pathPart, MethodInfo methodInfo)
+        public static PathPart Create(string pathPart, IEnumerable<MethodParameter> methodParameters)
         {
-            if(methodInfo == null) {
-                throw new ArgumentNullException(nameof(methodInfo));
+            if(methodParameters == null) {
+                throw new ArgumentNullException(nameof(methodParameters));
             }
 
             var part = pathPart ?? "";
             var match = ParameterRegex.Match(part);
 
             var parameterName = match.Success ? Normalise(match.Groups["name"].Value) : null;
-            var methodParameter = parameterName == null ? null : methodInfo.GetParameters().FirstOrDefault(r => Normalise(r.Name) == parameterName);
+            var methodParameter = parameterName == null ? null : methodParameters.FirstOrDefault(r => r.NormalisedName == parameterName);
 
             if(parameterName == null || methodParameter == null) {
                 return new PathPartText(part, Normalise(part));
@@ -78,7 +71,7 @@ namespace AWhewell.Owin.Interface.WebApi
                 return new PathPartParameter(
                     part,
                     Normalise(match.Groups["name"].Value),
-                    methodParameter.IsOptional
+                    methodParameter
                 );
             }
         }

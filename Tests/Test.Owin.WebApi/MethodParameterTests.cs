@@ -27,6 +27,13 @@ namespace Test.AWhewell.Owin.WebApi
         private ParameterInfo _ExampleMethod_optionalInt;
         private ParameterInfo _ExampleMethod_byteArrayWithExpect;
 
+        /// <summary>
+        /// A utility function that returns method parameters for a method.
+        /// </summary>
+        /// <param name="methodInfo"></param>
+        /// <returns></returns>
+        public static MethodParameter[] CreateMethodParameters(MethodInfo methodInfo) => methodInfo.GetParameters().Select(r => new MethodParameter(r)).ToArray();
+
         [TestInitialize]
         public void TestInitialise()
         {

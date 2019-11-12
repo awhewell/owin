@@ -168,6 +168,8 @@ namespace Test.AWhewell.Owin.WebApi
             [HttpGet, Route("no-params")] public int NoParams() { return 1; }
 
             [HttpGet, Route("three-params")] public int ThreeParams(string p1, int p2, byte p3) { return 1; }
+
+            [HttpGet, Route("abc/{p1}")] public int OnePathPart(string p1) { return 1; }
         }
 
         [TestMethod]
@@ -187,6 +189,18 @@ namespace Test.AWhewell.Owin.WebApi
             Assert.AreEqual("p1", route.MethodParameters[0].Name);
             Assert.AreEqual("p2", route.MethodParameters[1].Name);
             Assert.AreEqual("p3", route.MethodParameters[2].Name);
+        }
+
+        [TestMethod]
+        public void Route_Ctor_Uses_Same_MethodParameters_For_MethodParameters_Property_And_PathPartParameter_Objects()
+        {
+            var route = CreateRoute(typeof(MethodParametersController), nameof(MethodParametersController.OnePathPart));
+
+            Assert.AreEqual(1, route.MethodParameters.Length);
+            Assert.AreEqual(2, route.PathParts.Length);
+
+            var pathPartParameter = (PathPartParameter)route.PathParts[1];
+            Assert.AreSame(route.MethodParameters[0], pathPartParameter.MethodParameter);
         }
     }
 }

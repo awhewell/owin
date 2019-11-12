@@ -20,14 +20,18 @@ namespace AWhewell.Owin.Interface.WebApi
     public class PathPartParameter : PathPart
     {
         /// <summary>
+        /// Gets the method parameter that this path part parameter supplies values for at run-time.
+        /// </summary>
+        public MethodParameter MethodParameter { get; }
+
+        /// <summary>
         /// Creates a new object.
         /// </summary>
         /// <param name="part"></param>
         /// <param name="normalisedPart"></param>
-        /// <param name="isOptional"></param>
-        internal PathPartParameter(string part, string normalisedPart, bool isOptional) : base(part, normalisedPart, isOptional)
+        internal PathPartParameter(string part, string normalisedPart, MethodParameter methodParameter) : base(part, normalisedPart)
         {
-            ;
+            MethodParameter = methodParameter;
         }
 
         /// <summary>
