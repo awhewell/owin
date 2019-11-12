@@ -166,28 +166,38 @@ namespace AWhewell.Owin.WebApi
         {
             var filled = false;
 
-            for(var routePathPartIdx = 0;routePathPartIdx < route.PathParts.Length;++routePathPartIdx) {
-                if(route.PathParts[routePathPartIdx] is PathPartParameter routePathPart && routePathPart.NormalisedPart == methodParameter.NormalisedName) {
-                    if(pathParts.Length <= routePathPartIdx) {
-                        if(methodParameter.IsOptional) {
-                            filled = true;
-                            parameterValue = methodParameter.DefaultValue;
-                        }
-                    } else {
-                        filled = true;
-                        parameterValue =
-                            Parser.ParseType(
-                                methodParameter.ParameterType,
-                                pathParts[routePathPartIdx],
-                                ExpectFormatConverter.ToParserOptions(methodParameter.Expect?.ExpectFormat)
-                            )
-                            ??
-                            throw new HttpResponseException(
-                                HttpStatusCode.BadRequest,
-                                $"Cannot convert from \"{pathParts[routePathPartIdx]}\" to {methodParameter.ParameterType}"
-                            )
-                        ;
+            var pathPartIdx = 0;
+            PathPartParameter pathPartParameter = null;
+            for(;pathPartIdx < route.PathParts.Length;++pathPartIdx) {
+                if(route.PathParts[pathPartIdx] is PathPartParameter candidate) {
+                    if(Object.ReferenceEquals(candidate.MethodParameter, methodParameter)) {
+                        pathPartParameter = candidate;
+                        break;
                     }
+                }
+            }
+
+            if(pathPartParameter != null) {
+                if(pathParts.Length <= pathPartIdx) {
+                    if(methodParameter.IsOptional) {
+                        filled = true;
+                        parameterValue = methodParameter.DefaultValue;
+                    }
+                } else {
+                    filled = true;
+                    var pathPart = pathParts[pathPartIdx];
+                    parameterValue =
+                        Parser.ParseType(
+                            methodParameter.ParameterType,
+                            pathPart,
+                            ExpectFormatConverter.ToParserOptions(methodParameter.Expect?.ExpectFormat)
+                        )
+                        ??
+                        throw new HttpResponseException(
+                            HttpStatusCode.BadRequest,
+                            $"Cannot convert from \"{pathPart}\" to {methodParameter.ParameterType}"
+                        )
+                    ;
                 }
             }
 
