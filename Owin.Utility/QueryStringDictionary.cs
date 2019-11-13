@@ -20,9 +20,9 @@ namespace AWhewell.Owin.Utility
     /// <remarks>
     /// Query strings are split on ampersands or semicolons. Keys are case sensitive by default but can
     /// be made case insensitive to comply with Microsoft's query string implementations. If the same
-    /// key is seen more than once then each value is added to the string result. Indexed searches can
+    /// key is seen more than once then each value is added to the array of values. Indexed searches can
     /// use a key that does not exist - in that case they will return null. Keys with no value return
-    /// an empty array. Keys with an equals sign but not value return an array containing a single
+    /// an empty array. Keys with an equals sign but no value return an array containing a single
     /// empty string.
     /// </remarks>
     public class QueryStringDictionary : IReadOnlyDictionary<string, string[]>

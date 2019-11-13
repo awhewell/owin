@@ -251,6 +251,7 @@ namespace Test.AWhewell.Owin.Utility
         [DataRow("a=1",     false, "A",  ",", "1")]
         [DataRow("a=1&a=2", true,  "a",  ",", "1,2")]
         [DataRow("a=1&a=2", true,  "a",  ";", "1;2")]
+        [DataRow("a=1&a=2", true,  "a",  "",  "12")]
         [DataRow("a",       true,  "a",  ",", "")]
         [DataRow("a=",      true,  "a",  ",", "")]
         [DataRow("a=&a=1",  true,  "a",  ",", ",1")]
