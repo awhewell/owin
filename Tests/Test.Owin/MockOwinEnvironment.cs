@@ -43,6 +43,9 @@ namespace Test.AWhewell.Owin
             set => Environment["owin.RequestPath"] = value;
         }
 
+        /// <summary>
+        /// Gets or sets the request's query string.
+        /// </summary>
         public string RequestQueryString
         {
             get => Environment["owin.RequestQueryString"] as string;
