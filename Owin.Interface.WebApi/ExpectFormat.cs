@@ -21,7 +21,7 @@ namespace AWhewell.Owin.Interface.WebApi
     public enum ExpectFormat
     {
         /// <summary>
-        /// Use the default format for the associated property (or whatever) type.
+        /// Use the default format for the tagged parameter's type.
         /// </summary>
         Default,
 
@@ -36,5 +36,12 @@ namespace AWhewell.Owin.Interface.WebApi
         /// digit hex string with no intervening white space and an optional case-sensitive 0x prefix).
         /// </summary>
         HexString,
+
+        /// <summary>
+        /// Tells the parser that the tagged byte array will be sent as multiple name=value pairs in a query
+        /// string or multiple name=value pairs in a form body. This cannot be applied to path part byte array
+        /// parameters.
+        /// </summary>
+        Array,
     }
 }

@@ -29,6 +29,7 @@ namespace AWhewell.Owin.WebApi
             switch(expectFormat) {
                 case ExpectFormat.HexString:    return _HexString;
                 case ExpectFormat.Mime64:       return _Mime64;
+                case ExpectFormat.Array:
                 case ExpectFormat.Default:
                 case null:                      return null;
                 default:                        throw new NotImplementedException();

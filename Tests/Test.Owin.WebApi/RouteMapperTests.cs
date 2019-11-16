@@ -18,6 +18,7 @@ using System.Threading;
 using InterfaceFactory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AWhewell.Owin.Interface.WebApi;
+using System.Collections;
 
 namespace Test.AWhewell.Owin.WebApi
 {
@@ -181,7 +182,7 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        public void BuildRouteParameters_Uses_Default_If_Optional_Parameter_Missing()
+        public void BuildRouteParameters_Uses_Default_If_Optional_Path_Part_Is_Missing()
         {
             var route = RouteTests.CreateRoute(typeof(ApiEntityWithOptionalIDController), nameof(ApiEntityWithOptionalIDController.Method));
             _RouteMapper.Initialise(new Route[] { route });
@@ -234,8 +235,9 @@ namespace Test.AWhewell.Owin.WebApi
         [DataRow(nameof(PathPartTypeController.DoublePP),           "1.2",                          "de-DE", 1.2)]
         [DataRow(nameof(PathPartTypeController.DateTimePP),         "2019-07-01T22:53:47+00:00",    "en-GB", "2019-07-01T22:53:47+00:00")]
         [DataRow(nameof(PathPartTypeController.DateTimeOffsetPP),   "2019-07-01T22:53:47+00:00",    "en-US", "2019-07-01T22:53:47+00:00")]
-        [DataRow(nameof(PathPartTypeController.DefaultByteArrayPP), "0x01",                         "en-GB", new byte[] { 211, 29, 53 })]
+        [DataRow(nameof(PathPartTypeController.DefaultByteArrayPP), "0x01",  /* mime encoded */     "en-GB", new byte[] { 211, 29, 53 })]
         [DataRow(nameof(PathPartTypeController.HexByteArrayPP),     "0x01",                         "en-GB", new byte[] { 1 })]
+        [DataRow(nameof(PathPartTypeController.HexByteArrayPP),     "01",                           "en-GB", new byte[] { 1 })]
         [DataRow(nameof(PathPartTypeController.Mime64ByteArrayPP),  "0x01",                         "en-GB", new byte[] { 211, 29, 53 })]
         [TestMethod]
         public void BuildRouteParameters_Parses_Different_Types_From_Path_Parts(string methodName, string pathPart, string culture, object rawExpected)
@@ -246,7 +248,7 @@ namespace Test.AWhewell.Owin.WebApi
 
                 var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part, pathPart }, _Environment.Environment);
 
-                object expected = rawExpected;
+                var expected = rawExpected;
                 switch(methodName) {
                     case nameof(PathPartTypeController.DateTimePP):
                         expected = DateTime.Parse((string)rawExpected, CultureInfo.InvariantCulture);
@@ -274,7 +276,7 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        public void BuildRouteParameters_Can_Fill_Multiple_Parameters()
+        public void BuildRouteParameters_Can_Fill_Multiple_Path_Part_Parameters()
         {
             var route = RouteTests.CreateRoute(typeof(MultipleParameterController), nameof(MultipleParameterController.Method));
             _RouteMapper.Initialise(new Route[] { route });
@@ -320,6 +322,75 @@ namespace Test.AWhewell.Owin.WebApi
 
             Assert.AreEqual(1, parameters.Length);
             Assert.AreNotSame(_Environment.Environment, parameters[0]);
+        }
+
+        // This is expected to use Parser.ParseType so the test of conversions is not exhaustive, it's just a handful
+        // of basic tests to make sure things appear to be working OK
+        public class QueryStringController : Controller
+        {
+            [HttpGet, Route("string")]      public int StringParam(string param)                                        { return 0; }
+            [HttpGet, Route("int")]         public int IntParam(int param)                                              { return 0; }
+            [HttpGet, Route("nint")]        public int NullableInt(int? param)                                          { return 0; }
+            [HttpGet, Route("double")]      public int DoubleParam(double param)                                        { return 0; }
+            [HttpGet, Route("date")]        public int DateParam(DateTime param)                                        { return 0; }
+            [HttpGet, Route("dateoffset")]  public int DateOffsetParam(DateTimeOffset param)                            { return 0; }
+            [HttpGet, Route("string-arr")]  public int StringArrayParam(string[] param)                                 { return 0; }
+            [HttpGet, Route("int-arr")]     public int IntArrayParam(int[] param)                                       { return 0; }
+            [HttpGet, Route("byte-arr-1")]  public int ByteArray1Param(byte[] param)                                    { return 0; }
+            [HttpGet, Route("byte-arr-2")]  public int ByteArray2Param([Expect(ExpectFormat.HexString)] byte[] param)   { return 0; }
+            [HttpGet, Route("byte-arr-3")]  public int ByteArray3Param([Expect(ExpectFormat.Mime64)] byte[] param)      { return 0; }
+            [HttpGet, Route("byte-arr-4")]  public int ByteArray4Param([Expect(ExpectFormat.Array)] byte[] param)       { return 0; }
+        }
+
+        [TestMethod]
+        [DataRow(nameof(QueryStringController.StringParam),         "param", "param=Andrew",                    "en-GB", "Andrew")]
+        [DataRow(nameof(QueryStringController.StringParam),         "param", "param=1&Param=2",                 "en-GB", "1")]
+        [DataRow(nameof(QueryStringController.StringParam),         "param", "Param=1&param=2",                 "en-GB", "2")]
+        [DataRow(nameof(QueryStringController.IntParam),            "param", "param=123",                       "en-GB", 123)]
+        [DataRow(nameof(QueryStringController.NullableInt),         "param", "param=",                          "en-GB", null)]
+        [DataRow(nameof(QueryStringController.DoubleParam),         "param", "param=12.3",                      "en-GB", 12.3)]
+        [DataRow(nameof(QueryStringController.DoubleParam),         "param", "param=12.3",                      "de-DE", 12.3)]
+        [DataRow(nameof(QueryStringController.DateParam),           "param", "param=2019-07-01T22:53:47+00:00", "en-US", "2019-07-01T22:53:47+00:00")]
+        [DataRow(nameof(QueryStringController.DateOffsetParam),     "param", "param=2019-07-01T22:53:47+00:00", "de-DE", "2019-07-01T22:53:47+00:00")]
+        [DataRow(nameof(QueryStringController.StringArrayParam),    "param", "param=1&param=2;param=3",         "en-GB", new string[] { "1", "2", "3" })]
+        [DataRow(nameof(QueryStringController.IntArrayParam),       "param", "param=1&param=2;param=3",         "en-GB", new int[] { 1, 2, 3 })]
+        [DataRow(nameof(QueryStringController.ByteArray1Param),     "param", "param=0x01",  /* mime encoded */  "en-GB", new byte[] { 211, 29, 53 })]
+        [DataRow(nameof(QueryStringController.ByteArray2Param),     "param", "param=0x01",                      "en-GB", new byte[] { 1 })]
+        [DataRow(nameof(QueryStringController.ByteArray2Param),     "param", "param=01",                        "en-GB", new byte[] { 1 })]
+        [DataRow(nameof(QueryStringController.ByteArray3Param),     "param", "param=0x01",  /* mime encoded */  "en-GB", new byte[] { 211, 29, 53 })]
+        [DataRow(nameof(QueryStringController.ByteArray4Param),     "param", "param=1&param=2&param=3",         "en-GB", new byte[] { 1, 2, 3 })]
+        public void BuildRouteParameters_Can_Parse_Parameter_From_Query_String(string methodName, string parameterName, string queryString, string culture, object rawExpected)
+        {
+            using(new CultureSwap(culture)) {
+                var route = RouteTests.CreateRoute(typeof(QueryStringController), methodName);
+                _RouteMapper.Initialise(new Route[] { route });
+                _Environment.RequestQueryString = queryString;
+
+                var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+
+                var expected = rawExpected;
+                switch(methodName) {
+                    case nameof(QueryStringController.DateParam):
+                        expected = DateTime.Parse((string)rawExpected, CultureInfo.InvariantCulture);
+                        break;
+                    case nameof(QueryStringController.DateOffsetParam):
+                        expected = DateTimeOffset.Parse((string)rawExpected, CultureInfo.InvariantCulture);
+                        break;
+                }
+
+                Assert.AreEqual(1, parameters.Length);
+                var param = parameters[0];
+
+                if(expected is IList expectedList) {
+                    var actualList = (IList)param;
+                    Assert.AreEqual(expectedList.Count, actualList.Count);
+                    for(var i = 0;i < expectedList.Count;++i) {
+                        Assert.AreEqual(expectedList[i], actualList[i]);
+                    }
+                } else {
+                    Assert.AreEqual(expected, param);
+                }
+            }
         }
     }
 }

@@ -131,6 +131,9 @@ namespace AWhewell.Owin.WebApi
                 if(!filledParameter) {
                     filledParameter = ExtractParameterFromRequestPathParts(ref parameterValue, methodParameter, route, pathParts);
                 }
+                if(!filledParameter) {
+                    filledParameter = ExtractParameterFromQueryString(ref parameterValue, methodParameter, owinEnvironment);
+                }
 
                 if(filledParameter) {
                     result[paramIdx] = parameterValue;
@@ -200,6 +203,42 @@ namespace AWhewell.Owin.WebApi
                     ;
                 }
             }
+
+            return filled;
+        }
+
+        private bool ExtractParameterFromQueryString(ref object parameterValue, MethodParameter methodParameter, IDictionary<string, object> owinEnvironment)
+        {
+            var filled = false;
+
+            var queryStringDictionary = new QueryStringDictionary(owinEnvironment[EnvironmentKey.RequestQueryString] as string);
+            var parseSingleValue = !methodParameter.IsArray
+                                || (methodParameter.ElementType == typeof(byte) && methodParameter.Expect.ExpectFormat != ExpectFormat.Array);
+
+            if(parseSingleValue) {
+                parameterValue = Parser.ParseType(
+                    methodParameter.ParameterType,
+                    queryStringDictionary.GetValue(methodParameter.Name),
+                    ExpectFormatConverter.ToParserOptions(methodParameter.Expect?.ExpectFormat)
+                );
+                filled = true;
+            } else {
+                var strings = queryStringDictionary[methodParameter.Name];
+                var array = Array.CreateInstance(methodParameter.ElementType, strings.Length);
+                for(var idx = 0;idx < strings.Length;++idx) {
+                    array.SetValue(
+                        Parser.ParseType(
+                            methodParameter.ElementType,
+                            strings[idx],
+                            null
+                        ),
+                        idx
+                    );
+                }
+                parameterValue = array;
+                filled = true;
+            }
+
 
             return filled;
         }

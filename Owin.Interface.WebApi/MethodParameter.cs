@@ -36,6 +36,16 @@ namespace AWhewell.Owin.Interface.WebApi
         public Type ParameterType { get; }
 
         /// <summary>
+        /// Gets the type of element when <see cref="ParameterType"/> is an array.
+        /// </summary>
+        public Type ElementType { get; }
+
+        /// <summary>
+        /// Gets a value indicating that <see cref="ParameterType"/> is an array.
+        /// </summary>
+        public bool IsArray => ElementType != null;
+
+        /// <summary>
         /// Gets a value indicating that the parameter is optional.
         /// </summary>
         public bool IsOptional { get; }
@@ -59,9 +69,11 @@ namespace AWhewell.Owin.Interface.WebApi
             Name =              parameterInfo.Name;
             NormalisedName =    PathPart.Normalise(parameterInfo.Name);
             ParameterType =     parameterInfo.ParameterType;
+            ElementType =       parameterInfo.ParameterType.IsArray ? parameterInfo.ParameterType.GetElementType() : null;
             IsOptional =        parameterInfo.IsOptional;
             DefaultValue =      parameterInfo.DefaultValue;
-            Expect =            (ExpectAttribute)parameterInfo.GetCustomAttribute(typeof(ExpectAttribute));
+            Expect =            (ExpectAttribute)parameterInfo.GetCustomAttribute(typeof(ExpectAttribute))
+                                ?? ExpectAttribute.Default;
         }
 
         /// <summary>

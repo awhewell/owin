@@ -21,7 +21,11 @@ namespace Test.AWhewell.Owin.WebApi
     [TestClass]
     public class MethodParameterTests
     {
-        private void ExampleMethod(string stringParameter, [Expect(ExpectFormat.HexString)] byte[] byteArrayWithExpect, int optionalInt = 123) { ; }
+        private void ExampleMethod(
+            string stringParameter,
+            [Expect(ExpectFormat.HexString)] byte[] byteArrayWithExpect,
+            int optionalInt = 123
+        ) { ; }
 
         private ParameterInfo _ExampleMethod_stringParameter;
         private ParameterInfo _ExampleMethod_optionalInt;
@@ -52,7 +56,9 @@ namespace Test.AWhewell.Owin.WebApi
             Assert.AreEqual(typeof(string), param.ParameterType);
             Assert.AreEqual(false, param.IsOptional);
             Assert.AreEqual(System.DBNull.Value, param.DefaultValue);
-            Assert.IsNull(param.Expect);
+            Assert.AreEqual(ExpectFormat.Default, param.Expect.ExpectFormat);
+            Assert.IsNull(param.ElementType);
+            Assert.IsFalse(param.IsArray);
         }
 
         [TestMethod]
@@ -64,7 +70,9 @@ namespace Test.AWhewell.Owin.WebApi
             Assert.AreEqual(typeof(int), param.ParameterType);
             Assert.AreEqual(true, param.IsOptional);
             Assert.AreEqual(123, param.DefaultValue);
-            Assert.IsNull(param.Expect);
+            Assert.AreEqual(ExpectFormat.Default, param.Expect.ExpectFormat);
+            Assert.IsNull(param.ElementType);
+            Assert.IsFalse(param.IsArray);
         }
 
         [TestMethod]
@@ -77,6 +85,8 @@ namespace Test.AWhewell.Owin.WebApi
             Assert.AreEqual(false, param.IsOptional);
             Assert.AreEqual(System.DBNull.Value, param.DefaultValue);
             Assert.AreEqual(ExpectFormat.HexString, param.Expect.ExpectFormat);
+            Assert.AreEqual(typeof(byte), param.ElementType);
+            Assert.IsTrue(param.IsArray);
         }
     }
 }

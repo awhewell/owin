@@ -22,6 +22,11 @@ namespace AWhewell.Owin.Interface.WebApi
     public class ExpectAttribute : Attribute
     {
         /// <summary>
+        /// An <see cref="ExpectAttribute"/> that expects default formatting.
+        /// </summary>
+        public static readonly ExpectAttribute Default = new ExpectAttribute(ExpectFormat.Default);
+
+        /// <summary>
         /// Gets the expected format for the tagged parameter etc.
         /// </summary>
         public ExpectFormat ExpectFormat { get; }
