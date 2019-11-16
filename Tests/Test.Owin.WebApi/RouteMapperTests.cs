@@ -392,5 +392,45 @@ namespace Test.AWhewell.Owin.WebApi
                 }
             }
         }
+
+        // This is expected to use Parser.ParseType so the test of conversions is not exhaustive
+        public class PostFormController : Controller
+        {
+            [HttpPost, Route("string")]     public int StringParam(string param)                                        { return 0; }
+            [HttpPost, Route("int")]        public int IntParam(int param)                                              { return 0; }
+            [HttpGet, Route("string-arr")]  public int StringArrayParam(string[] param)                                 { return 0; }
+        }
+
+        [TestMethod]
+        [DataRow(nameof(PostFormController.StringParam),            "param", "param=Andrew",            "en-GB", "Andrew")]
+        [DataRow(nameof(PostFormController.StringParam),            "param", "param=1&Param=2",         "en-GB", "1")]
+        [DataRow(nameof(PostFormController.StringParam),            "param", "Param=1&param=2",         "en-GB", "2")]
+        [DataRow(nameof(PostFormController.IntParam),               "param", "param=123",               "en-GB", 123)]
+        [DataRow(nameof(PostFormController.StringArrayParam),       "param", "param=1&param=2;param=3", "en-GB", new string[] { "1", "2", "3" })]
+        public void BuildRouteParameters_Can_Parse_Parameter_From_Form_Body(string methodName, string parameterName, string body, string culture, object rawExpected)
+        {
+            using(new CultureSwap(culture)) {
+                var route = RouteTests.CreateRoute(typeof(PostFormController), methodName);
+                _RouteMapper.Initialise(new Route[] { route });
+                _Environment.AddRequestBody(body, contentType: "application/x-www-form-urlencoded");
+
+                var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+
+                var expected = rawExpected;
+
+                Assert.AreEqual(1, parameters.Length);
+                var param = parameters[0];
+
+                if(expected is IList expectedList) {
+                    var actualList = (IList)param;
+                    Assert.AreEqual(expectedList.Count, actualList.Count);
+                    for(var i = 0;i < expectedList.Count;++i) {
+                        Assert.AreEqual(expectedList[i], actualList[i]);
+                    }
+                } else {
+                    Assert.AreEqual(expected, param);
+                }
+            }
+        }
     }
 }

@@ -10,6 +10,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using AWhewell.Owin.Interface.WebApi;
@@ -134,6 +135,9 @@ namespace AWhewell.Owin.WebApi
                 if(!filledParameter) {
                     filledParameter = ExtractParameterFromQueryString(ref parameterValue, methodParameter, owinEnvironment);
                 }
+                if(!filledParameter) {
+                    filledParameter = ExtractParameterFromRequestBody(ref parameterValue, methodParameter, owinEnvironment);
+                }
 
                 if(filledParameter) {
                     result[paramIdx] = parameterValue;
@@ -209,36 +213,49 @@ namespace AWhewell.Owin.WebApi
 
         private bool ExtractParameterFromQueryString(ref object parameterValue, MethodParameter methodParameter, IDictionary<string, object> owinEnvironment)
         {
+            var queryStringDictionary = new QueryStringDictionary(owinEnvironment[EnvironmentKey.RequestQueryString] as string);
+            return ExtractParameterFromQueryStringDictionary(ref parameterValue, methodParameter, queryStringDictionary);
+        }
+
+        private bool ExtractParameterFromRequestBody(ref object parameterValue, MethodParameter methodParameter, IDictionary<string, object> owinEnvironment)
+        {
+            using(var streamReader = new StreamReader(owinEnvironment[EnvironmentKey.RequestBody] as Stream)) {
+                var queryStringDictionary = new QueryStringDictionary(streamReader.ReadToEnd());
+                return ExtractParameterFromQueryStringDictionary(ref parameterValue, methodParameter, queryStringDictionary);
+            }
+        }
+
+        private bool ExtractParameterFromQueryStringDictionary(ref object parameterValue, MethodParameter methodParameter, QueryStringDictionary queryStringDictionary)
+        {
             var filled = false;
 
-            var queryStringDictionary = new QueryStringDictionary(owinEnvironment[EnvironmentKey.RequestQueryString] as string);
-            var parseSingleValue = !methodParameter.IsArray
-                                || (methodParameter.ElementType == typeof(byte) && methodParameter.Expect.ExpectFormat != ExpectFormat.Array);
+            if(queryStringDictionary.TryGetValue(methodParameter.Name, out var queryStringArray)) {
+                var parseSingleValue = !methodParameter.IsArray
+                                    || (methodParameter.ElementType == typeof(byte) && methodParameter.Expect.ExpectFormat != ExpectFormat.Array);
 
-            if(parseSingleValue) {
-                parameterValue = Parser.ParseType(
-                    methodParameter.ParameterType,
-                    queryStringDictionary.GetValue(methodParameter.Name),
-                    ExpectFormatConverter.ToParserOptions(methodParameter.Expect?.ExpectFormat)
-                );
-                filled = true;
-            } else {
-                var strings = queryStringDictionary[methodParameter.Name];
-                var array = Array.CreateInstance(methodParameter.ElementType, strings.Length);
-                for(var idx = 0;idx < strings.Length;++idx) {
-                    array.SetValue(
-                        Parser.ParseType(
-                            methodParameter.ElementType,
-                            strings[idx],
-                            null
-                        ),
-                        idx
+                if(parseSingleValue) {
+                    parameterValue = Parser.ParseType(
+                        methodParameter.ParameterType,
+                        QueryStringDictionary.JoinValue(queryStringArray),
+                        ExpectFormatConverter.ToParserOptions(methodParameter.Expect?.ExpectFormat)
                     );
+                    filled = true;
+                } else {
+                    var array = Array.CreateInstance(methodParameter.ElementType, queryStringArray.Length);
+                    for(var idx = 0;idx < queryStringArray.Length;++idx) {
+                        array.SetValue(
+                            Parser.ParseType(
+                                methodParameter.ElementType,
+                                queryStringArray[idx],
+                                null
+                            ),
+                            idx
+                        );
+                    }
+                    parameterValue = array;
+                    filled = true;
                 }
-                parameterValue = array;
-                filled = true;
             }
-
 
             return filled;
         }

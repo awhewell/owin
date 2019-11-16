@@ -272,5 +272,34 @@ namespace Test.AWhewell.Owin.Utility
             var dictionary = new QueryStringDictionary("a=1&a=2");
             Assert.AreEqual("1,2", dictionary.GetValue("a"));
         }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void JoinValue_Throws_If_Passed_Null_Join()
+        {
+            QueryStringDictionary.JoinValue(new string[] { "1" }, null);
+        }
+
+        [TestMethod]
+        [DataRow(new string[] { "1" },      ",",    "1")]
+        [DataRow(new string[] { "1", "2" }, ",",    "1,2")]
+        [DataRow(new string[] { "1", "2" }, ", ",   "1, 2")]
+        [DataRow(new string[] { "1", "2" }, "",     "12")]
+        [DataRow(null,                      ",",    null)]
+        [DataRow(new string[0],             ",",    "")]
+        public void JoinValue_Returns_Expected_Value(string[] value, string join, string expected)
+        {
+            var actual = QueryStringDictionary.JoinValue(value, join);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void JoinValue_Defaults_To_Comma()
+        {
+            var actual = QueryStringDictionary.JoinValue(new string[] { "a", "b" });
+
+            Assert.AreEqual("a,b", actual);
+        }
     }
 }

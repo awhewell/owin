@@ -10,6 +10,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -144,6 +145,33 @@ namespace Test.AWhewell.Owin
             Environment["owin.RequestScheme"] =         requestScheme;
             Environment["owin.RequestHeaders"] =        headers ?? new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
             Environment["owin.RequestBody"] =           body ?? Stream.Null;
+        }
+
+        /// <summary>
+        /// Sets the request body stream up.
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="contentType"></param>
+        /// <param name="contentLength"></param>
+        public void AddRequestBody(byte[] bytes, string contentType = null, int? contentLength = null)
+        {
+            Environment["owin.RequestBody"] = new MemoryStream(bytes);
+            if(contentType != null) {
+                RequestHeaders.Set("Content-Type", contentType);
+            }
+            RequestHeaders.Set("Content-Length", (contentLength ?? bytes.Length).ToString(CultureInfo.InvariantCulture));
+        }
+
+        /// <summary>
+        /// Sets the request body stream up.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="encoding"></param>
+        /// <param name="contentType"></param>
+        /// <param name="contentLength"></param>
+        public void AddRequestBody(string text, Encoding encoding = null, string contentType = null, int? contentLength = null)
+        {
+            AddRequestBody((encoding ?? Encoding.UTF8).GetBytes(text ?? ""), contentType, contentLength);
         }
 
         /// <summary>

@@ -160,12 +160,9 @@ namespace AWhewell.Owin.Utility
         /// <returns></returns>
         public string GetValue(string key, string join)
         {
-            if(join == null) {
-                throw new ArgumentNullException(nameof(join));
-            }
-
             _KeyValueMap.TryGetValue(key, out var value);
-            return value == null ? null : String.Join(join, value);
+
+            return JoinValue(value, join);
         }
 
         /// <summary>
@@ -176,5 +173,27 @@ namespace AWhewell.Owin.Utility
         /// <param name="key"></param>
         /// <returns></returns>
         public string GetValue(string key) => GetValue(key, ",");
+
+        /// <summary>
+        /// Returns the value joined together using the join string supplied.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="join"></param>
+        /// <returns></returns>
+        public static string JoinValue(string[] value, string join)
+        {
+            if(join == null) {
+                throw new ArgumentNullException(nameof(join));
+            }
+
+            return value == null ? null : String.Join(join, value);
+        }
+
+        /// <summary>
+        /// Returns the value joined together using a comma separator.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static string JoinValue(string[] value) => JoinValue(value, ",");
     }
 }
