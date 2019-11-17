@@ -23,6 +23,27 @@ namespace AWhewell.Owin.Interface.WebApi
     public interface IWebApiMiddleware
     {
         /// <summary>
+        /// Gets or sets a value indicating that query string keys must match the case of the parameter
+        /// names they are assigned to. Default is false.
+        /// </summary>
+        /// <remarks>
+        /// The spec default is that they *ARE* case sensitive. However, Microsoft usually make them
+        /// case insensitive so that is probably the less surprising choice.
+        /// </remarks>
+        bool AreQueryStringNamesCaseSensitive { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating that form string keys must match the case of the parameter
+        /// names they are assigned to. Default is false.
+        /// </summary>
+        /// <remarks>
+        /// The spec default is that they *ARE* case sensitive. However, Microsoft usually make them
+        /// case insensitive so that is probably the less surprising choice. Note that this only applies
+        /// to URL-encoded forms. Other body formats infer their own case sensitivity.
+        /// </remarks>
+        bool AreFormNamesCaseSensitive { get; set; }
+
+        /// <summary>
         /// Creates the web API middleware.
         /// </summary>
         /// <param name="next"></param>

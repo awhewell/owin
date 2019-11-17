@@ -41,6 +41,29 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
+        public void Ctor_Initialises_Properties()
+        {
+            Assert.IsTrue(_RouteMapper.AreFormNamesCaseSensitive);
+            Assert.IsTrue(_RouteMapper.AreQueryStringNamesCaseSensitive);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void AreFormNamesCaseSensitive_Throws_If_Changed_After_Initialise_Called()
+        {
+            _RouteMapper.Initialise(new Route[0]);
+            _RouteMapper.AreFormNamesCaseSensitive = !_RouteMapper.AreFormNamesCaseSensitive;
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void AreQueryStringNamesCaseSensitive_Throws_If_Changed_After_Initialise_Called()
+        {
+            _RouteMapper.Initialise(new Route[0]);
+            _RouteMapper.AreQueryStringNamesCaseSensitive = !_RouteMapper.AreQueryStringNamesCaseSensitive;
+        }
+
+        [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
         public void Initialise_Throws_If_Passed_Null()
         {
@@ -389,6 +412,41 @@ namespace Test.AWhewell.Owin.WebApi
             }
         }
 
+        [TestMethod]
+        public void BuildRouteParameters_Can_Use_Case_Sensitive_Query_String_Matching()
+        {
+            var route = RouteTests.CreateRoute(typeof(QueryStringController), nameof(QueryStringController.StringParam));
+            _RouteMapper.AreQueryStringNamesCaseSensitive = true;
+            _RouteMapper.Initialise(new Route[] { route });
+
+            _Environment.RequestQueryString = "PARAM=1";
+            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+            Assert.IsFalse(parameters.IsValid);
+
+            _Environment.RequestQueryString = "param=1";
+            parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual("1", parameters.Parameters[0]);
+        }
+
+        [TestMethod]
+        public void BuildRouteParameters_Can_Use_Case_Insensitive_Query_String_Matching()
+        {
+            var route = RouteTests.CreateRoute(typeof(QueryStringController), nameof(QueryStringController.StringParam));
+            _RouteMapper.AreQueryStringNamesCaseSensitive = false;
+            _RouteMapper.Initialise(new Route[] { route });
+
+            _Environment.RequestQueryString = "PARAM=1";
+            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual("1", parameters.Parameters[0]);
+
+            _Environment.RequestQueryString = "param=1";
+            parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual("1", parameters.Parameters[0]);
+        }
+
         // This is expected to use Parser.ParseType so the test of conversions is not exhaustive
         public class PostFormController : Controller
         {
@@ -408,7 +466,7 @@ namespace Test.AWhewell.Owin.WebApi
             using(new CultureSwap(culture)) {
                 var route = RouteTests.CreateRoute(typeof(PostFormController), methodName);
                 _RouteMapper.Initialise(new Route[] { route });
-                _Environment.AddRequestBody(body, contentType: "application/x-www-form-urlencoded");
+                _Environment.SetRequestBody(body, contentType: "application/x-www-form-urlencoded");
 
                 var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
 
@@ -428,6 +486,41 @@ namespace Test.AWhewell.Owin.WebApi
                     Assert.AreEqual(expected, param);
                 }
             }
+        }
+
+        [TestMethod]
+        public void BuildRouteParameters_Can_Use_Case_Sensitive_Form_Body_Matching()
+        {
+            var route = RouteTests.CreateRoute(typeof(PostFormController), nameof(PostFormController.StringParam));
+            _RouteMapper.AreFormNamesCaseSensitive = true;
+            _RouteMapper.Initialise(new Route[] { route });
+
+            _Environment.SetRequestBody("PARAM=1", contentType: "application/x-www-form-urlencoded");
+            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+            Assert.IsFalse(parameters.IsValid);
+
+            _Environment.SetRequestBody("param=1", contentType: "application/x-www-form-urlencoded");
+            parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual("1", parameters.Parameters[0]);
+        }
+
+        [TestMethod]
+        public void BuildRouteParameters_Can_Use_Case_Insensitive_Form_Body_Matching()
+        {
+            var route = RouteTests.CreateRoute(typeof(PostFormController), nameof(PostFormController.StringParam));
+            _RouteMapper.AreFormNamesCaseSensitive = false;
+            _RouteMapper.Initialise(new Route[] { route });
+
+            _Environment.SetRequestBody("PARAM=1", contentType: "application/x-www-form-urlencoded");
+            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual("1", parameters.Parameters[0]);
+
+            _Environment.SetRequestBody("param=1", contentType: "application/x-www-form-urlencoded");
+            parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual("1", parameters.Parameters[0]);
         }
     }
 }

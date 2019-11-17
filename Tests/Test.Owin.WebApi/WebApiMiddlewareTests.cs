@@ -28,7 +28,10 @@ namespace Test.AWhewell.Owin.WebApi
         private MockPipeline                _Pipeline;
         private MockOwinEnvironment         _Environment;
         private Mock<IControllerManager>    _ControllerManager;
-        private List<Type>                  _Controllers;
+        private List<Type>                  _ControllerTypes;
+        private Mock<IRouteManager>         _RouteManager;
+        private List<Route>                 _Routes;
+        private Mock<IRouteMapper>          _RouteMapper;
 
         [TestInitialize]
         public void TestInitialise()
@@ -36,8 +39,14 @@ namespace Test.AWhewell.Owin.WebApi
             _Snapshot = Factory.TakeSnapshot();
 
             _ControllerManager = MockHelper.FactoryImplementation<IControllerManager>();
-            _Controllers = new List<Type>();
-            _ControllerManager.Setup(r => r.DiscoverControllers()).Returns(_Controllers);
+            _ControllerTypes = new List<Type>();
+            _ControllerManager.Setup(r => r.DiscoverControllers()).Returns(_ControllerTypes);
+
+            _RouteManager = MockHelper.FactoryImplementation<IRouteManager>();
+            _Routes = new List<Route>();
+            _RouteManager.Setup(r => r.DiscoverRoutes(It.IsAny<IEnumerable<Type>>())).Returns(_Routes);
+
+            _RouteMapper = MockHelper.FactoryImplementation<IRouteMapper>();
 
             _Pipeline = new MockPipeline();
             _Environment = new MockOwinEnvironment();
@@ -58,6 +67,53 @@ namespace Test.AWhewell.Owin.WebApi
         {
             CallMiddleware();
             Assert.IsTrue(_Pipeline.NextMiddlewareCalled);
+        }
+
+        [TestMethod]
+        public void CreateMiddleware_Finds_Controller_Types()
+        {
+            _WebApi.CreateMiddleware(null);
+
+            _ControllerManager.Verify(r => r.DiscoverControllers(), Times.Once());
+        }
+
+        [TestMethod]
+        public void CreateMiddleware_Finds_Routes()
+        {
+            _WebApi.CreateMiddleware(null);
+
+            _RouteManager.Verify(r => r.DiscoverRoutes(_ControllerTypes), Times.Once());
+        }
+
+        [TestMethod]
+        public void CreateMiddleware_Initialises_Route_Mapper()
+        {
+            _WebApi.CreateMiddleware(null);
+
+            _RouteMapper.Verify(r => r.Initialise(_Routes), Times.Once());
+        }
+
+        [TestMethod]
+        [DataRow(false, false)]
+        [DataRow(false, true)]
+        [DataRow(true,  false)]
+        [DataRow(true,  true)]
+        public void CreateMiddleware_Sets_Properties_On_Route_Mapper_Before_Initialisation(bool queryStringCaseSensitive, bool formBodyCaseSensitive)
+        {
+            bool? actualQueryStringCaseSensitive = null;
+            bool? actualFormBodyCaseSensitive = null;
+            _RouteMapper.Setup(r => r.Initialise(It.IsAny<IEnumerable<Route>>())).Callback(() => {
+                actualFormBodyCaseSensitive =    _RouteMapper.Object.AreFormNamesCaseSensitive;
+                actualQueryStringCaseSensitive = _RouteMapper.Object.AreQueryStringNamesCaseSensitive;
+            });
+
+            _WebApi.AreFormNamesCaseSensitive =         formBodyCaseSensitive;
+            _WebApi.AreQueryStringNamesCaseSensitive =  queryStringCaseSensitive;
+
+            _WebApi.CreateMiddleware(null);
+
+            Assert.AreEqual(queryStringCaseSensitive, actualQueryStringCaseSensitive);
+            Assert.AreEqual(formBodyCaseSensitive,    actualFormBodyCaseSensitive);
         }
     }
 }

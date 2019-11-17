@@ -169,7 +169,7 @@ namespace Test.AWhewell.Owin
         /// <param name="encoding"></param>
         /// <param name="contentType"></param>
         /// <param name="contentLength"></param>
-        public void AddRequestBody(string text, Encoding encoding = null, string contentType = null, int? contentLength = null)
+        public void SetRequestBody(string text, Encoding encoding = null, string contentType = null, int? contentLength = null)
         {
             AddRequestBody((encoding ?? Encoding.UTF8).GetBytes(text ?? ""), contentType, contentLength);
         }

@@ -20,6 +20,24 @@ namespace AWhewell.Owin.Interface.WebApi
     public interface IRouteMapper
     {
         /// <summary>
+        /// Gets or sets a value indicating that query string keys must match the case of the parameter
+        /// names they are assigned to.
+        /// </summary>
+        /// <remarks>
+        /// Changes to this property after <see cref="Initialise"/> has been called will throw an exception.
+        /// </remarks>
+        bool AreQueryStringNamesCaseSensitive { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating that form string keys must match the case of the parameter
+        /// names they are assigned to.
+        /// </summary>
+        /// <remarks>
+        /// Changes to this property after <see cref="Initialise"/> has been called will throw an exception.
+        /// </remarks>
+        bool AreFormNamesCaseSensitive { get; set; }
+
+        /// <summary>
         /// Initialises the mapper. This can only be called once.
         /// </summary>
         /// <param name="routes"></param>

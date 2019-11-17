@@ -26,25 +26,12 @@ namespace AWhewell.Owin.WebApi
         /// <summary>
         /// See interface docs.
         /// </summary>
-        public IControllerManager ControllerManager { get; private set; }
-
-        /// <summary>
-        /// Creates a new object.
-        /// </summary>
-        public WebApiMiddleware()
-        {
-            ControllerManager = Factory.Resolve<IControllerManager>();
-            ControllerManager.DiscoverControllers();
-        }
+        public bool AreQueryStringNamesCaseSensitive { get; set; }
 
         /// <summary>
         /// See interface docs.
         /// </summary>
-        /// <param name="controllerManager"></param>
-        public void Reconfigure(IControllerManager controllerManager = null)
-        {
-            throw new NotImplementedException();
-        }
+        public bool AreFormNamesCaseSensitive { get; set; }
 
         /// <summary>
         /// See interface docs.
@@ -53,6 +40,17 @@ namespace AWhewell.Owin.WebApi
         /// <returns></returns>
         public AppFunc CreateMiddleware(AppFunc next)
         {
+            var controllerManager = Factory.Resolve<IControllerManager>();
+            var controllerTypes = controllerManager.DiscoverControllers();
+
+            var routeManager = Factory.Resolve<IRouteManager>();
+            var routes = routeManager.DiscoverRoutes(controllerTypes);
+
+            var routeMapper = Factory.Resolve<IRouteMapper>();
+            routeMapper.AreFormNamesCaseSensitive =         AreFormNamesCaseSensitive;
+            routeMapper.AreQueryStringNamesCaseSensitive =  AreQueryStringNamesCaseSensitive;
+            routeMapper.Initialise(routes);
+
             AppFunc result = async(IDictionary<string, object> environment) =>
             {
                 await next(environment);

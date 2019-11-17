@@ -27,6 +27,45 @@ namespace AWhewell.Owin.WebApi
         private Dictionary<long, Route> _Routes;
 
         /// <summary>
+        /// True if the mapper has been initialised.
+        /// </summary>
+        private bool Initialised => _Routes != null;
+
+        private bool _AreQueryStringNamesCaseSensitive = true;
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        public bool AreQueryStringNamesCaseSensitive
+        {
+            get => _AreQueryStringNamesCaseSensitive;
+            set {
+                if(_AreQueryStringNamesCaseSensitive != value) {
+                    if(Initialised) {
+                        throw new InvalidOperationException($"Cannot change {nameof(AreQueryStringNamesCaseSensitive)} after initialisation");
+                    }
+                    _AreQueryStringNamesCaseSensitive = value;
+                }
+            }
+        }
+
+        private bool _AreFormNamesCaseSensitive = true;
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        public bool AreFormNamesCaseSensitive
+        {
+            get => _AreFormNamesCaseSensitive;
+            set {
+                if(_AreFormNamesCaseSensitive != value) {
+                    if(Initialised) {
+                        throw new InvalidOperationException($"Cannot change {nameof(AreFormNamesCaseSensitive)} after initialisation");
+                    }
+                    _AreFormNamesCaseSensitive = value;
+                }
+            }
+        }
+
+        /// <summary>
         /// See interface docs.
         /// </summary>
         /// <param name="routes"></param>
@@ -35,7 +74,7 @@ namespace AWhewell.Owin.WebApi
             if(routes == null) {
                 throw new ArgumentNullException();
             }
-            if(_Routes != null) {
+            if(Initialised) {
                 throw new InvalidOperationException($"You cannot call {nameof(Initialise)} twice");
             }
 
@@ -146,6 +185,8 @@ namespace AWhewell.Owin.WebApi
 
                     if(filledParameter && failedValidationMessage == null) {
                         resultParameters[paramIdx] = parameterValue;
+                    } else if(failedValidationMessage == null) {
+                        failedValidationMessage = $"No value was passed for the {methodParameter.Name} parameter";
                     }
                 }
             }
@@ -214,14 +255,20 @@ namespace AWhewell.Owin.WebApi
 
         private bool ExtractParameterFromQueryString(ref object parameterValue, MethodParameter methodParameter, IDictionary<string, object> owinEnvironment)
         {
-            var queryStringDictionary = new QueryStringDictionary(owinEnvironment[EnvironmentKey.RequestQueryString] as string);
+            var queryStringDictionary = new QueryStringDictionary(
+                owinEnvironment[EnvironmentKey.RequestQueryString] as string,
+                AreQueryStringNamesCaseSensitive
+            );
             return ExtractParameterFromQueryStringDictionary(ref parameterValue, methodParameter, queryStringDictionary);
         }
 
         private bool ExtractParameterFromRequestBody(ref object parameterValue, MethodParameter methodParameter, IDictionary<string, object> owinEnvironment)
         {
             using(var streamReader = new StreamReader(owinEnvironment[EnvironmentKey.RequestBody] as Stream)) {
-                var queryStringDictionary = new QueryStringDictionary(streamReader.ReadToEnd());
+                var queryStringDictionary = new QueryStringDictionary(
+                    streamReader.ReadToEnd(),
+                    AreFormNamesCaseSensitive
+                );
                 return ExtractParameterFromQueryStringDictionary(ref parameterValue, methodParameter, queryStringDictionary);
             }
         }
