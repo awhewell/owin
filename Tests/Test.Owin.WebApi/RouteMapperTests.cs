@@ -157,15 +157,15 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        [ExpectedException(typeof(HttpResponseException))]
-        public void BuildRouteParameters_Throws_If_Route_Was_Not_Initialised()
+        public void BuildRouteParameters_Rejects_Call_If_Route_Was_Not_Initialised()
         {
             var initialisedRoute = RouteTests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
             var uninitialisedRoute = RouteTests.CreateRoute(typeof(ApiEntityWithOptionalIDController), nameof(ApiEntityWithOptionalIDController.Method));
-
             _RouteMapper.Initialise(new Route[] { initialisedRoute });
 
-            _RouteMapper.BuildRouteParameters(uninitialisedRoute, new string[] { "api", "entity", "1" }, _Environment.Environment);
+            var parameters = _RouteMapper.BuildRouteParameters(uninitialisedRoute, new string[] { "api", "entity", "1" }, _Environment.Environment);
+
+            Assert.IsFalse(parameters.IsValid);
         }
 
         [TestMethod]
@@ -176,9 +176,10 @@ namespace Test.AWhewell.Owin.WebApi
 
             var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { "api", "entity", "12" }, _Environment.Environment);
 
-            Assert.AreEqual(1, parameters.Length);
-            Assert.IsInstanceOfType(parameters[0], typeof(int));
-            Assert.AreEqual(12, (int)parameters[0]);
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual(1, parameters.Parameters.Length);
+            Assert.IsInstanceOfType(parameters.Parameters[0], typeof(int));
+            Assert.AreEqual(12, (int)parameters.Parameters[0]);
         }
 
         [TestMethod]
@@ -189,26 +190,21 @@ namespace Test.AWhewell.Owin.WebApi
 
             var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { "api", "entity" }, _Environment.Environment);
 
-            Assert.AreEqual(1, parameters.Length);
-            Assert.IsInstanceOfType(parameters[0], typeof(int));
-            Assert.AreEqual(-1, (int)parameters[0]);
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual(1, parameters.Parameters.Length);
+            Assert.IsInstanceOfType(parameters.Parameters[0], typeof(int));
+            Assert.AreEqual(-1, (int)parameters.Parameters[0]);
         }
 
         [TestMethod]
-        public void BuildRouteParameters_Throws_HttpResponseException_When_Parameter_Cannot_Be_Parsed()
+        public void BuildRouteParameters_Clears_IsValid_When_Parameter_Cannot_Be_Parsed()
         {
             var route = RouteTests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
             _RouteMapper.Initialise(new Route[] { route });
 
-            HttpResponseException exception = null;
-            try {
-                _RouteMapper.BuildRouteParameters(route, new string[] { "api", "entity", "not-an-int" }, _Environment.Environment);
-            } catch(HttpResponseException ex) {
-                exception = ex;
-            }
+            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { "api", "entity", "not-an-int" }, _Environment.Environment);
 
-            Assert.IsNotNull(exception);
-            Assert.AreEqual(HttpStatusCode.BadRequest, exception.StatusCode);
+            Assert.IsFalse(parameters.IsValid);
         }
 
         // The expectation is that the implementation uses Owin.Utility.Parser to parse the path part string into the
@@ -258,13 +254,14 @@ namespace Test.AWhewell.Owin.WebApi
                         break;
                 }
 
-                Assert.AreEqual(1, parameters.Length);
-                var actual = parameters[0];
+                Assert.IsTrue(parameters.IsValid);
+                Assert.AreEqual(1, parameters.Parameters.Length);
+                var actual = parameters.Parameters[0];
                 if(actual is byte[] byteArray) {
                     var expectedByteArray = (byte[])expected;
                     Assert.IsTrue(expectedByteArray.SequenceEqual(byteArray));
                 } else {
-                    Assert.AreEqual(expected, parameters[0]);
+                    Assert.AreEqual(expected, parameters.Parameters[0]);
                 }
             }
         }
@@ -283,9 +280,10 @@ namespace Test.AWhewell.Owin.WebApi
 
             var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part, "string-value", "55" }, _Environment.Environment);
 
-            Assert.AreEqual(2, parameters.Length);
-            Assert.AreEqual("string-value", parameters[0]);
-            Assert.AreEqual(55, parameters[1]);
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual(2, parameters.Parameters.Length);
+            Assert.AreEqual("string-value", parameters.Parameters[0]);
+            Assert.AreEqual(55, parameters.Parameters[1]);
         }
 
         public class OwinEnvController : Controller
@@ -305,23 +303,20 @@ namespace Test.AWhewell.Owin.WebApi
 
             var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
 
-            Assert.AreEqual(1, parameters.Length);
-            Assert.AreSame(_Environment.Environment, parameters[0]);
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual(1, parameters.Parameters.Length);
+            Assert.AreSame(_Environment.Environment, parameters.Parameters[0]);
         }
 
         [TestMethod]
         public void BuildRouteParameters_Does_Not_Inject_Owin_Environment_To_Instance_Route_Method()
         {
-            // THIS WILL EVENTUALLY CHANGE. When the code is written to throw a bad request response when a parameter
-            // cannot be filled this method should trigger that.
-
             var route = RouteTests.CreateRoute(typeof(OwinEnvController), nameof(OwinEnvController.NotStatic));
             _RouteMapper.Initialise(new Route[] { route });
 
             var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
 
-            Assert.AreEqual(1, parameters.Length);
-            Assert.AreNotSame(_Environment.Environment, parameters[0]);
+            Assert.IsFalse(parameters.IsValid);
         }
 
         // This is expected to use Parser.ParseType so the test of conversions is not exhaustive, it's just a handful
@@ -378,8 +373,9 @@ namespace Test.AWhewell.Owin.WebApi
                         break;
                 }
 
-                Assert.AreEqual(1, parameters.Length);
-                var param = parameters[0];
+                Assert.IsTrue(parameters.IsValid);
+                Assert.AreEqual(1, parameters.Parameters.Length);
+                var param = parameters.Parameters[0];
 
                 if(expected is IList expectedList) {
                     var actualList = (IList)param;
@@ -418,8 +414,9 @@ namespace Test.AWhewell.Owin.WebApi
 
                 var expected = rawExpected;
 
-                Assert.AreEqual(1, parameters.Length);
-                var param = parameters[0];
+                Assert.IsTrue(parameters.IsValid);
+                Assert.AreEqual(1, parameters.Parameters.Length);
+                var param = parameters.Parameters[0];
 
                 if(expected is IList expectedList) {
                     var actualList = (IList)param;

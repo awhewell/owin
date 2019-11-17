@@ -1,4 +1,4 @@
-// Copyright © 2019 onwards, Andrew Whewell
+﻿// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -10,40 +10,40 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace AWhewell.Owin.Interface.WebApi
 {
     /// <summary>
-    /// The interface for objects that can map incoming requests to controllers, methods and method parameters.
+    /// The result of a call to <see cref="IRouteMapper.BuildRouteParameters(Route, string[], IDictionary{string, object})"/>.
     /// </summary>
-    public interface IRouteMapper
+    public class RouteParameters
     {
         /// <summary>
-        /// Initialises the mapper. This can only be called once.
+        /// Gets a value indicating that the parameters could be parsed correctly.
         /// </summary>
-        /// <param name="routes"></param>
-        void Initialise(IEnumerable<Route> routes);
+        public bool IsValid => FailedValidationMessages.Length == 0;
 
         /// <summary>
-        /// Returns the single route that matches the method and path parts supplied.
+        /// Gets the parameters to pass to the controller method. Property is undefined if <see cref="IsValid"/> is false.
         /// </summary>
-        /// <param name="httpMethod"></param>
-        /// <param name="pathParts"></param>
-        /// <returns></returns>
-        Route FindRouteForPath(string httpMethod, string[] pathParts);
+        public object[] Parameters { get; }
 
         /// <summary>
-        /// Returns the parameters to pass to a route method.
+        /// Gets the reasons why <see cref="IsValid"/> is false, otherwise an empty array if <see cref="IsValid"/> is true.
         /// </summary>
-        /// <param name="route"></param>
-        /// <param name="pathParts"></param>
-        /// <param name="owinEnvironment"></param>
-        /// <returns></returns>
-        /// <remarks>
-        /// If the request cannot be parsed into the parameters expected by the route then an <see cref="HttpResponseException"/>
-        /// is thrown indicating a bad request, with the message describing which parameters could not be parsed.
-        /// </remarks>
-        RouteParameters BuildRouteParameters(Route route, string[] pathParts, IDictionary<string, object> owinEnvironment);
+        public string[] FailedValidationMessages { get; }
+
+        /// <summary>
+        /// Creates a new object.
+        /// </summary>
+        /// <param name="failedValidationMessages"></param>
+        /// <param name="parameters"></param>
+        public RouteParameters(IEnumerable<string> failedValidationMessages, object[] parameters)
+        {
+            FailedValidationMessages = failedValidationMessages?.ToArray() ?? new string[0];
+            Parameters = parameters;
+        }
     }
 }

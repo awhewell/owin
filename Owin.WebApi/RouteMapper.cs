@@ -104,7 +104,7 @@ namespace AWhewell.Owin.WebApi
         /// <param name="pathParts"></param>
         /// <param name="owinEnvironment"></param>
         /// <returns></returns>
-        public object[] BuildRouteParameters(Route route, string[] pathParts, IDictionary<string, object> owinEnvironment)
+        public RouteParameters BuildRouteParameters(Route route, string[] pathParts, IDictionary<string, object> owinEnvironment)
         {
             if(route == null) {
                 throw new ArgumentNullException(nameof(route));
@@ -116,60 +116,63 @@ namespace AWhewell.Owin.WebApi
                 throw new ArgumentNullException(nameof(owinEnvironment));
             }
 
-            CheckRouteIsValid(route);
+            string failedValidationMessage = null;
+            object[] resultParameters = null;
 
-            var methodParameters = route.MethodParameters;;
-
-            var result = new object[methodParameters.Length];
-            object parameterValue;
-            bool filledParameter;
-
-            for(var paramIdx = 0;paramIdx < methodParameters.Length;++paramIdx) {
-                var methodParameter = methodParameters[paramIdx];
-                parameterValue = null;
-
-                filledParameter = UseInjectedValueForParameter(ref parameterValue, methodParameter, route, owinEnvironment);
-                if(!filledParameter) {
-                    filledParameter = ExtractParameterFromRequestPathParts(ref parameterValue, methodParameter, route, pathParts);
-                }
-                if(!filledParameter) {
-                    filledParameter = ExtractParameterFromQueryString(ref parameterValue, methodParameter, owinEnvironment);
-                }
-                if(!filledParameter) {
-                    filledParameter = ExtractParameterFromRequestBody(ref parameterValue, methodParameter, owinEnvironment);
-                }
-
-                if(filledParameter) {
-                    result[paramIdx] = parameterValue;
-                }
-            }
-
-            return result;
-        }
-
-        private void CheckRouteIsValid(Route route)
-        {
             if(!_Routes.ContainsKey(route.ID)) {
-                throw new HttpResponseException(
-                    HttpStatusCode.BadRequest,
-                    $"The {route.HttpMethod} {String.Join("/", route.PathParts.Select(r => r.Part))} route is no longer being serviced"
-                );
+                failedValidationMessage = "Cannot build parameters for routes that have not been initialised";
             }
+
+            if(failedValidationMessage == null) {
+                var methodParameters = route.MethodParameters;;
+                resultParameters = new object[methodParameters.Length];
+
+                for(var paramIdx = 0;paramIdx < methodParameters.Length && failedValidationMessage == null;++paramIdx) {
+                    var methodParameter = methodParameters[paramIdx];
+                    object parameterValue = null;
+
+                    var filledParameter = UseInjectedValueForParameter(ref parameterValue, ref failedValidationMessage, methodParameter, route, owinEnvironment);
+
+                    if(!filledParameter && failedValidationMessage == null) {
+                        filledParameter = ExtractParameterFromRequestPathParts(ref parameterValue, ref failedValidationMessage, methodParameter, route, pathParts);
+                    }
+
+                    if(!filledParameter && failedValidationMessage == null) {
+                        filledParameter = ExtractParameterFromQueryString(ref parameterValue, methodParameter, owinEnvironment);
+                    }
+                    if(!filledParameter && failedValidationMessage == null) {
+                        filledParameter = ExtractParameterFromRequestBody(ref parameterValue, methodParameter, owinEnvironment);
+                    }
+
+                    if(filledParameter && failedValidationMessage == null) {
+                        resultParameters[paramIdx] = parameterValue;
+                    }
+                }
+            }
+
+            return new RouteParameters(
+                failedValidationMessage == null ? null : new string[] { failedValidationMessage },
+                resultParameters
+            );
         }
 
-        private bool UseInjectedValueForParameter(ref object parameterValue, MethodParameter methodParameter, Route route, IDictionary<string, object> owinEnvironment)
+        private bool UseInjectedValueForParameter(ref object parameterValue, ref string failedValidationMessage, MethodParameter methodParameter, Route route, IDictionary<string, object> owinEnvironment)
         {
             var filled = false;
 
-            if(route.Method.IsStatic && methodParameter.ParameterType == typeof(IDictionary<string, object>)) {
-                filled = true;
-                parameterValue = owinEnvironment;
+            if(methodParameter.ParameterType == typeof(IDictionary<string, object>)) {
+                if(!route.Method.IsStatic) {
+                    failedValidationMessage = $"Cannot inject OWIN environment into parameters to {methodParameter.Name}, it is not static. Use the OWIN environment property instead.";
+                } else {
+                    filled = true;
+                    parameterValue = owinEnvironment;
+                }
             }
 
             return filled;
         }
 
-        private bool ExtractParameterFromRequestPathParts(ref object parameterValue, MethodParameter methodParameter, Route route, string[] pathParts)
+        private bool ExtractParameterFromRequestPathParts(ref object parameterValue, ref string failedValidationMessage, MethodParameter methodParameter, Route route, string[] pathParts)
         {
             var filled = false;
 
@@ -191,20 +194,18 @@ namespace AWhewell.Owin.WebApi
                         parameterValue = methodParameter.DefaultValue;
                     }
                 } else {
-                    filled = true;
                     var pathPart = pathParts[pathPartIdx];
-                    parameterValue =
-                        Parser.ParseType(
-                            methodParameter.ParameterType,
-                            pathPart,
-                            ExpectFormatConverter.ToParserOptions(methodParameter.Expect?.ExpectFormat)
-                        )
-                        ??
-                        throw new HttpResponseException(
-                            HttpStatusCode.BadRequest,
-                            $"Cannot convert from \"{pathPart}\" to {methodParameter.ParameterType}"
-                        )
-                    ;
+                    parameterValue = Parser.ParseType(
+                        methodParameter.ParameterType,
+                        pathPart,
+                        ExpectFormatConverter.ToParserOptions(methodParameter.Expect?.ExpectFormat)
+                    );
+
+                    if(parameterValue == null) {
+                        failedValidationMessage = $"Could not parse '{pathPart}' as type {methodParameter.ParameterType}";
+                    } else {
+                        filled = true;
+                    }
                 }
             }
 
