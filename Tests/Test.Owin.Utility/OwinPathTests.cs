@@ -87,7 +87,7 @@ namespace Test.AWhewell.Owin.Utility
             Assert.AreEqual(1, actual.Length);
             Assert.AreEqual("a", actual[0]);
 
-            var cacheEntry = environment.Environment[CustomEnvironmentKey.OwinPathRequestPathParts] as IList<string>;
+            var cacheEntry = environment.Environment[CustomEnvironmentKey.RequestPathParts] as IList<string>;
             if(createCacheEntry) {
                 Assert.IsTrue(actual.SequenceEqual(cacheEntry));
             } else {
@@ -102,7 +102,7 @@ namespace Test.AWhewell.Owin.Utility
         {
             var environment = new MockOwinEnvironment();
             environment.RequestPath = "/a";
-            environment.Environment[CustomEnvironmentKey.OwinPathRequestPathParts] = new string[] { "b" };
+            environment.Environment[CustomEnvironmentKey.RequestPathParts] = new string[] { "b" };
 
             var actual = OwinPath.RequestPathParts(environment.Environment, createAndUseCachedResult: useCacheEntry);
 

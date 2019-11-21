@@ -22,6 +22,6 @@ namespace AWhewell.Owin.Utility
         /// <summary>
         /// Value is a string array resulting from splitting the RequestPath at slashes after ignoring the initial slash.
         /// </summary>
-        public const string OwinPathRequestPathParts = "awowin.RequestPathParts";
+        public const string RequestPathParts = "awowin.RequestPathParts";
     }
 }
