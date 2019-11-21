@@ -140,16 +140,12 @@ namespace AWhewell.Owin.WebApi
         /// See interface docs.
         /// </summary>
         /// <param name="route"></param>
-        /// <param name="pathParts"></param>
         /// <param name="owinEnvironment"></param>
         /// <returns></returns>
-        public RouteParameters BuildRouteParameters(Route route, string[] pathParts, IDictionary<string, object> owinEnvironment)
+        public RouteParameters BuildRouteParameters(Route route, IDictionary<string, object> owinEnvironment)
         {
             if(route == null) {
                 throw new ArgumentNullException(nameof(route));
-            }
-            if(pathParts == null) {
-                throw new ArgumentNullException(nameof(pathParts));
             }
             if(owinEnvironment == null) {
                 throw new ArgumentNullException(nameof(owinEnvironment));
@@ -163,8 +159,10 @@ namespace AWhewell.Owin.WebApi
             }
 
             if(failedValidationMessage == null) {
-                var methodParameters = route.MethodParameters;;
+                var methodParameters = route.MethodParameters;
                 resultParameters = new object[methodParameters.Length];
+
+                var pathParts = OwinPath.RequestPathParts(owinEnvironment, createAndUseCachedResult: true);
 
                 for(var paramIdx = 0;paramIdx < methodParameters.Length && failedValidationMessage == null;++paramIdx) {
                     var methodParameter = methodParameters[paramIdx];

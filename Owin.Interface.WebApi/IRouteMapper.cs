@@ -55,13 +55,8 @@ namespace AWhewell.Owin.Interface.WebApi
         /// Returns the parameters to pass to a route method.
         /// </summary>
         /// <param name="route"></param>
-        /// <param name="pathParts"></param>
         /// <param name="owinEnvironment"></param>
         /// <returns></returns>
-        /// <remarks>
-        /// If the request cannot be parsed into the parameters expected by the route then an <see cref="HttpResponseException"/>
-        /// is thrown indicating a bad request, with the message describing which parameters could not be parsed.
-        /// </remarks>
-        RouteParameters BuildRouteParameters(Route route, string[] pathParts, IDictionary<string, object> owinEnvironment);
+        RouteParameters BuildRouteParameters(Route route, IDictionary<string, object> owinEnvironment);
     }
 }

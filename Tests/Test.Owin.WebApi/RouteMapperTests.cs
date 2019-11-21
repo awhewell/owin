@@ -156,17 +156,8 @@ namespace Test.AWhewell.Owin.WebApi
             var route = RouteTests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
             _RouteMapper.Initialise(new Route[] { route });
 
-            _RouteMapper.BuildRouteParameters(null, new string[] { "api", "entity", "1" }, _Environment.Environment);
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void BuildRouteParameters_Throws_If_PathParts_Is_Null()
-        {
-            var route = RouteTests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
-            _RouteMapper.Initialise(new Route[] { route });
-
-            _RouteMapper.BuildRouteParameters(route, null, _Environment.Environment);
+            _Environment.SetRequestPath("/api/entity/1");
+            _RouteMapper.BuildRouteParameters(null, _Environment.Environment);
         }
 
         [TestMethod]
@@ -176,7 +167,7 @@ namespace Test.AWhewell.Owin.WebApi
             var route = RouteTests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
             _RouteMapper.Initialise(new Route[] { route });
 
-            _RouteMapper.BuildRouteParameters(route, new string[] { "api", "entity", "1" }, null);
+            _RouteMapper.BuildRouteParameters(route, null);
         }
 
         [TestMethod]
@@ -186,7 +177,8 @@ namespace Test.AWhewell.Owin.WebApi
             var uninitialisedRoute = RouteTests.CreateRoute(typeof(ApiEntityWithOptionalIDController), nameof(ApiEntityWithOptionalIDController.Method));
             _RouteMapper.Initialise(new Route[] { initialisedRoute });
 
-            var parameters = _RouteMapper.BuildRouteParameters(uninitialisedRoute, new string[] { "api", "entity", "1" }, _Environment.Environment);
+            _Environment.SetRequestPath("/api/entity/1");
+            var parameters = _RouteMapper.BuildRouteParameters(uninitialisedRoute, _Environment.Environment);
 
             Assert.IsFalse(parameters.IsValid);
         }
@@ -197,7 +189,8 @@ namespace Test.AWhewell.Owin.WebApi
             var route = RouteTests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
             _RouteMapper.Initialise(new Route[] { route });
 
-            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { "api", "entity", "12" }, _Environment.Environment);
+            _Environment.SetRequestPath("/api/entity/12");
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
 
             Assert.IsTrue(parameters.IsValid);
             Assert.AreEqual(1, parameters.Parameters.Length);
@@ -211,7 +204,8 @@ namespace Test.AWhewell.Owin.WebApi
             var route = RouteTests.CreateRoute(typeof(ApiEntityWithOptionalIDController), nameof(ApiEntityWithOptionalIDController.Method));
             _RouteMapper.Initialise(new Route[] { route });
 
-            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { "api", "entity" }, _Environment.Environment);
+            _Environment.SetRequestPath("/api/entity");
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
 
             Assert.IsTrue(parameters.IsValid);
             Assert.AreEqual(1, parameters.Parameters.Length);
@@ -225,7 +219,8 @@ namespace Test.AWhewell.Owin.WebApi
             var route = RouteTests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
             _RouteMapper.Initialise(new Route[] { route });
 
-            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { "api", "entity", "not-an-int" }, _Environment.Environment);
+            _Environment.SetRequestPath("/api/entity/not-an-int");
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
 
             Assert.IsFalse(parameters.IsValid);
         }
@@ -265,7 +260,8 @@ namespace Test.AWhewell.Owin.WebApi
                 var route = RouteTests.CreateRoute(typeof(PathPartTypeController), methodName);
                 _RouteMapper.Initialise(new Route[] { route });
 
-                var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part, pathPart }, _Environment.Environment);
+                _Environment.SetRequestPath(new string[] { route.PathParts[0].Part, pathPart });
+                var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
 
                 var expected = rawExpected;
                 switch(methodName) {
@@ -301,7 +297,8 @@ namespace Test.AWhewell.Owin.WebApi
             var route = RouteTests.CreateRoute(typeof(MultipleParameterController), nameof(MultipleParameterController.Method));
             _RouteMapper.Initialise(new Route[] { route });
 
-            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part, "string-value", "55" }, _Environment.Environment);
+            _Environment.SetRequestPath(new string[] { route.PathParts[0].Part, "string-value", "55" });
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
 
             Assert.IsTrue(parameters.IsValid);
             Assert.AreEqual(2, parameters.Parameters.Length);
@@ -324,7 +321,8 @@ namespace Test.AWhewell.Owin.WebApi
             var route = RouteTests.CreateRoute(typeof(OwinEnvController), nameof(OwinEnvController.JustEnvironment));
             _RouteMapper.Initialise(new Route[] { route });
 
-            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+            _Environment.SetRequestPath(route.PathParts[0].Part);
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
 
             Assert.IsTrue(parameters.IsValid);
             Assert.AreEqual(1, parameters.Parameters.Length);
@@ -337,7 +335,8 @@ namespace Test.AWhewell.Owin.WebApi
             var route = RouteTests.CreateRoute(typeof(OwinEnvController), nameof(OwinEnvController.NotStatic));
             _RouteMapper.Initialise(new Route[] { route });
 
-            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+            _Environment.SetRequestPath(route.PathParts[0].Part);
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
 
             Assert.IsFalse(parameters.IsValid);
         }
@@ -384,7 +383,8 @@ namespace Test.AWhewell.Owin.WebApi
                 _RouteMapper.Initialise(new Route[] { route });
                 _Environment.RequestQueryString = queryString;
 
-                var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+                _Environment.SetRequestPath(route.PathParts[0].Part);
+                var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
 
                 var expected = rawExpected;
                 switch(methodName) {
@@ -419,12 +419,14 @@ namespace Test.AWhewell.Owin.WebApi
             _RouteMapper.AreQueryStringNamesCaseSensitive = true;
             _RouteMapper.Initialise(new Route[] { route });
 
+            _Environment.SetRequestPath(route.PathParts[0].Part);
+
             _Environment.RequestQueryString = "PARAM=1";
-            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
             Assert.IsFalse(parameters.IsValid);
 
             _Environment.RequestQueryString = "param=1";
-            parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+            parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
             Assert.IsTrue(parameters.IsValid);
             Assert.AreEqual("1", parameters.Parameters[0]);
         }
@@ -436,13 +438,15 @@ namespace Test.AWhewell.Owin.WebApi
             _RouteMapper.AreQueryStringNamesCaseSensitive = false;
             _RouteMapper.Initialise(new Route[] { route });
 
+            _Environment.SetRequestPath(route.PathParts[0].Part);
+
             _Environment.RequestQueryString = "PARAM=1";
-            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
             Assert.IsTrue(parameters.IsValid);
             Assert.AreEqual("1", parameters.Parameters[0]);
 
             _Environment.RequestQueryString = "param=1";
-            parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+            parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
             Assert.IsTrue(parameters.IsValid);
             Assert.AreEqual("1", parameters.Parameters[0]);
         }
@@ -467,8 +471,9 @@ namespace Test.AWhewell.Owin.WebApi
                 var route = RouteTests.CreateRoute(typeof(PostFormController), methodName);
                 _RouteMapper.Initialise(new Route[] { route });
                 _Environment.SetRequestBody(body, contentType: "application/x-www-form-urlencoded");
+                _Environment.SetRequestPath(route.PathParts[0].Part);
 
-                var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+                var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
 
                 var expected = rawExpected;
 
@@ -494,13 +499,14 @@ namespace Test.AWhewell.Owin.WebApi
             var route = RouteTests.CreateRoute(typeof(PostFormController), nameof(PostFormController.StringParam));
             _RouteMapper.AreFormNamesCaseSensitive = true;
             _RouteMapper.Initialise(new Route[] { route });
+            _Environment.SetRequestPath(route.PathParts[0].Part);
 
             _Environment.SetRequestBody("PARAM=1", contentType: "application/x-www-form-urlencoded");
-            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
             Assert.IsFalse(parameters.IsValid);
 
             _Environment.SetRequestBody("param=1", contentType: "application/x-www-form-urlencoded");
-            parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+            parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
             Assert.IsTrue(parameters.IsValid);
             Assert.AreEqual("1", parameters.Parameters[0]);
         }
@@ -511,14 +517,15 @@ namespace Test.AWhewell.Owin.WebApi
             var route = RouteTests.CreateRoute(typeof(PostFormController), nameof(PostFormController.StringParam));
             _RouteMapper.AreFormNamesCaseSensitive = false;
             _RouteMapper.Initialise(new Route[] { route });
+            _Environment.SetRequestPath(route.PathParts[0].Part);
 
             _Environment.SetRequestBody("PARAM=1", contentType: "application/x-www-form-urlencoded");
-            var parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
             Assert.IsTrue(parameters.IsValid);
             Assert.AreEqual("1", parameters.Parameters[0]);
 
             _Environment.SetRequestBody("param=1", contentType: "application/x-www-form-urlencoded");
-            parameters = _RouteMapper.BuildRouteParameters(route, new string[] { route.PathParts[0].Part }, _Environment.Environment);
+            parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
             Assert.IsTrue(parameters.IsValid);
             Assert.AreEqual("1", parameters.Parameters[0]);
         }

@@ -27,12 +27,21 @@ namespace Test.AWhewell.Owin
         /// <summary>
         /// Gets the environment.
         /// </summary>
-        public IDictionary<string, object> Environment { get; private set; } = new Dictionary<string, object>();
+        public IDictionary<string, object> Environment { get; private set; } = new OwinDictionary<object>();
 
         public CancellationToken CallCancelled
         {
             get => (CancellationToken)Environment["owin.CallCancelled"];
             set => Environment["owin.CallCancelled"] = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the request's path base.
+        /// </summary>
+        public string RequestPathBase
+        {
+            get => Environment["owin.RequestPath"] as string;
+            set => Environment["owin.RequestPathBase"] = value;
         }
 
         /// <summary>
@@ -232,6 +241,34 @@ namespace Test.AWhewell.Owin
 
                 RequestQueryString = buffer.ToString();
             }
+        }
+
+        /// <summary>
+        /// Sets the request path.
+        /// </summary>
+        /// <param name="pathParts"></param>
+        public void SetRequestPath(string[] pathParts)
+        {
+            SetRequestPath(String.Join("/", pathParts ?? new string[0]));
+        }
+
+        /// <summary>
+        /// Sets the request path.
+        /// </summary>
+        /// <param name="path"></param>
+        public void SetRequestPath(string path)
+        {
+            path = path ?? "";
+
+            if(path.Length == 0 || path[0] != '/') {
+                path = "/" + path;
+            }
+
+            if(path == "/" && !String.IsNullOrEmpty(RequestPathBase)) {
+                path = "";
+            }
+
+            RequestPath = path;
         }
 
         /// <summary>
