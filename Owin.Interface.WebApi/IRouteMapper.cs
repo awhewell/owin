@@ -44,12 +44,11 @@ namespace AWhewell.Owin.Interface.WebApi
         void Initialise(IEnumerable<Route> routes);
 
         /// <summary>
-        /// Returns the single route that matches the method and path parts supplied.
+        /// Returns the single route that matches the request environment supplied.
         /// </summary>
-        /// <param name="httpMethod"></param>
-        /// <param name="pathParts"></param>
+        /// <param name="owinEnvironment"></param>
         /// <returns></returns>
-        Route FindRouteForPath(string httpMethod, string[] pathParts);
+        Route FindRouteForRequest(IDictionary<string, object> owinEnvironment);
 
         /// <summary>
         /// Returns the parameters to pass to a route method.

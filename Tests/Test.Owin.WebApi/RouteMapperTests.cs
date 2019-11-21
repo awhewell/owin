@@ -19,6 +19,7 @@ using InterfaceFactory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AWhewell.Owin.Interface.WebApi;
 using System.Collections;
+using AWhewell.Owin.Utility;
 
 namespace Test.AWhewell.Owin.WebApi
 {
@@ -86,31 +87,26 @@ namespace Test.AWhewell.Owin.WebApi
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void FindRouteForPath_Throws_If_HttpMethod_Is_Null()
+        public void FindRouteForRequest_Throws_If_Environment_Is_Null()
         {
-            _RouteMapper.FindRouteForPath(null, new string[0]);
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void FindRouteForPath_Throws_If_PathParts_Are_Null()
-        {
-            _RouteMapper.FindRouteForPath("GET", null);
+            _RouteMapper.FindRouteForRequest(null);
         }
 
         public class SimplePathController : Controller { [HttpGet, Route("simple-path")] public int Method() { return 0; } }
 
         [TestMethod]
-        [DataRow("GET",     "simple-path", true)]   // Case matches normalised cases in Route
-        [DataRow("get",     "simple-path", true)]   // HTTP method does not match Route's normalised case
-        [DataRow("GET",     "SIMPLE-PATH", true)]   // Path parts does not match Route's normalised case
-        [DataRow("POST",    "simple-path", false)]
-        public void FindRouteForPath_Returns_Correct_Candidates(string httpMethod, string pathPart, bool expectResult)
+        [DataRow("GET",     "/simple-path", true)]   // Case matches normalised cases in Route
+        [DataRow("get",     "/simple-path", true)]   // HTTP method does not match Route's normalised case
+        [DataRow("GET",     "/SIMPLE-PATH", true)]   // Path parts does not match Route's normalised case
+        [DataRow("POST",    "/simple-path", false)]
+        public void FindRouteForRequest_Returns_Correct_Candidates(string httpMethod, string pathPart, bool expectResult)
         {
             var expected = RouteTests.CreateRoute<SimplePathController>(nameof(SimplePathController.Method));
             _RouteMapper.Initialise(new Route[] { expected });
+            _Environment.Environment[EnvironmentKey.RequestMethod] = httpMethod;
+            _Environment.Environment[EnvironmentKey.RequestPath] = pathPart;
 
-            var actual = _RouteMapper.FindRouteForPath(httpMethod, new string[] { pathPart });
+            var actual = _RouteMapper.FindRouteForRequest(_Environment.Environment);
 
             if(!expectResult) {
                 Assert.IsNull(actual);
@@ -135,12 +131,14 @@ namespace Test.AWhewell.Owin.WebApi
         [DataRow("GET", typeof(ApiEntityOptionalThenNotController), new string[] { "api", "entity", "1", "2" }, true)]
         [DataRow("GET", typeof(ApiEntityOptionalThenNotController), new string[] { "api", "entity", "1" },      false)]
         [DataRow("GET", typeof(ApiEntityOptionalThenNotController), new string[] { "api", "entity" },           false)]
-        public void FindRouteForPath_Matches_MultiPart_Paths(string httpMethod, Type controllerType, string[] pathParts, bool expectMatch)
+        public void FindRouteForRequest_Matches_MultiPart_Paths(string httpMethod, Type controllerType, string[] pathParts, bool expectMatch)
         {
             var route = RouteTests.CreateRoute(controllerType, "Method");
             _RouteMapper.Initialise(new Route[] { route });
+            _Environment.Environment[EnvironmentKey.RequestMethod] = httpMethod;
+            _Environment.SetRequestPath(pathParts);
 
-            var actual = _RouteMapper.FindRouteForPath(httpMethod, pathParts);
+            var actual = _RouteMapper.FindRouteForRequest(_Environment.Environment);
 
             if(!expectMatch) {
                 Assert.IsNull(actual);

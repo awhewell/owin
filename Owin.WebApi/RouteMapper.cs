@@ -89,19 +89,17 @@ namespace AWhewell.Owin.WebApi
         /// <summary>
         /// See interface docs.
         /// </summary>
-        /// <param name="httpMethod"></param>
-        /// <param name="pathParts"></param>
+        /// <param name="owinEnvironment"></param>
         /// <returns></returns>
-        public Route FindRouteForPath(string httpMethod, string[] pathParts)
+        public Route FindRouteForRequest(IDictionary<string, object> owinEnvironment)
         {
-            if(httpMethod == null) {
-                throw new ArgumentNullException(nameof(httpMethod));
-            }
-            if(pathParts == null) {
-                throw new ArgumentNullException(nameof(pathParts));
+            if(owinEnvironment == null) {
+                throw new ArgumentNullException(nameof(owinEnvironment));
             }
 
-            httpMethod = httpMethod.ToUpper();
+            var httpMethod = ((string)owinEnvironment[EnvironmentKey.RequestMethod]).ToUpper();
+            var pathParts = OwinPath.RequestPathParts(owinEnvironment, createAndUseCachedResult: true);
+
             var requestPathParts = new string[pathParts.Length];
             for(var i = 0;i < pathParts.Length;++i) {
                 requestPathParts[i] = PathPart.Normalise(pathParts[i]);
