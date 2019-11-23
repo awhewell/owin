@@ -66,10 +66,17 @@ namespace AWhewell.Owin.Interface.WebApi
         /// <summary>
         /// Creates a new object.
         /// </summary>
+        public Route()
+        {
+        }
+
+        /// <summary>
+        /// Creates a new object.
+        /// </summary>
         /// <param name="controller"></param>
         /// <param name="method"></param>
         /// <param name="routeAttribute"></param>
-        public Route(Type controller, MethodInfo method, RouteAttribute routeAttribute)
+        public Route(Type controller, MethodInfo method, RouteAttribute routeAttribute) : this()
         {
             Controller = controller;
             Method = method;

@@ -38,9 +38,16 @@ namespace AWhewell.Owin.Interface.WebApi
         /// <summary>
         /// Creates a new object.
         /// </summary>
+        public RouteParameters()
+        {
+        }
+
+        /// <summary>
+        /// Creates a new object.
+        /// </summary>
         /// <param name="failedValidationMessages"></param>
         /// <param name="parameters"></param>
-        public RouteParameters(IEnumerable<string> failedValidationMessages, object[] parameters)
+        public RouteParameters(IEnumerable<string> failedValidationMessages, object[] parameters) : this()
         {
             FailedValidationMessages = failedValidationMessages?.ToArray() ?? new string[0];
             Parameters = parameters;

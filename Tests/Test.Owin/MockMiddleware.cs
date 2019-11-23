@@ -49,5 +49,15 @@ namespace Test.AWhewell.Owin
                 }
             };
         }
+
+        public static Task Stub(IDictionary<string, object> environment)
+        {
+            return Task.FromResult(0);
+        }
+
+        public static void Call(AppFunc middleware, IDictionary<string, object> environment)
+        {
+            middleware.Invoke(environment).Wait();
+        }
     }
 }

@@ -51,12 +51,15 @@ namespace AWhewell.Owin.WebApi
             routeMapper.AreQueryStringNamesCaseSensitive =  AreQueryStringNamesCaseSensitive;
             routeMapper.Initialise(routes);
 
-            AppFunc result = async(IDictionary<string, object> environment) =>
+            return async(IDictionary<string, object> environment) =>
             {
+                var route = routeMapper.FindRouteForRequest(environment);
+                if(route != null) {
+                    routeMapper.BuildRouteParameters(route, environment);
+                }
+
                 await next(environment);
             };
-
-            return result;
         }
     }
 }
