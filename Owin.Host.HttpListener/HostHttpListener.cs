@@ -231,13 +231,20 @@ namespace AWhewell.Owin.Host.HttpListener
                     }
                 }
 
-                var root = Root;
-                var pathQuery = context == null ? null : SplitRawUrlIntoPathAndQuery(context.Request.RawUrl);
-                if(IsRequestValid(context, root, pathQuery)) {
-                    var cancellationToken = new CancellationToken();
-                    var environment = OwinEnvironmentFromContext(context, cancellationToken, root, pathQuery);
-                    _Pipeline.ProcessRequest(environment);
+                if(context != null) {
+                    ProcessRequest(context);
                 }
+            }
+        }
+
+        private void ProcessRequest(IHttpListenerContext context)
+        {
+            var root = Root;
+            var pathQuery = SplitRawUrlIntoPathAndQuery(context.Request.RawUrl);
+            if(IsRequestValid(root, pathQuery)) {
+                var cancellationToken = new CancellationToken();
+                var environment = OwinEnvironmentFromContext(context, cancellationToken, root, pathQuery);
+                _Pipeline.ProcessRequest(environment).Wait();
             }
         }
 
@@ -261,15 +268,12 @@ namespace AWhewell.Owin.Host.HttpListener
             return new Tuple<string, string>(path, query);
         }
 
-        private bool IsRequestValid(IHttpListenerContext context, string root, Tuple<string,string> pathQuery)
+        private bool IsRequestValid(string root, Tuple<string,string> pathQuery)
         {
-            var result = context != null;
             var path = pathQuery?.Item1;
 
-            result = result &&
-            (      String.Equals(path, root, StringComparison.OrdinalIgnoreCase)
-                || path.StartsWith(root == "/" ? root : root + '/', StringComparison.OrdinalIgnoreCase)
-            );
+            var result = String.Equals(path, root, StringComparison.OrdinalIgnoreCase)
+                      || path.StartsWith(root == "/" ? root : root + '/', StringComparison.OrdinalIgnoreCase);
 
             return result;
         }

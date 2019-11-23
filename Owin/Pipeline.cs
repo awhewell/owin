@@ -65,7 +65,7 @@ namespace AWhewell.Owin
         /// See interface docs.
         /// </summary>
         /// <param name="environment"></param>
-        public void ProcessRequest(IDictionary<string, object> environment)
+        public async Task ProcessRequest(IDictionary<string, object> environment)
         {
             if(environment == null) {
                 throw new ArgumentNullException(nameof(environment));
@@ -74,10 +74,10 @@ namespace AWhewell.Owin
                 throw new InvalidOperationException($"You cannot call {nameof(ProcessRequest)} before calling {nameof(Construct)}");
             }
 
-            _MiddlewareChain.Invoke(environment).Wait();
+            await _MiddlewareChain(environment);
 
             foreach(var streamManipulatorAppFunc in _StreamManipulatorChain) {
-                streamManipulatorAppFunc.Invoke(environment).Wait();
+                await streamManipulatorAppFunc(environment);
             }
         }
 

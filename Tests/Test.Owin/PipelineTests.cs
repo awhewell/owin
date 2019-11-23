@@ -66,8 +66,8 @@ namespace Test.AWhewell.Owin
             _MiddlewareChain.Add(middleware.CreateAppFunc);
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
-            _Pipeline.ProcessRequest(_Environment);
-            _Pipeline.ProcessRequest(_Environment);
+            _Pipeline.ProcessRequest(_Environment).Wait();
+            _Pipeline.ProcessRequest(_Environment).Wait();
 
             Assert.AreEqual(1, middleware.CreateAppFuncCallCount);
         }
@@ -101,14 +101,23 @@ namespace Test.AWhewell.Owin
         public void ProcessRequest_Throws_If_Passed_Null()
         {
             _Pipeline.Construct(_BuilderEnvironment.Object);
-            _Pipeline.ProcessRequest(null);
+
+            try {
+                _Pipeline.ProcessRequest(null).Wait();
+            } catch(AggregateException ex) {
+                throw ex.Flatten().InnerException;
+            }
         }
 
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
         public void ProcessRequest_Throws_If_Not_Yet_Constructed()
         {
-            _Pipeline.ProcessRequest(_Environment);
+            try {
+                _Pipeline.ProcessRequest(_Environment).Wait();
+            } catch(AggregateException ex) {
+                throw ex.Flatten().InnerException;
+            }
         }
 
         [TestMethod]
@@ -116,7 +125,7 @@ namespace Test.AWhewell.Owin
         {
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
-            _Pipeline.ProcessRequest(_Environment);
+            _Pipeline.ProcessRequest(_Environment).Wait();
 
             Assert.AreEqual(1, _Environment.Count);
             Assert.AreEqual(404, (int)_Environment[EnvironmentKey.ResponseStatusCode]);
@@ -129,7 +138,7 @@ namespace Test.AWhewell.Owin
             _MiddlewareChain.Add(middleware.CreateAppFunc);
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
-            _Pipeline.ProcessRequest(_Environment);
+            _Pipeline.ProcessRequest(_Environment).Wait();
 
             Assert.AreEqual(1, middleware.Environments.Count);
             Assert.AreSame(_Environment, middleware.LastEnvironment);
@@ -150,7 +159,7 @@ namespace Test.AWhewell.Owin
             _MiddlewareChain.Add(middleware_2.CreateAppFunc);
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
-            _Pipeline.ProcessRequest(_Environment);
+            _Pipeline.ProcessRequest(_Environment).Wait();
 
             Assert.AreEqual(1, middleware_1.AppFuncCallCount);
             Assert.AreEqual(1, middleware_2.AppFuncCallCount);
@@ -166,7 +175,7 @@ namespace Test.AWhewell.Owin
             _MiddlewareChain.Add(middleware_2.CreateAppFunc);
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
-            _Pipeline.ProcessRequest(_Environment);
+            _Pipeline.ProcessRequest(_Environment).Wait();
 
             Assert.AreEqual(1, middleware_1.AppFuncCallCount);
             Assert.AreEqual(0, middleware_2.AppFuncCallCount);
@@ -181,9 +190,9 @@ namespace Test.AWhewell.Owin
             _MiddlewareChain.Add(middleware_1.CreateAppFunc);
             _MiddlewareChain.Add(middleware_2.CreateAppFunc);
             _Pipeline.Construct(_BuilderEnvironment.Object);
-            _Pipeline.ProcessRequest(_Environment);
+            _Pipeline.ProcessRequest(_Environment).Wait();
             middleware_1.ChainToNextMiddleware = true;
-            _Pipeline.ProcessRequest(_Environment);
+            _Pipeline.ProcessRequest(_Environment).Wait();
 
             Assert.AreEqual(2, middleware_1.AppFuncCallCount);
             Assert.AreEqual(1, middleware_2.AppFuncCallCount);
@@ -196,7 +205,7 @@ namespace Test.AWhewell.Owin
             _StreamManipulatorChain.Add(middleware.CreateAppFunc);
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
-            _Pipeline.ProcessRequest(_Environment);
+            _Pipeline.ProcessRequest(_Environment).Wait();
 
             Assert.AreEqual(1, middleware.Environments.Count);
             Assert.AreSame(_Environment, middleware.LastEnvironment);
@@ -217,7 +226,7 @@ namespace Test.AWhewell.Owin
             _StreamManipulatorChain.Add(streamManipulator.CreateAppFunc);
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
-            _Pipeline.ProcessRequest(_Environment);
+            _Pipeline.ProcessRequest(_Environment).Wait();
 
             Assert.AreEqual(1, middleware.AppFuncCallCount);
             Assert.AreEqual(1, streamManipulator.AppFuncCallCount);
@@ -233,7 +242,7 @@ namespace Test.AWhewell.Owin
             _StreamManipulatorChain.Add(middleware_2.CreateAppFunc);
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
-            _Pipeline.ProcessRequest(_Environment);
+            _Pipeline.ProcessRequest(_Environment).Wait();
 
             Assert.AreEqual(1, middleware_1.AppFuncCallCount);
             Assert.AreEqual(1, middleware_2.AppFuncCallCount);
@@ -251,7 +260,7 @@ namespace Test.AWhewell.Owin
             _StreamManipulatorChain.Add(streamManipulator.CreateAppFunc);
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
-            _Pipeline.ProcessRequest(_Environment);
+            _Pipeline.ProcessRequest(_Environment).Wait();
 
             Assert.AreEqual(1, middleware_1.AppFuncCallCount);
             Assert.AreEqual(0, middleware_2.AppFuncCallCount);

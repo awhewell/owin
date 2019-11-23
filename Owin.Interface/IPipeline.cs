@@ -38,6 +38,6 @@ namespace AWhewell.Owin.Interface
         /// Processes a request.
         /// </summary>
         /// <param name="environment"></param>
-        void ProcessRequest(IDictionary<string, object> environment);
+        Task ProcessRequest(IDictionary<string, object> environment);
     }
 }
