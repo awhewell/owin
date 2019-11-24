@@ -97,8 +97,10 @@ namespace AWhewell.Owin.WebApi
                 throw new ArgumentNullException(nameof(owinEnvironment));
             }
 
-            var httpMethod = ((string)owinEnvironment[EnvironmentKey.RequestMethod]).ToUpper();
-            var pathParts = OwinPath.RequestPathParts(owinEnvironment, createAndUseCachedResult: true);
+            var context = OwinContext.Create(owinEnvironment);
+
+            var httpMethod = context.RequestHttpMethod;
+            var pathParts = context.RequestPathParts;
 
             var requestPathParts = new string[pathParts.Length];
             for(var i = 0;i < pathParts.Length;++i) {
@@ -149,6 +151,8 @@ namespace AWhewell.Owin.WebApi
                 throw new ArgumentNullException(nameof(owinEnvironment));
             }
 
+            var context = OwinContext.Create(owinEnvironment);
+
             string failedValidationMessage = null;
             object[] resultParameters = null;
 
@@ -160,23 +164,23 @@ namespace AWhewell.Owin.WebApi
                 var methodParameters = route.MethodParameters;
                 resultParameters = new object[methodParameters.Length];
 
-                var pathParts = OwinPath.RequestPathParts(owinEnvironment, createAndUseCachedResult: true);
+                var pathParts = context.RequestPathParts;
 
                 for(var paramIdx = 0;paramIdx < methodParameters.Length && failedValidationMessage == null;++paramIdx) {
                     var methodParameter = methodParameters[paramIdx];
                     object parameterValue = null;
 
-                    var filledParameter = UseInjectedValueForParameter(ref parameterValue, ref failedValidationMessage, methodParameter, route, owinEnvironment);
+                    var filledParameter = UseInjectedValueForParameter(ref parameterValue, ref failedValidationMessage, methodParameter, route, context);
 
                     if(!filledParameter && failedValidationMessage == null) {
                         filledParameter = ExtractParameterFromRequestPathParts(ref parameterValue, ref failedValidationMessage, methodParameter, route, pathParts);
                     }
 
                     if(!filledParameter && failedValidationMessage == null) {
-                        filledParameter = ExtractParameterFromQueryString(ref parameterValue, methodParameter, owinEnvironment);
+                        filledParameter = ExtractParameterFromQueryString(ref parameterValue, methodParameter, context);
                     }
                     if(!filledParameter && failedValidationMessage == null) {
-                        filledParameter = ExtractParameterFromRequestBody(ref parameterValue, methodParameter, owinEnvironment);
+                        filledParameter = ExtractParameterFromRequestBody(ref parameterValue, methodParameter, context);
                     }
 
                     if(filledParameter && failedValidationMessage == null) {
@@ -193,7 +197,7 @@ namespace AWhewell.Owin.WebApi
             );
         }
 
-        private bool UseInjectedValueForParameter(ref object parameterValue, ref string failedValidationMessage, MethodParameter methodParameter, Route route, IDictionary<string, object> owinEnvironment)
+        private bool UseInjectedValueForParameter(ref object parameterValue, ref string failedValidationMessage, MethodParameter methodParameter, Route route, OwinContext context)
         {
             var filled = false;
 
@@ -202,7 +206,7 @@ namespace AWhewell.Owin.WebApi
                     failedValidationMessage = $"Cannot inject OWIN environment into parameters to {methodParameter.Name}, it is not static. Use the OWIN environment property instead.";
                 } else {
                     filled = true;
-                    parameterValue = owinEnvironment;
+                    parameterValue = context.Environment;
                 }
             }
 
@@ -249,18 +253,16 @@ namespace AWhewell.Owin.WebApi
             return filled;
         }
 
-        private bool ExtractParameterFromQueryString(ref object parameterValue, MethodParameter methodParameter, IDictionary<string, object> owinEnvironment)
+        private bool ExtractParameterFromQueryString(ref object parameterValue, MethodParameter methodParameter, OwinContext context)
         {
-            var queryStringDictionary = new QueryStringDictionary(
-                owinEnvironment[EnvironmentKey.RequestQueryString] as string,
-                AreQueryStringNamesCaseSensitive
-            );
+            var queryStringDictionary = context.RequestQueryStringDictionary(AreQueryStringNamesCaseSensitive);
+
             return ExtractParameterFromQueryStringDictionary(ref parameterValue, methodParameter, queryStringDictionary);
         }
 
-        private bool ExtractParameterFromRequestBody(ref object parameterValue, MethodParameter methodParameter, IDictionary<string, object> owinEnvironment)
+        private bool ExtractParameterFromRequestBody(ref object parameterValue, MethodParameter methodParameter, OwinContext context)
         {
-            using(var streamReader = new StreamReader(owinEnvironment[EnvironmentKey.RequestBody] as Stream)) {
+            using(var streamReader = new StreamReader(context.RequestBody)) {
                 var queryStringDictionary = new QueryStringDictionary(
                     streamReader.ReadToEnd(),
                     AreFormNamesCaseSensitive

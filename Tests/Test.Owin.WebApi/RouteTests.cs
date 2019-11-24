@@ -14,6 +14,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AWhewell.Owin.Interface.WebApi;
+using AWhewell.Owin.Utility;
 
 namespace Test.AWhewell.Owin.WebApi
 {
@@ -80,17 +81,17 @@ namespace Test.AWhewell.Owin.WebApi
         {
             var route = CreateRoute<Controller>(nameof(Controller.Example));
 
-            Assert.AreEqual("POST", route.HttpMethod);
+            Assert.AreEqual(HttpMethod.Post, route.HttpMethod);
         }
 
         [TestMethod]
-        [DataRow("Delete",  "DELETE")]
-        [DataRow("Get",     "GET")]
-        [DataRow("Head",    "HEAD")]
-        [DataRow("Patch",   "PATCH")]
-        [DataRow("Post",    "POST")]
-        [DataRow("Put",     "PUT")]
-        public void Route_Ctor_Sets_HttpMethod_From_Method_Attribute(string methodName, string expected)
+        [DataRow("Delete",  HttpMethod.Delete)]
+        [DataRow("Get",     HttpMethod.Get)]
+        [DataRow("Head",    HttpMethod.Head)]
+        [DataRow("Patch",   HttpMethod.Patch)]
+        [DataRow("Post",    HttpMethod.Post)]
+        [DataRow("Put",     HttpMethod.Put)]
+        public void Route_Ctor_Sets_HttpMethod_From_Method_Attribute(string methodName, HttpMethod expected)
         {
             var route = CreateRoute<Controller>(methodName);
 
@@ -98,11 +99,11 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        public void Route_Ctor_Sets_Empty_HttpMethod_If_Multiple_Attributes_Present()
+        public void Route_Ctor_Sets_Unknown_HttpMethod_If_Multiple_Attributes_Present()
         {
             var route = CreateRoute<Controller>(nameof(Controller.Duplicate_Methods_Not_Allowed));
 
-            Assert.AreEqual("", route.HttpMethod);
+            Assert.AreEqual(HttpMethod.Unknown, route.HttpMethod);
         }
 
         public class NullRoute : Controller         { [HttpGet, Route(null)]                public int Method() { return 1; } }

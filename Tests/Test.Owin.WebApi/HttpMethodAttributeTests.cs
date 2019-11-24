@@ -12,6 +12,7 @@ using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AWhewell.Owin.Interface.WebApi;
+using AWhewell.Owin.Utility;
 
 namespace Test.AWhewell.Owin.WebApi
 {
@@ -21,7 +22,7 @@ namespace Test.AWhewell.Owin.WebApi
         private void CheckUsage<T>()
         {
             var usageAttribute = typeof(T)
-                .GetCustomAttributes(inherit: false)
+                .GetCustomAttributes(inherit: true)
                 .OfType<AttributeUsageAttribute>()
                 .FirstOrDefault();
 
@@ -48,5 +49,31 @@ namespace Test.AWhewell.Owin.WebApi
 
         [TestMethod]
         public void HttpPutAttribute_Has_Correct_Usage() => CheckUsage<HttpPutAttribute>();
+
+        private void CheckMethodProperty<T>(HttpMethod expected)
+            where T: HttpMethodAttribute, new()
+        {
+            var instance = new T();
+
+            Assert.AreEqual(expected, instance.Method);
+        }
+
+        [TestMethod]
+        public void HttpDeleteAttribute_Has_Correct_Method() => CheckMethodProperty<HttpDeleteAttribute>(HttpMethod.Delete);
+
+        [TestMethod]
+        public void HttpGetAttribute_Has_Correct_Method() => CheckMethodProperty<HttpGetAttribute>(HttpMethod.Get);
+
+        [TestMethod]
+        public void HttpHeadAttribute_Has_Correct_Method() => CheckMethodProperty<HttpHeadAttribute>(HttpMethod.Head);
+
+        [TestMethod]
+        public void HttpPatchAttribute_Has_Correct_Method() => CheckMethodProperty<HttpPatchAttribute>(HttpMethod.Patch);
+
+        [TestMethod]
+        public void HttpPostAttribute_Has_Correct_Method() => CheckMethodProperty<HttpPostAttribute>(HttpMethod.Post);
+
+        [TestMethod]
+        public void HttpPutAttribute_Has_Correct_Method() => CheckMethodProperty<HttpPutAttribute>(HttpMethod.Put);
     }
 }

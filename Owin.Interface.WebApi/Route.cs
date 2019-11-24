@@ -12,6 +12,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using AWhewell.Owin.Utility;
 
 namespace AWhewell.Owin.Interface.WebApi
 {
@@ -51,11 +52,11 @@ namespace AWhewell.Owin.Interface.WebApi
         public RouteAttribute RouteAttribute { get; }
 
         /// <summary>
-        /// Gets the upper-case HTTP method associated with the function. Defaults to POST. You can only have
-        /// one HTTP method per entry point, if you specify 2+ then <see cref="HttpMethod"/> is an empty string
-        /// and will not match anything. Always in upper-case.
+        /// Gets the HTTP method associated with the function. Defaults to POST. You can only have
+        /// one HTTP method per entry point, if you specify 2+ then <see cref="HttpMethod"/> is Unknown
+        /// and will not match anything.
         /// </summary>
-        public string HttpMethod { get; }
+        public HttpMethod HttpMethod { get; }
 
         /// <summary>
         /// Gets the path from the route attribute split into parts. If the route attribute is unusable then
@@ -96,30 +97,22 @@ namespace AWhewell.Owin.Interface.WebApi
                 .ToArray();
         }
 
-        private string ExtractHttpMethod(MethodInfo method)
+        private HttpMethod ExtractHttpMethod(MethodInfo method)
         {
-            string result = null;
+            HttpMethod? result = null;
 
             foreach(var attr in method.GetCustomAttributes(inherit: true)) {
-                var candidate = "";
-                if(attr is HttpDeleteAttribute)     candidate = "DELETE";
-                else if(attr is HttpGetAttribute)   candidate = "GET";
-                else if(attr is HttpHeadAttribute)  candidate = "HEAD";
-                else if(attr is HttpPatchAttribute) candidate = "PATCH";
-                else if(attr is HttpPostAttribute)  candidate = "POST";
-                else if(attr is HttpPutAttribute)   candidate = "PUT";
-
-                if(candidate != "") {
+                if(attr is HttpMethodAttribute methodAttribute) {
                     if(result == null) {
-                        result = candidate;
+                        result = methodAttribute.Method;
                     } else {
-                        result = "";
+                        result = HttpMethod.Unknown;
                         break;
                     }
                 }
             }
 
-            return result ?? "POST";
+            return result ?? HttpMethod.Post;
         }
 
         private PathPart[] ExtractPathParts(MethodParameter[] methodParameters, RouteAttribute routeAttribute)
