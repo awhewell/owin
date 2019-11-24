@@ -345,5 +345,57 @@ namespace AWhewell.Owin.Utility
 
             return result;
         }
+
+        /// <summary>
+        /// Returns the <see cref="HttpMethod"/> value corresponding with the text passed in.
+        /// </summary>
+        /// <param name="httpMethod"></param>
+        /// <returns></returns>
+        public static HttpMethod ParseHttpMethod(string httpMethod)
+        {
+            switch((httpMethod ?? "").Trim().ToUpper()) {
+                case "CONNECT":     return HttpMethod.Connect;
+                case "DELETE":      return HttpMethod.Delete;
+                case "GET":         return HttpMethod.Get;
+                case "HEAD":        return HttpMethod.Head;
+                case "OPTIONS":     return HttpMethod.Options;
+                case "PATCH":       return HttpMethod.Patch;
+                case "POST":        return HttpMethod.Post;
+                case "PUT":         return HttpMethod.Put;
+                case "TRACE":       return HttpMethod.Trace;
+                default:            return HttpMethod.Unknown;
+            }
+        }
+
+        /// <summary>
+        /// Returns the <see cref="HttpProtocol"/> value corresponding with the text passed in.
+        /// </summary>
+        /// <param name="httpProtocol"></param>
+        /// <returns></returns>
+        public static HttpProtocol ParseHttpProtocol(string httpProtocol)
+        {
+            switch((httpProtocol ?? "").Trim().ToUpper()) {
+                case "HTTP/0.9":    return HttpProtocol.Http0_9;
+                case "HTTP/1.0":    return HttpProtocol.Http1_0;
+                case "HTTP/1.1":    return HttpProtocol.Http1_1;
+                case "HTTP/2.0":    return HttpProtocol.Http2_0;
+                case "HTTP/3.0":    return HttpProtocol.Http3_0;
+                default:            return HttpProtocol.Unknown;
+            }
+        }
+
+        /// <summary>
+        /// Returns the correct <see cref="HttpScheme"/> value corresponding with the text passed in.
+        /// </summary>
+        /// <param name="httpScheme"></param>
+        /// <returns></returns>
+        public static HttpScheme ParseHttpScheme(string httpScheme)
+        {
+            switch((httpScheme ?? "").Trim().ToLower()) {
+                case "http":    return HttpScheme.Http;
+                case "https":   return HttpScheme.Https;
+                default:        return HttpScheme.Unknown;
+            }
+        }
     }
 }

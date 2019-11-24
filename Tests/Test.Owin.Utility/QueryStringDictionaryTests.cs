@@ -34,11 +34,12 @@ namespace Test.AWhewell.Owin.Utility
         [DataRow("name=Andrew",     true,  "name=Andrew")]
         [DataRow("space=%20&x=1",   true,  "space=%20&x=1")]
         [DataRow("name=Andrew",     false, "name=Andrew")]
-        public void QueryString_Returns_Ctor_Parameter(string queryString, bool caseSensitiveKey, string expected)
+        public void Ctor_Initialises_Properties(string queryString, bool caseSensitiveKeys, string expected)
         {
-            var dictionary = new QueryStringDictionary(queryString, caseSensitiveKey);
+            var dictionary = new QueryStringDictionary(queryString, caseSensitiveKeys);
 
             Assert.AreEqual(expected, dictionary.QueryString);
+            Assert.AreEqual(caseSensitiveKeys, dictionary.CaseSensitiveKeys);
         }
 
         [TestMethod]

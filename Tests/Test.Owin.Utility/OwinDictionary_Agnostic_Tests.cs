@@ -22,6 +22,14 @@ namespace Test.AWhewell.Owin.Utility
         protected OwinDictionary<object> _Dictionary;
 
         [TestMethod]
+        public void WrappedDictionary_Exposes_Underlying_Dictionary()
+        {
+            _Dictionary.WrappedDictionary.Add("a", 1);
+
+            Assert.AreEqual(1, _Dictionary["a"]);
+        }
+
+        [TestMethod]
         public void Index_Operator_Returns_Null_For_Missing_Keys()
         {
             Assert.IsNull(_Dictionary["missing"]);

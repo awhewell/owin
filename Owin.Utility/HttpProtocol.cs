@@ -15,23 +15,35 @@ using System.Text;
 namespace AWhewell.Owin.Utility
 {
     /// <summary>
-    /// A collection of custom environment keys.
+    /// An enumeration of the different HTTP protocols.
     /// </summary>
-    public static class CustomEnvironmentKey
+    public enum HttpProtocol
     {
-        /// <summary>
-        /// Value is an <see cref="OwinContext"/> object that was created by a prior call to <see cref="OwinContext.Create"/>.
-        /// </summary>
-        public const string Context =  "awowin.Context";
+        Unknown,
 
         /// <summary>
-        /// Value is a string array resulting from splitting the RequestPath at slashes after ignoring the initial slash.
+        /// HTTP/0.9
         /// </summary>
-        public const string RequestPathParts = "awowin.RequestPathParts";
+        Http0_9,
 
         /// <summary>
-        /// Value is the path that <see cref="RequestPathParts"/> was built from.
+        /// HTTP/1.0
         /// </summary>
-        public const string RequestPathPartsBasis = "awowin.RequestPathPartsBasis";
+        Http1_0,
+
+        /// <summary>
+        /// HTTP/1.1
+        /// </summary>
+        Http1_1,
+
+        /// <summary>
+        /// HTTP/2.0
+        /// </summary>
+        Http2_0,
+
+        /// <summary>
+        /// HTTP/3.0
+        /// </summary>
+        Http3_0,
     }
 }

@@ -42,11 +42,17 @@ namespace AWhewell.Owin.Utility
         /// <returns>A string array built by splitting the RequestPath at slashes after ignoring the initial slash.</returns>
         public static string[] RequestPathParts(IDictionary<string, object> owinEnvironment, bool createAndUseCachedResult)
         {
-            if(!createAndUseCachedResult || !(owinEnvironment[CustomEnvironmentKey.RequestPathParts] is string[] result)) {
-                result = RequestPathParts(owinEnvironment[EnvironmentKey.RequestPath] as string);
+            var requestPath = owinEnvironment[EnvironmentKey.RequestPath] as string;
+
+            if(!createAndUseCachedResult
+               || !(owinEnvironment[CustomEnvironmentKey.RequestPathParts] is string[] result)
+               || requestPath != (string)owinEnvironment[CustomEnvironmentKey.RequestPathPartsBasis]
+            ) {
+                result = RequestPathParts(requestPath);
 
                 if(createAndUseCachedResult) {
                     owinEnvironment[CustomEnvironmentKey.RequestPathParts] = result;
+                    owinEnvironment[CustomEnvironmentKey.RequestPathPartsBasis] = requestPath;
                 }
             }
 

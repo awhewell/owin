@@ -15,23 +15,23 @@ using System.Text;
 namespace AWhewell.Owin.Utility
 {
     /// <summary>
-    /// A collection of custom environment keys.
+    /// Exposes a <see cref="HeadersDictionary"/> on the request headers in an OWIN environment.
     /// </summary>
-    public static class CustomEnvironmentKey
+    public class RequestHeadersDictionary : HeadersDictionary
     {
         /// <summary>
-        /// Value is an <see cref="OwinContext"/> object that was created by a prior call to <see cref="OwinContext.Create"/>.
+        /// Creates a new object.
         /// </summary>
-        public const string Context =  "awowin.Context";
+        public RequestHeadersDictionary() : base()
+        {
+        }
 
         /// <summary>
-        /// Value is a string array resulting from splitting the RequestPath at slashes after ignoring the initial slash.
+        /// Creates a new object.
         /// </summary>
-        public const string RequestPathParts = "awowin.RequestPathParts";
-
-        /// <summary>
-        /// Value is the path that <see cref="RequestPathParts"/> was built from.
-        /// </summary>
-        public const string RequestPathPartsBasis = "awowin.RequestPathPartsBasis";
+        /// <param name="existingDictionary"></param>
+        public RequestHeadersDictionary(IDictionary<string, string[]> existingDictionary) : base(existingDictionary)
+        {
+        }
     }
 }

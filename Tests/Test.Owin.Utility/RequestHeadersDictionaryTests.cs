@@ -11,27 +11,22 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using AWhewell.Owin.Utility;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace AWhewell.Owin.Utility
+namespace Test.AWhewell.Owin.Utility
 {
-    /// <summary>
-    /// A collection of custom environment keys.
-    /// </summary>
-    public static class CustomEnvironmentKey
+    [TestClass]
+    public class RequestHeadersDictionaryTests
     {
-        /// <summary>
-        /// Value is an <see cref="OwinContext"/> object that was created by a prior call to <see cref="OwinContext.Create"/>.
-        /// </summary>
-        public const string Context =  "awowin.Context";
+        IDictionary<string, string[]>   _UnderlyingDictionary;
+        RequestHeadersDictionary        _RequestHeaders;
 
-        /// <summary>
-        /// Value is a string array resulting from splitting the RequestPath at slashes after ignoring the initial slash.
-        /// </summary>
-        public const string RequestPathParts = "awowin.RequestPathParts";
-
-        /// <summary>
-        /// Value is the path that <see cref="RequestPathParts"/> was built from.
-        /// </summary>
-        public const string RequestPathPartsBasis = "awowin.RequestPathPartsBasis";
+        [TestInitialize]
+        public void TestInitialise()
+        {
+            _UnderlyingDictionary = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+            _RequestHeaders = new RequestHeadersDictionary(_UnderlyingDictionary);
+        }
     }
 }

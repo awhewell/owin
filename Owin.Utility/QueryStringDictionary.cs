@@ -28,6 +28,11 @@ namespace AWhewell.Owin.Utility
     public class QueryStringDictionary : IReadOnlyDictionary<string, string[]>
     {
         /// <summary>
+        /// The object that splits key=value pairs up for us.
+        /// </summary>
+        private static KeyValueParser _KeyValueParser = new KeyValueParser('=', null);
+
+        /// <summary>
         /// The backing dictionary.
         /// </summary>
         private Dictionary<string, string[]> _KeyValueMap;
@@ -36,6 +41,11 @@ namespace AWhewell.Owin.Utility
         /// Gets the query string used to initialise the dictionary.
         /// </summary>
         public string QueryString { get; }
+
+        /// <summary>
+        /// Gets a value indicating that the keys are case sensitive.
+        /// </summary>
+        public bool CaseSensitiveKeys { get; }
 
         /// <summary>
         /// Creates a new object.
@@ -49,7 +59,8 @@ namespace AWhewell.Owin.Utility
         public QueryStringDictionary(string queryString, bool caseSensitiveKeys)
         {
             QueryString = queryString ?? "";
-            BuildKeyValueMap(caseSensitiveKeys);
+            CaseSensitiveKeys = caseSensitiveKeys;
+            BuildKeyValueMap();
         }
 
         /// <summary>
@@ -60,34 +71,31 @@ namespace AWhewell.Owin.Utility
         {
         }
 
-        private void BuildKeyValueMap(bool caseSensitiveKeys)
+        private void BuildKeyValueMap()
         {
-            _KeyValueMap = new Dictionary<string, string[]>(caseSensitiveKeys ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
+            _KeyValueMap = new Dictionary<string, string[]>(CaseSensitiveKeys ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
 
-            void addKeyValue(string key, string value)
-            {
-                if(key != "") {
-                    if(!_KeyValueMap.TryGetValue(key, out var existing)) {
-                        var valueArray = value == null ? new string[0] : new string[] { value };
-                        _KeyValueMap.Add(key, valueArray);
-                    } else if(value != null) {
-                        var newArray = new string[existing.Length + 1];
-                        Array.Copy(existing, newArray, existing.Length);
-                        newArray[newArray.Length - 1] = value;
-                        _KeyValueMap[key] = newArray;
-                    }
-                }
-            }
-
+            string key, value;
             foreach(var nameValue in QueryString.Split('&', ';')) {
-                var valueIdx = nameValue.IndexOf('=');
-                if(valueIdx == -1) {
-                    addKeyValue(nameValue, null);
-                } else if(valueIdx > 0) {
-                    var key = Uri.UnescapeDataString(nameValue.Substring(0, valueIdx));
-                    var value = Uri.UnescapeDataString(nameValue.Substring(valueIdx + 1));
+                _KeyValueParser.Parse(nameValue, out key, out value);
+                AddKeyValue(key, value);
+            }
+        }
 
-                    addKeyValue(key, value);
+        void AddKeyValue(string key, string value)
+        {
+            key = key == null ? null : Uri.UnescapeDataString(key);
+            value = value == null ? null : Uri.UnescapeDataString(value);
+
+            if(key != "") {
+                if(!_KeyValueMap.TryGetValue(key, out var existing)) {
+                    var valueArray = value == null ? new string[0] : new string[] { value };
+                    _KeyValueMap.Add(key, valueArray);
+                } else if(value != null) {
+                    var newArray = new string[existing.Length + 1];
+                    Array.Copy(existing, newArray, existing.Length);
+                    newArray[newArray.Length - 1] = value;
+                    _KeyValueMap[key] = newArray;
                 }
             }
         }

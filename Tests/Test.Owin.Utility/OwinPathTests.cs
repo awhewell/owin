@@ -96,21 +96,18 @@ namespace Test.AWhewell.Owin.Utility
         }
 
         [TestMethod]
-        [DataRow(true)]
-        [DataRow(false)]
-        public void RequestPathParts_Uses_Environment_Cache_Result_If_Present_And_Requested(bool useCacheEntry)
+        public void RequestPathParts_Rebuilds_Cache_If_Path_Changes()
         {
             var environment = new MockOwinEnvironment();
             environment.RequestPath = "/a";
-            environment.Environment[CustomEnvironmentKey.RequestPathParts] = new string[] { "b" };
 
-            var actual = OwinPath.RequestPathParts(environment.Environment, createAndUseCachedResult: useCacheEntry);
+            var pathParts1 = OwinPath.RequestPathParts(environment.Environment, createAndUseCachedResult: true);
+            environment.RequestPath = "/b";
+            var pathParts2 = OwinPath.RequestPathParts(environment.Environment, createAndUseCachedResult: true);
 
-            if(!useCacheEntry) {
-                Assert.IsTrue(new string[] { "a" }.SequenceEqual(actual));
-            } else {
-                Assert.IsTrue(new string[] { "b" }.SequenceEqual(actual));
-            }
+            Assert.AreNotSame(pathParts1, pathParts2);
+            Assert.AreEqual(1, pathParts2.Length);
+            Assert.AreEqual("b", pathParts2[0]);
         }
     }
 }

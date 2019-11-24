@@ -86,6 +86,27 @@ namespace Test.AWhewell.Owin
         public byte[] ResponseBodyBytes => _ResponseBodyStream.ToArray();
 
         /// <summary>
+        /// Gets the response status code or null if none has been set.
+        /// </summary>
+        public int? ResponseStatusCode => Environment[EnvironmentKey.ResponseStatusCode] as int?;
+
+        /// <summary>
+        /// Gets the response headers.
+        /// </summary>
+        public HeadersDictionary ResponseHeaders
+        {
+            get => new HeadersDictionary(Environment["owin.ResponseHeaders"] as IDictionary<string, string[]>);
+        }
+
+        /// <summary>
+        /// Gets the response headers formatted as a <see cref="ResponseHeadersDictionary"/>.
+        /// </summary>
+        public ResponseHeadersDictionary ResponseHeadersDictionary
+        {
+            get => new ResponseHeadersDictionary(Environment["owin.ResponseHeaders"] as IDictionary<string, string[]>);
+        }
+
+        /// <summary>
         /// Creates a new object.
         /// </summary>
         public MockOwinEnvironment()

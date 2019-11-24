@@ -10,28 +10,56 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace AWhewell.Owin.Utility
 {
     /// <summary>
-    /// A collection of custom environment keys.
+    /// Exposes a <see cref="HeadersDictionary"/> on the response headers in an OWIN environment.
     /// </summary>
-    public static class CustomEnvironmentKey
+    public class ResponseHeadersDictionary : HeadersDictionary
     {
         /// <summary>
-        /// Value is an <see cref="OwinContext"/> object that was created by a prior call to <see cref="OwinContext.Create"/>.
+        /// Gets or sets the content type of the response.
         /// </summary>
-        public const string Context =  "awowin.Context";
+        public string ContentType
+        {
+            get => base["Content-Type"];
+            set => base["Content-Type"] = value;
+        }
 
         /// <summary>
-        /// Value is a string array resulting from splitting the RequestPath at slashes after ignoring the initial slash.
+        /// Gets or sets the content type value of the response.
         /// </summary>
-        public const string RequestPathParts = "awowin.RequestPathParts";
+        public ContentTypeValue ContentTypeValue
+        {
+            get => ContentTypeValue.Parse(ContentType);
+            set => ContentType = value?.ToString();
+        }
 
         /// <summary>
-        /// Value is the path that <see cref="RequestPathParts"/> was built from.
+        /// Gets or sets the length of the response body.
         /// </summary>
-        public const string RequestPathPartsBasis = "awowin.RequestPathPartsBasis";
+        public long? ContentLength
+        {
+            get => long.TryParse(base["Content-Length"], out var result) ? result : (long?)null;
+            set => base["Content-Length"] = value?.ToString(CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// Creates a new object.
+        /// </summary>
+        public ResponseHeadersDictionary() : base()
+        {
+        }
+
+        /// <summary>
+        /// Creates a new object.
+        /// </summary>
+        /// <param name="existingDictionary"></param>
+        public ResponseHeadersDictionary(IDictionary<string, string[]> existingDictionary) : base(existingDictionary)
+        {
+        }
     }
 }

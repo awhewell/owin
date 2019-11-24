@@ -15,23 +15,57 @@ using System.Text;
 namespace AWhewell.Owin.Utility
 {
     /// <summary>
-    /// A collection of custom environment keys.
+    /// A simple key-value splitter.
     /// </summary>
-    public static class CustomEnvironmentKey
+    /// <remarks>
+    /// This class is type-safe.
+    /// </remarks>
+    public class KeyValueParser
     {
         /// <summary>
-        /// Value is an <see cref="OwinContext"/> object that was created by a prior call to <see cref="OwinContext.Create"/>.
+        /// Gets or sets the separator between keys and values.
         /// </summary>
-        public const string Context =  "awowin.Context";
+        public char Separator { get; set; }
 
         /// <summary>
-        /// Value is a string array resulting from splitting the RequestPath at slashes after ignoring the initial slash.
+        /// Gets or sets the value to use when the value is missing.
         /// </summary>
-        public const string RequestPathParts = "awowin.RequestPathParts";
+        public string MissingValue { get; set; }
 
         /// <summary>
-        /// Value is the path that <see cref="RequestPathParts"/> was built from.
+        /// Creates a new object.
         /// </summary>
-        public const string RequestPathPartsBasis = "awowin.RequestPathPartsBasis";
+        public KeyValueParser() : this('=', "")
+        {
+        }
+
+        /// <summary>
+        /// Creates a new object.
+        /// </summary>
+        /// <param name="separator"></param>
+        /// <param name="missingValue"></param>
+        public KeyValueParser(char separator, string missingValue)
+        {
+            Separator = separator;
+            MissingValue = missingValue;
+        }
+
+        /// <summary>
+        /// Parses the string into <see cref="Key"/> and <see cref="Value"/>.
+        /// </summary>
+        /// <param name="text"></param>
+        public void Parse(string text, out string key, out string value)
+        {
+            text = text ?? "";
+
+            var separatorIdx = text.IndexOf(Separator);
+            if(separatorIdx == -1) {
+                key = text;
+                value = MissingValue;
+            } else {
+                key = text.Substring(0, separatorIdx);
+                value = text.Substring(separatorIdx + 1);
+            }
+        }
     }
 }

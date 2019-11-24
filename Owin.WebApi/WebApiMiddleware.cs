@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using InterfaceFactory;
 using AWhewell.Owin.Interface.WebApi;
+using AWhewell.Owin.Utility;
 
 namespace AWhewell.Owin.WebApi
 {
@@ -56,6 +57,7 @@ namespace AWhewell.Owin.WebApi
                 var route = routeMapper.FindRouteForRequest(environment);
                 if(route != null) {
                     routeMapper.BuildRouteParameters(route, environment);
+                    environment[EnvironmentKey.ResponseStatusCode] = 400;
                 }
 
                 await next(environment);

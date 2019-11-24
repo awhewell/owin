@@ -15,8 +15,8 @@ using System.Collections.Generic;
 namespace AWhewell.Owin.Utility
 {
     /// <summary>
-    /// A dictionary with a case sensitive string key whose indexed get returns default(TValue)
-    /// when fetching a non-existent key instead of throwing an exception.
+    /// A dictionary whose indexed get returns default(TValue) when fetching a non-existent key instead of
+    /// throwing an exception.
     /// </summary>
     /// <typeparam name="TValue">The type of value stored by the dictionary.</typeparam>
     public class OwinDictionary<TValue> : IDictionary<string, TValue>
@@ -25,6 +25,11 @@ namespace AWhewell.Owin.Utility
         /// The dictionary that we are wrapping.
         /// </summary>
         private IDictionary<string, TValue> _Dictionary;
+
+        /// <summary>
+        /// Gets the dictionary that has been wrapped.
+        /// </summary>
+        public IDictionary<string, TValue> WrappedDictionary => _Dictionary;
 
         /// <summary>
         /// See class summary.
@@ -61,7 +66,7 @@ namespace AWhewell.Owin.Utility
         public bool IsReadOnly => _Dictionary.IsReadOnly;
 
         /// <summary>
-        /// Creates a new object.
+        /// Creates a new object. Defaults to being case sensitive.
         /// </summary>
         public OwinDictionary() : this(caseSensitive: true)
         {

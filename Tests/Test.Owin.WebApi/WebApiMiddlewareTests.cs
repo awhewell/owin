@@ -152,5 +152,26 @@ namespace Test.AWhewell.Owin.WebApi
 
             _RouteMapper.Verify(r => r.BuildRouteParameters(_FoundRoute, _Environment.Environment), Times.Never());
         }
+
+        [TestMethod]
+        public void Middleware_Returns_Status_400_If_Parameters_Could_Not_Be_Built()
+        {
+            _RouteParameters = new RouteParameters(new string[] { "Some error message" }, new object[0]);
+            var middleware = _WebApi.CreateMiddleware(MockMiddleware.Stub);
+
+            MockMiddleware.Call(middleware, _Environment.Environment);
+
+            Assert.AreEqual(400, _Environment.ResponseStatusCode);
+        }
+
+        [TestMethod]
+        public void Middleware_Calls_Route_With_Parameters()
+        {
+            var middleware = _WebApi.CreateMiddleware(MockMiddleware.Stub);
+
+            MockMiddleware.Call(middleware, _Environment.Environment);
+
+            throw new NotImplementedException();
+        }
     }
 }

@@ -940,5 +940,57 @@ namespace Test.AWhewell.Owin.Utility
                 Assert.AreEqual(expected, actual);
             }
         }
+
+        [TestMethod]
+        [DataRow(null,          HttpMethod.Unknown)]
+        [DataRow("",            HttpMethod.Unknown)]
+        [DataRow("connect",     HttpMethod.Connect)]
+        [DataRow("CONNECT",     HttpMethod.Connect)]
+        [DataRow(" Connect ",   HttpMethod.Connect)]
+        [DataRow("Delete",      HttpMethod.Delete)]
+        [DataRow("Get",         HttpMethod.Get)]
+        [DataRow("Head",        HttpMethod.Head)]
+        [DataRow("Options",     HttpMethod.Options)]
+        [DataRow("Patch",       HttpMethod.Patch)]
+        [DataRow("Post",        HttpMethod.Post)]
+        [DataRow("Put",         HttpMethod.Put)]
+        [DataRow("Trace",       HttpMethod.Trace)]
+        public void ParseHttpMethod_Returns_Correct_Enum_Value(string text, HttpMethod expected)
+        {
+            var actual = Parser.ParseHttpMethod(text);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        [DataRow(null,          HttpProtocol.Unknown)]
+        [DataRow("",            HttpProtocol.Unknown)]
+        [DataRow("http/0.9",    HttpProtocol.Http0_9)]
+        [DataRow(" HTTP/0.9 ",  HttpProtocol.Http0_9)]
+        [DataRow("HTTP/0.9",    HttpProtocol.Http0_9)]
+        [DataRow("HTTP/1.0",    HttpProtocol.Http1_0)]
+        [DataRow("HTTP/1.1",    HttpProtocol.Http1_1)]
+        [DataRow("HTTP/2.0",    HttpProtocol.Http2_0)]
+        [DataRow("HTTP/3.0",    HttpProtocol.Http3_0)]
+        public void ParseHttpProtocol_Returns_Correct_Enum_Value(string text, HttpProtocol expected)
+        {
+            var actual = Parser.ParseHttpProtocol(text);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        [DataRow(null,      HttpScheme.Unknown)]
+        [DataRow("",        HttpScheme.Unknown)]
+        [DataRow("HTTP",    HttpScheme.Http)]
+        [DataRow(" http ",  HttpScheme.Http)]
+        [DataRow("http",    HttpScheme.Http)]
+        [DataRow("https",   HttpScheme.Https)]
+        public void ParseHttpScheme_Returns_Correct_Enum_Value(string text, HttpScheme expected)
+        {
+            var actual = Parser.ParseHttpScheme(text);
+
+            Assert.AreEqual(expected, actual);
+        }
     }
 }
