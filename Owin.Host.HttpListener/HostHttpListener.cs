@@ -9,6 +9,7 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading;
@@ -278,43 +279,40 @@ namespace AWhewell.Owin.Host.HttpListener
             return result;
         }
 
-        private OwinDictionary<object> OwinEnvironmentFromContext(IHttpListenerContext context, CancellationToken cancellationToken, string root, Tuple<string,string> pathQuery)
+        private IDictionary<string, object> OwinEnvironmentFromContext(IHttpListenerContext context, CancellationToken cancellationToken, string root, Tuple<string,string> pathQuery)
         {
             var request = context.Request;
             var response = context.Response;
 
-            var result = new OwinDictionary<object> {
-                { EnvironmentKey.Version,           Constants.Version },
-                { EnvironmentKey.CallCancelled,     cancellationToken },
-                { EnvironmentKey.RequestMethod,     request.HttpMethod },
-                { EnvironmentKey.RequestHeaders,    new HeadersWrapper(request.Headers) },
-                { EnvironmentKey.ResponseHeaders,   new HeadersWrapper_Response(response, response.Headers) },
-            };
-
-            result[EnvironmentKey.RequestBody] = !request.HasEntityBody ? Stream.Null : request.InputStream;
-
             var path = pathQuery.Item1;
             var query = pathQuery.Item2;
 
-            result[EnvironmentKey.RequestPathBase] =        root == "/" ? "" : root;
-            result[EnvironmentKey.RequestPath] =            root == "/" ? path : path.Substring(root.Length);
-            result[EnvironmentKey.RequestQueryString] =     query;
-            result[EnvironmentKey.RequestProtocol] =        $"HTTP/{request.ProtocolVersion}";
-            result[EnvironmentKey.RequestScheme] =          request.Url.Scheme;
+            var result = OwinContext.Create(null);
+            result.Version =            Constants.Version;
+            result.CallCancelled =      cancellationToken;
+            result.RequestMethod =      request.HttpMethod;
+            result.RequestBody =        !request.HasEntityBody ? Stream.Null : request.InputStream;
+            result.RequestHeaders =     new HeadersWrapper(request.Headers);
+            result.RequestPathBase =    root == "/" ? "" : root;
+            result.RequestPath =        root == "/" ? path : path.Substring(root.Length);
+            result.RequestQueryString = query;
+            result.RequestProtocol =    $"HTTP/{request.ProtocolVersion}";
+            result.RequestScheme =      request.Url.Scheme;
 
-            result[EnvironmentKey.ResponseBody] =           response.OutputStream;
+            result.ResponseBody =       response.OutputStream;
+            result.ResponseHeaders =    new HeadersWrapper_Response(response, response.Headers);
 
-            result[EnvironmentKey.ServerIsLocal] =          request.IsLocal;
-            result[EnvironmentKey.ServerLocalIpAddress] =   request.LocalEndPoint?.Address?.ToString() ?? "";
-            result[EnvironmentKey.ServerLocalPort] =        request.LocalEndPoint?.Port ?? 0;
-            result[EnvironmentKey.ServerRemoteIpAddress] =  request.RemoteEndPoint?.Address?.ToString() ?? "";
-            result[EnvironmentKey.ServerRemotePort] =       request.RemoteEndPoint?.Port ?? 0;
+            result.Environment[EnvironmentKey.ServerIsLocal] =          request.IsLocal;
+            result.Environment[EnvironmentKey.ServerLocalIpAddress] =   request.LocalEndPoint?.Address?.ToString() ?? "";
+            result.Environment[EnvironmentKey.ServerLocalPort] =        request.LocalEndPoint?.Port ?? 0;
+            result.Environment[EnvironmentKey.ServerRemoteIpAddress] =  request.RemoteEndPoint?.Address?.ToString() ?? "";
+            result.Environment[EnvironmentKey.ServerRemotePort] =       request.RemoteEndPoint?.Port ?? 0;
 
             if(String.Equals(request.Url.Scheme, "https", StringComparison.OrdinalIgnoreCase)) {
-                result[EnvironmentKey.SslClientCertificate] = request.GetClientCertificate();
+                result.Environment[EnvironmentKey.SslClientCertificate] = request.GetClientCertificate();
             }
 
-            return result;
+            return result.Environment;
         }
     }
 }
