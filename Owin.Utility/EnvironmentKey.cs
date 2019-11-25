@@ -37,11 +37,12 @@ namespace AWhewell.Owin.Utility
         public const string Version =               "owin.Version";         // [Required] A string indicating the OWIN version.
 
         // Common request keys
+        // See http://owin.org/spec/CommonKeys.html for names and types
         public const string ServerIsLocal =         "server.IsLocal";           // [Optional] True if the request was from a browser on the same machine as the server, false otherwise.
-        public const string ServerLocalIpAddress =  "server.LocalIpAddress";    // [Optional] The local address that the request was received on, E.G. 127.0.0.1
-        public const string ServerLocalPort =       "server.LocalPort";         // [Optional] The local port that the request was received on, E.G. 80
-        public const string ServerRemoteIpAddress = "server.RemoteIpAddress";   // [Optional] The IP Address of the remote client, E.G. 192.168.1.1 or ::1
-        public const string ServerRemotePort =      "server.RemotePort";        // [Optional] The port that the remote client is taking replies on, E.G. 1234
-        public const string SslClientCertificate =  "ssl.ClientCertificate";    // [Optional] Client certificate presented to server in HTTPS connections.
+        public const string ServerLocalIpAddress =  "server.LocalIpAddress";    // [Optional] The local address that the request was received on, E.G. 127.0.0.1, as a string.
+        public const string ServerLocalPort =       "server.LocalPort";         // [Optional] The local port that the request was received on, E.G. 80, as a string.
+        public const string ServerRemoteIpAddress = "server.RemoteIpAddress";   // [Optional] The IP Address of the remote client, E.G. 192.168.1.1 or ::1, as a string.
+        public const string ServerRemotePort =      "server.RemotePort";        // [Optional] The port that the remote client is taking replies on, E.G. 1234, as a string.
+        public const string SslClientCertificate =  "ssl.ClientCertificate";    // [Optional] Client certificate presented to server in HTTPS connections as an X509Certificate.
     }
 }

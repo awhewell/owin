@@ -14,6 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using AWhewell.Owin.Utility;
@@ -203,6 +204,10 @@ namespace Test.AWhewell.Owin.Utility
         [DataRow(nameof(OwinContext.RequestProtocol),       EnvironmentKey.RequestProtocol)]
         [DataRow(nameof(OwinContext.RequestQueryString),    EnvironmentKey.RequestQueryString)]
         [DataRow(nameof(OwinContext.RequestScheme),         EnvironmentKey.RequestScheme)]
+        [DataRow(nameof(OwinContext.ServerLocalIpAddress),  EnvironmentKey.ServerLocalIpAddress)]
+        [DataRow(nameof(OwinContext.ServerLocalPort),       EnvironmentKey.ServerLocalPort)]
+        [DataRow(nameof(OwinContext.ServerRemoteIpAddress), EnvironmentKey.ServerRemoteIpAddress)]
+        [DataRow(nameof(OwinContext.ServerRemotePort),      EnvironmentKey.ServerRemotePort)]
         [DataRow(nameof(OwinContext.Version),               EnvironmentKey.Version)]
         public void Unchangeable_String_Properties_Expose_Underlying_String_Values_Correctly(string propertyName, string environmentKey)
         {
@@ -220,6 +225,26 @@ namespace Test.AWhewell.Owin.Utility
 
             // Setter throws if you overwrite existing value
             AssertExceptionThrownOnAction(() => propertyInfo.SetValue(_Context, "different text"));
+        }
+
+        [TestMethod]
+        [DataRow(nameof(OwinContext.ServerIsLocal), EnvironmentKey.ServerIsLocal)]
+        public void Unchangeable_Boolean_Properties_Expose_Underlying_Bool_Values_Correctly(string propertyName, string environmentKey)
+        {
+            var propertyInfo = typeof(OwinContext).GetProperty(propertyName);
+            var boolValue = true;
+
+            // Setter lets you overwrite null
+            propertyInfo.SetValue(_Context, boolValue);
+            Assert.AreEqual(boolValue, propertyInfo.GetValue(_Context, null));
+            Assert.AreEqual(boolValue, _Environment[environmentKey]);
+
+            // Setter lets you overwrite self
+            propertyInfo.SetValue(_Context, boolValue);
+            Assert.AreEqual(boolValue, propertyInfo.GetValue(_Context, null));
+
+            // Setter throws if you overwrite existing value
+            AssertExceptionThrownOnAction(() => propertyInfo.SetValue(_Context, !boolValue));
         }
 
         [TestMethod]
@@ -386,6 +411,43 @@ namespace Test.AWhewell.Owin.Utility
 
             // Cannot change
             AssertExceptionThrownOnAction(() => _Context.CallCancelled = new CancellationToken(true));
+        }
+
+        [TestMethod]
+        public void SslClientCertificate_Exposes_Underlying_SslClientCertificate()
+        {
+            using(var c1 = new X509Certificate()) {
+                Assert.IsNull(_Context.SslClientCertificate);
+
+                // Can change null value
+                _Context.SslClientCertificate = c1;
+                Assert.AreSame(c1, _Environment[EnvironmentKey.SslClientCertificate]);
+                Assert.AreSame(c1, _Context.SslClientCertificate);
+
+                // Can overwrite with self
+                _Context.SslClientCertificate = c1;
+                Assert.AreSame(c1, _Environment[EnvironmentKey.SslClientCertificate]);
+                Assert.AreSame(c1, _Context.SslClientCertificate);
+
+                // Cannot change to new value
+                //
+                // This is a bit tricky to unit test because X509Certificate has a custom Equals
+                // that compares properties so two default ctor certificates compare as equal and
+                // the exception isn't triggered. Creating certificates that compare as unequal
+                // involves creating self-signed X509 certificates either within the test (bit
+                // tricky on the face of it) or shipping them with the tests.
+                //
+                // I'm not *too* fussed if the "throw exception if they try to overwrite" code
+                // isn't working, it's just a nicety - you can always defeat it by just writing
+                // directly to the underlying OWIN environment dictionary. As long as we can show
+                // that we can overwrite the null / empty state and assign with self then that
+                // will be OK.
+                //
+                // This will not throw the expected exception:
+                // using(var c2 = new X509Certificate()) {
+                //     AssertExceptionThrownOnAction(() => _Context.SslClientCertificate = c2);
+                // }
+            }
         }
 
         [TestMethod]

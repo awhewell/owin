@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 
@@ -22,6 +23,27 @@ namespace AWhewell.Owin.Utility
     /// </summary>
     public class OwinContext
     {
+        private RequestHeadersDictionary _RequestHeadersDictionary;
+
+        private QueryStringDictionary _RequestQueryStringDictionary;
+
+        private ResponseHeadersDictionary _ResponseHeadersDictionary;
+
+        /// <summary>
+        /// Gets or sets a cancellation token indicating whether the request has been cancelled or aborted. Attempts
+        /// to overwrite this when non-null will throw an exception.
+        /// </summary>
+        public CancellationToken? CallCancelled
+        {
+            get => Environment[EnvironmentKey.CallCancelled] as CancellationToken?;
+            set {
+                if(CallCancelled != null && CallCancelled != value) {
+                    throw new InvalidOperationException("A value has already been set for CallCancelled");
+                }
+                Environment[EnvironmentKey.CallCancelled] = value;
+            }
+        }
+
         /// <summary>
         /// Gets the environment that this context is wrapping.
         /// </summary>
@@ -45,7 +67,6 @@ namespace AWhewell.Owin.Utility
             set => SetIfInitialisingOrNoChange(RequestHeaders, value, EnvironmentKey.RequestHeaders, "There is already a dictionary set for RequestHeaders");
         }
 
-        private RequestHeadersDictionary _RequestHeadersDictionary;
         /// <summary>
         /// Gets a <see cref="RequestHeadersDictionary"/> wrapper around <see cref="RequestHeaders"/>.
         /// </summary>
@@ -62,6 +83,21 @@ namespace AWhewell.Owin.Utility
         }
 
         /// <summary>
+        /// Gets the <see cref="RequestMethod"/> parsed into an <see cref="HttpMethod"/>.
+        /// </summary>
+        public HttpMethod RequestHttpMethod => Parser.ParseHttpMethod(RequestMethod);
+
+        /// <summary>
+        /// Gets <see cref="RequestProtocol"/> parsed into an <see cref="HttpProtocol"/>.
+        /// </summary>
+        public HttpProtocol RequestHttpProtocol => Parser.ParseHttpProtocol(RequestProtocol);
+
+        /// <summary>
+        /// Gets the <see cref="RequestScheme"/> parsed into an <see cref="HttpScheme"/> enum value.
+        /// </summary>
+        public HttpScheme RequestHttpScheme => Parser.ParseHttpScheme(RequestScheme);
+
+        /// <summary>
         /// Gets or sets the request method. Setter will throw if overwriting an existing method.
         /// </summary>
         public string RequestMethod
@@ -69,11 +105,6 @@ namespace AWhewell.Owin.Utility
             get => Environment[EnvironmentKey.RequestMethod] as string;
             set => SetIfInitialisingOrNoChange(RequestMethod, value, EnvironmentKey.RequestMethod, "There is already a value set for RequestMethod");
         }
-
-        /// <summary>
-        /// Gets the <see cref="RequestMethod"/> parsed into an <see cref="HttpMethod"/>.
-        /// </summary>
-        public HttpMethod RequestHttpMethod => Parser.ParseHttpMethod(RequestMethod);
 
         /// <summary>
         /// Gets or sets the request path after unescaping. Setter will throw if overwriting an existing path.
@@ -106,12 +137,6 @@ namespace AWhewell.Owin.Utility
             get => Environment[EnvironmentKey.RequestProtocol] as string;
             set => SetIfInitialisingOrNoChange(RequestProtocol, value, EnvironmentKey.RequestProtocol, "There is already a value set for RequestProtocol");
         }
-
-        /// <summary>
-        /// Gets <see cref="RequestProtocol"/> parsed into an <see cref="HttpProtocol"/>.
-        /// </summary>
-        public HttpProtocol RequestHttpProtocol => Parser.ParseHttpProtocol(RequestProtocol);
-
         /// <summary>
         /// Gets or sets the query string without the initial question mark and without any unescaping.
         /// </summary>
@@ -120,25 +145,6 @@ namespace AWhewell.Owin.Utility
             get => Environment[EnvironmentKey.RequestQueryString] as string;
             set => SetIfInitialisingOrNoChange(RequestQueryString, value, EnvironmentKey.RequestQueryString, "There is already a value set for RequestQueryString");
         }
-
-        private QueryStringDictionary _RequestQueryStringDictionary;
-        /// <summary>
-        /// Returns a <see cref="QueryStringDictionary"/> wrapper around <see cref="RequestQueryString"/>.
-        /// </summary>
-        /// <param name="caseSensitiveKeys">True if the query string keys can be distinguished just by case.</param>
-        /// <remarks></remarks>
-        public QueryStringDictionary RequestQueryStringDictionary(bool caseSensitiveKeys)
-        {
-            var queryString = RequestQueryString ?? "";
-            if(_RequestQueryStringDictionary == null
-                || _RequestQueryStringDictionary.QueryString != queryString
-                || _RequestQueryStringDictionary.CaseSensitiveKeys != caseSensitiveKeys
-            ) {
-                _RequestQueryStringDictionary = new QueryStringDictionary(queryString, caseSensitiveKeys);
-            }
-            return _RequestQueryStringDictionary;
-        }
-
         /// <summary>
         /// Gets or sets the request scheme. Attempts to overwrite an existing scheme with a new one will throw an exception.
         /// </summary>
@@ -147,11 +153,6 @@ namespace AWhewell.Owin.Utility
             get => Environment[EnvironmentKey.RequestScheme] as string;
             set => SetIfInitialisingOrNoChange(RequestScheme, value, EnvironmentKey.RequestScheme, "There is already a value set for RequestScheme");
         }
-
-        /// <summary>
-        /// Gets the <see cref="RequestScheme"/> parsed into an <see cref="HttpScheme"/> enum value.
-        /// </summary>
-        public HttpScheme RequestHttpScheme => Parser.ParseHttpScheme(RequestScheme);
 
         /// <summary>
         /// Gets or sets the response stream. Attempts to overwrite a non-null / non-Stream.Null stream with a
@@ -172,7 +173,6 @@ namespace AWhewell.Owin.Utility
             set => SetIfInitialisingOrNoChange(ResponseHeaders, value, EnvironmentKey.ResponseHeaders, "There is already a dictionary set for ResponseHeaders");
         }
 
-        private ResponseHeadersDictionary _ResponseHeadersDictionary;
         /// <summary>
         /// Gets a <see cref="ResponseHeadersDictionary"/> wrapper around the <see cref="ResponseHeaders"/> dictionary.
         /// </summary>
@@ -189,15 +189,6 @@ namespace AWhewell.Owin.Utility
         }
 
         /// <summary>
-        /// Gets or sets the response status code. Overwriting an existing status code is permitted.
-        /// </summary>
-        public int? ResponseStatusCode
-        {
-            get => Environment[EnvironmentKey.ResponseStatusCode] as int?;
-            set => Environment[EnvironmentKey.ResponseStatusCode] = value;
-        }
-
-        /// <summary>
         /// Gets or sets the response status code as an <see cref="HttpStatusCode"/>.
         /// </summary>
         public HttpStatusCode? ResponseHttpStatusCode
@@ -210,15 +201,6 @@ namespace AWhewell.Owin.Utility
         }
 
         /// <summary>
-        /// Gets or sets the response reason phrase. Overwriting an existing reason phrase is permitted.
-        /// </summary>
-        public string ResponseReasonPhrase
-        {
-            get => Environment[EnvironmentKey.ResponseReasonPhrase] as string;
-            set => Environment[EnvironmentKey.ResponseReasonPhrase] = value;
-        }
-
-        /// <summary>
         /// Gets or sets the response protocol. Overwriting an existing response protocol is permitted.
         /// </summary>
         public string ResponseProtocol
@@ -228,18 +210,81 @@ namespace AWhewell.Owin.Utility
         }
 
         /// <summary>
-        /// Gets or sets a cancellation token indicating whether the request has been cancelled or aborted. Attempts
-        /// to overwrite this when non-null will throw an exception.
+        /// Gets or sets the response reason phrase. Overwriting an existing reason phrase is permitted.
         /// </summary>
-        public CancellationToken? CallCancelled
+        public string ResponseReasonPhrase
         {
-            get => Environment[EnvironmentKey.CallCancelled] as CancellationToken?;
-            set {
-                if(CallCancelled != null && CallCancelled != value) {
-                    throw new InvalidOperationException("A value has already been set for CallCancelled");
-                }
-                Environment[EnvironmentKey.CallCancelled] = value;
-            }
+            get => Environment[EnvironmentKey.ResponseReasonPhrase] as string;
+            set => Environment[EnvironmentKey.ResponseReasonPhrase] = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the response status code. Overwriting an existing status code is permitted.
+        /// </summary>
+        public int? ResponseStatusCode
+        {
+            get => Environment[EnvironmentKey.ResponseStatusCode] as int?;
+            set => Environment[EnvironmentKey.ResponseStatusCode] = value;
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating that the request was from a browser on the same machine as the
+        /// server. Attempts to overwrite this if it is not null will throw an exception.
+        /// </summary>
+        public bool? ServerIsLocal
+        {
+            get => Environment[EnvironmentKey.ServerIsLocal] as bool?;
+            set => SetIfInitialisingOrNoChange(ServerIsLocal, value, EnvironmentKey.ServerIsLocal, "A value has already been set for ServerIsLocal");
+        }
+
+        /// <summary>
+        /// Gets or sets the IP address that the request was received on. Attempts to overwrite this when
+        /// it is not a null value will throw an exception.
+        /// </summary>
+        public string ServerLocalIpAddress
+        {
+            get => Environment[EnvironmentKey.ServerLocalIpAddress] as string;
+            set => SetIfInitialisingOrNoChange(ServerLocalIpAddress, value, EnvironmentKey.ServerLocalIpAddress, "There is already a value set for ServerLocalIpAddress");
+        }
+
+        /// <summary>
+        /// Gets or sets the port number (as a string) that the request was received on. Attempts to overwrite this when
+        /// it is not a null value will throw an exception.
+        /// </summary>
+        public string ServerLocalPort
+        {
+            get => Environment[EnvironmentKey.ServerLocalPort] as string;
+            set => SetIfInitialisingOrNoChange(ServerLocalPort, value, EnvironmentKey.ServerLocalPort, "There is already a value set for ServerLocalPort");
+        }
+
+        /// <summary>
+        /// Gets or sets the IP address that the request was received from. Attempts to overwrite this when
+        /// it is not a null value will throw an exception.
+        /// </summary>
+        public string ServerRemoteIpAddress
+        {
+            get => Environment[EnvironmentKey.ServerRemoteIpAddress] as string;
+            set => SetIfInitialisingOrNoChange(ServerRemoteIpAddress, value, EnvironmentKey.ServerRemoteIpAddress, "There is already a value set for ServerRemoteIpAddress");
+        }
+
+        /// <summary>
+        /// Gets or sets the port number (as a string) that the request was received from. Attempts to overwrite this when
+        /// it is not a null value will throw an exception.
+        /// </summary>
+        public string ServerRemotePort
+        {
+            get => Environment[EnvironmentKey.ServerRemotePort] as string;
+            set => SetIfInitialisingOrNoChange(ServerRemotePort, value, EnvironmentKey.ServerRemotePort, "There is already a value set for ServerRemotePort");
+        }
+
+        /// <summary>
+        /// Gets or sets the X509Certificate presented by the client during an encrypted request. Attempts to overwrite
+        /// this when it is not a null value will throw an exception.
+        /// </summary>
+        public X509Certificate SslClientCertificate
+        {
+            get => Environment[EnvironmentKey.SslClientCertificate] as X509Certificate;
+            set => SetIfInitialisingOrNoChange(SslClientCertificate, value, EnvironmentKey.SslClientCertificate, "There is already a value set for SslClientCertificate");
         }
 
         /// <summary>
@@ -286,6 +331,23 @@ namespace AWhewell.Owin.Utility
         }
 
         /// <summary>
+        /// Returns a <see cref="QueryStringDictionary"/> wrapper around <see cref="RequestQueryString"/>.
+        /// </summary>
+        /// <param name="caseSensitiveKeys">True if the query string keys can be distinguished just by case.</param>
+        /// <remarks></remarks>
+        public QueryStringDictionary RequestQueryStringDictionary(bool caseSensitiveKeys)
+        {
+            var queryString = RequestQueryString ?? "";
+            if(_RequestQueryStringDictionary == null
+                || _RequestQueryStringDictionary.QueryString != queryString
+                || _RequestQueryStringDictionary.CaseSensitiveKeys != caseSensitiveKeys
+            ) {
+                _RequestQueryStringDictionary = new QueryStringDictionary(queryString, caseSensitiveKeys);
+            }
+            return _RequestQueryStringDictionary;
+        }
+
+        /// <summary>
         /// Sets up the environment for a text response.
         /// </summary>
         /// <param name="text"></param>
@@ -310,33 +372,6 @@ namespace AWhewell.Owin.Utility
         }
 
         /// <summary>
-        /// Assigns a value to the environment but only if the existing value is either null or is the same as
-        /// the value being set.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="existingValue"></param>
-        /// <param name="newValue"></param>
-        /// <param name="environmentKey"></param>
-        /// <param name="exceptionMessage"></param>
-        private void SetIfInitialisingOrNoChange(object existingValue, object newValue, string environmentKey, string exceptionMessage)
-        {
-            if(existingValue != null && existingValue != newValue) {
-                throw new InvalidOperationException(exceptionMessage);
-            }
-            Environment[environmentKey] = newValue;
-        }
-
-        private void SetIfInitialisingOrNoChange(Stream existingValue, Stream newValue, string environmentKey, string exceptionMessage)
-        {
-            SetIfInitialisingOrNoChange(
-                (object)(existingValue == Stream.Null ? null : existingValue),
-                newValue,
-                environmentKey,
-                exceptionMessage
-            );
-        }
-
-        /// <summary>
         /// Gets or creates a wrapper around a headers dictionary.
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -346,7 +381,7 @@ namespace AWhewell.Owin.Utility
         /// <param name="assignWrapper"></param>
         /// <returns></returns>
         T GetOrCreateWrapper<T>(IDictionary<string, string[]> envHeaders, T existingWrapper, Func<IDictionary<string, string[]>, T> createWrapper, Action<T> assignWrapper)
-            where T: HeadersDictionary
+            where T : HeadersDictionary
         {
             if(envHeaders == null) {
                 if(existingWrapper != null) {
@@ -364,6 +399,33 @@ namespace AWhewell.Owin.Utility
             }
 
             return existingWrapper;
+        }
+
+        /// <summary>
+        /// Assigns a value to the environment but only if the existing value is either null or is the same as
+        /// the value being set.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="existingValue"></param>
+        /// <param name="newValue"></param>
+        /// <param name="environmentKey"></param>
+        /// <param name="exceptionMessage"></param>
+        private void SetIfInitialisingOrNoChange(object existingValue, object newValue, string environmentKey, string exceptionMessage)
+        {
+            if(existingValue != null && !Object.Equals(existingValue, newValue)) {
+                throw new InvalidOperationException(exceptionMessage);
+            }
+            Environment[environmentKey] = newValue;
+        }
+
+        private void SetIfInitialisingOrNoChange(Stream existingValue, Stream newValue, string environmentKey, string exceptionMessage)
+        {
+            SetIfInitialisingOrNoChange(
+                (object)(existingValue == Stream.Null ? null : existingValue),
+                newValue,
+                environmentKey,
+                exceptionMessage
+            );
         }
     }
 }
