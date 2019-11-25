@@ -135,8 +135,8 @@ namespace Test.AWhewell.Owin.Host.HttpListener
             Initialise();
 
             var properties = _PipelineBuilderEnvironment.Object.Properties;
-            Assert.AreEqual(Constants.Version,          properties[ApplicationStartupKey.Version]);
-            Assert.AreEqual("Owin.Host.HttpListener",   properties[ApplicationStartupKey.HostType]);
+            Assert.AreEqual(Constants.Version,                  properties[ApplicationStartupKey.Version]);
+            Assert.AreEqual("AWhewell.Owin.Host.HttpListener",  properties[ApplicationStartupKey.HostType]);
         }
 
         [TestMethod]

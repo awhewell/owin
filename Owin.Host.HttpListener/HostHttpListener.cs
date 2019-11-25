@@ -155,7 +155,7 @@ namespace AWhewell.Owin.Host.HttpListener
                 throw new InvalidOperationException("You cannot initialise a host twice");
             }
 
-            environment.Properties[ApplicationStartupKey.HostType] = "Owin.Host.HttpListener";
+            environment.Properties[ApplicationStartupKey.HostType] = "AWhewell.Owin.Host.HttpListener";
             environment.Properties[ApplicationStartupKey.Version] =  Constants.Version;
 
             _Pipeline = builder.CreatePipeline(environment);
