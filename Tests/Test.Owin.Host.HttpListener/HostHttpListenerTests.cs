@@ -637,16 +637,16 @@ namespace Test.AWhewell.Owin.Host.HttpListener
 
             AssertEnvironment(
                 context => context.MockRequest.SetupGet(r => r.RemoteEndPoint).Returns(expected),
-                remoteIPAddress ?? "",
+                remoteIPAddress,
                 env => env[EnvironmentKey.ServerRemoteIpAddress]
             );
         }
 
         [TestMethod]
-        [DataRow("192.168.0.12:12345", 12345)]
-        [DataRow("[::1]:2",            2)]
-        [DataRow(null,                 0)]
-        public void GetContext_Environment_server_RemotePort_Filled_Correctly(string remoteIPAddress, int expectedPort)
+        [DataRow("192.168.0.12:12345", "12345")]
+        [DataRow("[::1]:2",            "2")]
+        [DataRow(null,                 null)]
+        public void GetContext_Environment_server_RemotePort_Filled_Correctly(string remoteIPAddress, string expectedPort)
         {
             var remoteIPEndPoint = remoteIPAddress == null ? null : IPEndPoint.Parse(remoteIPAddress);
 
@@ -667,16 +667,16 @@ namespace Test.AWhewell.Owin.Host.HttpListener
 
             AssertEnvironment(
                 context => context.MockRequest.SetupGet(r => r.LocalEndPoint).Returns(expected),
-                localIPAddress ?? "",
+                localIPAddress,
                 env => env[EnvironmentKey.ServerLocalIpAddress]
             );
         }
 
         [TestMethod]
-        [DataRow("192.168.0.12:12345", 12345)]
-        [DataRow("[::1]:2",            2)]
-        [DataRow(null,                 0)]
-        public void GetContext_Environment_server_LocalPort_Filled_Correctly(string localIPAddress, int expectedPort)
+        [DataRow("192.168.0.12:12345", "12345")]
+        [DataRow("[::1]:2",            "2")]
+        [DataRow(null,                 null)]
+        public void GetContext_Environment_server_LocalPort_Filled_Correctly(string localIPAddress, string expectedPort)
         {
             var localIPEndPoint = localIPAddress == null ? null : IPEndPoint.Parse(localIPAddress);
 

@@ -288,28 +288,28 @@ namespace AWhewell.Owin.Host.HttpListener
             var query = pathQuery.Item2;
 
             var result = OwinContext.Create(null);
-            result.Version =            Constants.Version;
-            result.CallCancelled =      cancellationToken;
-            result.RequestMethod =      request.HttpMethod;
-            result.RequestBody =        !request.HasEntityBody ? Stream.Null : request.InputStream;
-            result.RequestHeaders =     new HeadersWrapper(request.Headers);
-            result.RequestPathBase =    root == "/" ? "" : root;
-            result.RequestPath =        root == "/" ? path : path.Substring(root.Length);
-            result.RequestQueryString = query;
-            result.RequestProtocol =    $"HTTP/{request.ProtocolVersion}";
-            result.RequestScheme =      request.Url.Scheme;
+            result.Version =                Constants.Version;
+            result.CallCancelled =          cancellationToken;
+            result.RequestMethod =          request.HttpMethod;
+            result.RequestBody =            !request.HasEntityBody ? Stream.Null : request.InputStream;
+            result.RequestHeaders =         new HeadersWrapper(request.Headers);
+            result.RequestPathBase =        root == "/" ? "" : root;
+            result.RequestPath =            root == "/" ? path : path.Substring(root.Length);
+            result.RequestQueryString =     query;
+            result.RequestProtocol =        $"HTTP/{request.ProtocolVersion}";
+            result.RequestScheme =          request.Url.Scheme;
 
-            result.ResponseBody =       response.OutputStream;
-            result.ResponseHeaders =    new HeadersWrapper_Response(response, response.Headers);
+            result.ResponseBody =           response.OutputStream;
+            result.ResponseHeaders =        new HeadersWrapper_Response(response, response.Headers);
 
-            result.Environment[EnvironmentKey.ServerIsLocal] =          request.IsLocal;
-            result.Environment[EnvironmentKey.ServerLocalIpAddress] =   request.LocalEndPoint?.Address?.ToString() ?? "";
-            result.Environment[EnvironmentKey.ServerLocalPort] =        request.LocalEndPoint?.Port ?? 0;
-            result.Environment[EnvironmentKey.ServerRemoteIpAddress] =  request.RemoteEndPoint?.Address?.ToString() ?? "";
-            result.Environment[EnvironmentKey.ServerRemotePort] =       request.RemoteEndPoint?.Port ?? 0;
+            result.ServerIsLocal =          request.IsLocal;
+            result.ServerLocalIpAddress =   request.LocalEndPoint?.Address?.ToString();
+            result.ServerLocalPort =        request.LocalEndPoint?.Port.ToString();
+            result.ServerRemoteIpAddress =  request.RemoteEndPoint?.Address?.ToString();
+            result.ServerRemotePort =       request.RemoteEndPoint?.Port.ToString();
 
             if(String.Equals(request.Url.Scheme, "https", StringComparison.OrdinalIgnoreCase)) {
-                result.Environment[EnvironmentKey.SslClientCertificate] = request.GetClientCertificate();
+                result.SslClientCertificate = request.GetClientCertificate();
             }
 
             return result.Environment;
