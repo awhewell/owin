@@ -21,6 +21,32 @@ namespace Test.AWhewell.Owin.Utility
     public class OwinPathTests
     {
         [TestMethod]
+        [DataRow("http",    "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "name=value",               "http://1.2.3.4/VirtualRadar/poobah.html?name=value")]
+        [DataRow("http",    "1.2.3.4",      "",                 "/poobah.html", "name=value",               "http://1.2.3.4/poobah.html?name=value")]
+        [DataRow("http",    "1.2.3.4",      "",                 "/",            "name=value",               "http://1.2.3.4/?name=value")]
+        [DataRow("http",    "1.2.3.4",      "",                 "/",            "",                         "http://1.2.3.4/")]
+        [DataRow("http",    "1.2.3.4",      "",                 "/",            null,                       "http://1.2.3.4/")]
+        [DataRow("http",    "1.2.3.4",      "/Root",            "",             null,                       "http://1.2.3.4/Root")]
+        [DataRow("http",    "1.2.3.4",      "/Root",            "/",            null,                       "http://1.2.3.4/Root/")]
+        [DataRow(null,      "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "name=value",               "http://1.2.3.4/VirtualRadar/poobah.html?name=value")]
+        [DataRow("",        "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "name=value",               "http://1.2.3.4/VirtualRadar/poobah.html?name=value")]
+        [DataRow("https",   "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "name=value",               "https://1.2.3.4/VirtualRadar/poobah.html?name=value")]
+        [DataRow("http",    null,           "/VirtualRadar",    "/poobah.html", "name=value",               "http://127.0.0.1/VirtualRadar/poobah.html?name=value")]
+        [DataRow("http",    "",             "/VirtualRadar",    "/poobah.html", "name=value",               "http://127.0.0.1/VirtualRadar/poobah.html?name=value")]
+        [DataRow("http",    "1.2.3.4:80",   "/VirtualRadar",    "/poobah.html", "name=value",               "http://1.2.3.4:80/VirtualRadar/poobah.html?name=value")]
+        [DataRow("http",    "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "name=percent%2Dencoded",   "http://1.2.3.4/VirtualRadar/poobah.html?name=percent%2Dencoded")]
+        [DataRow("http",    "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "?name",                    "http://1.2.3.4/VirtualRadar/poobah.html??name")]   // Invalid, query string must not start with ?
+        [DataRow("http",    "1.2.3.4",      "VirtualRadar",     "poobah.html",  "name",                     "http://1.2.3.4VirtualRadarpoobah.html?name")]      // Invalid, pathBase must start with a slash or be "", likewise path must start with a slash
+        [DataRow("http",    "1.2.3.4",      "/VirtualRadar",    "/poobah.html", null,                       "http://1.2.3.4/VirtualRadar/poobah.html")]
+        [DataRow("http",    "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "",                         "http://1.2.3.4/VirtualRadar/poobah.html")]
+        public void ConstructUrl_Returns_Correct_Values(string scheme, string host, string pathBase, string path, string queryString, string expected)
+        {
+            var url = OwinPath.ConstructUrl(scheme, host, pathBase, path, queryString);
+
+            Assert.AreEqual(expected, url);
+        }
+
+        [TestMethod]
         [DataRow(new string[] { },              null)]
         [DataRow(new string[] { },              "")]
         [DataRow(new string[] { },              "/")]

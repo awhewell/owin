@@ -20,6 +20,32 @@ namespace AWhewell.Owin.Utility
     public static class OwinPath
     {
         /// <summary>
+        /// Rebuilds a request URL from the constituent parts as exposed in an OWIN environment.
+        /// </summary>
+        /// <param name="scheme"></param>
+        /// <param name="host"></param>
+        /// <param name="pathBase"></param>
+        /// <param name="path"></param>
+        /// <param name="queryString"></param>
+        /// <returns></returns>
+        public static string ConstructUrl(string scheme, string host, string pathBase, string path, string queryString)
+        {
+            var result = new StringBuilder();
+
+            result.Append(String.IsNullOrEmpty(scheme) ? "http" : scheme);
+            result.Append("://");
+            result.Append(String.IsNullOrEmpty(host) ? "127.0.0.1" : host);     // note that OWIN host headers can include the port
+            result.Append(pathBase);
+            result.Append(path);
+
+            if(!String.IsNullOrEmpty(queryString)) {
+                result.Append($"?{queryString}");       // note that OWIN presents query strings in their percent encoded form
+            }
+
+            return result.ToString();
+        }
+
+        /// <summary>
         /// Splits a request path into a collection of path parts.
         /// </summary>
         /// <param name="requestPath"></param>
