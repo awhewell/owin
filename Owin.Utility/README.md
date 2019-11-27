@@ -73,3 +73,8 @@ equals the current value.
 | `ServerRemotePort`          | `string`                        | 1    | `server.RemotePort` |
 | `SslClientCertificate`      | `X509Certificate`               | 1    | `ssl.ClientCertificate` |
 | `Version`                   | `string`                        | 1    | `owin.Version` |
+
+### Methods
+**`RequestQueryStringDictionary`** `(bool caseSensitiveKeys)`
+returns a `QueryStringDictionary` wrapper around `RequestQueryString` that exposes the query string key value
+pairs.

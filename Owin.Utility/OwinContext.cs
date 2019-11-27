@@ -197,6 +197,7 @@ namespace AWhewell.Owin.Utility
             get => Environment[EnvironmentKey.RequestProtocol] as string;
             set => SetIfInitialisingOrNoChange(RequestProtocol, value, EnvironmentKey.RequestProtocol, "There is already a value set for RequestProtocol");
         }
+
         /// <summary>
         /// Gets or sets the query string without the initial question mark and without any unescaping.
         /// </summary>
@@ -205,6 +206,7 @@ namespace AWhewell.Owin.Utility
             get => Environment[EnvironmentKey.RequestQueryString] as string;
             set => SetIfInitialisingOrNoChange(RequestQueryString, value, EnvironmentKey.RequestQueryString, "There is already a value set for RequestQueryString");
         }
+
         /// <summary>
         /// Gets or sets the request scheme. Attempts to overwrite an existing scheme with a new one will throw an exception.
         /// </summary>
