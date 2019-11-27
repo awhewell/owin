@@ -40,36 +40,36 @@ results throughout the middleware chain.
 Setters marked as "1" can only be set if the current value is null, or if the new value
 equals the current value.
 
-| Property                    | Type                            | Get? | Set? | Key                       | Notes |
-|-                            |-                                |:-:   |:-:   |-                          | - |
-| `CallCancelled`             | `CancellationToken?`            | Y    | 1    | owin.CallCancelled        | See spec. |
-| `Environment`               | `IDictionary<string, object>`   | Y    | N    | -                         | The OWIN environment that is being wrapped. |
-| `RequestBody`               | `Stream`                        | Y    | 1    | owin.RequestBody          | See spec. |
-| `RequestHeaders`            | `IDictionary<string, string[]>` | Y    | 1    | owin.RequestHeaders       | See spec. |
-| `RequestHeadersDictionary`  | `RequestHeadersDictionary`      | Y    | N    | -                         | Wrapper around `RequestHeaders` |
-| `RequestHttpMethod`         | `HttpMethod`                    | Y    | N    | -                         | `RequestMethod` parsed into an enum |
-| `RequestHttpProtocol`       | `HttpProtocol`                  | Y    | N    | -                         | `RequestProtocol` parsed into an enum |
-| `RequestHttpScheme`         | `HttpScheme`                    | Y    | N    | -                         | `RequestScheme` parsed into an enum |
-| `RequestMethod`             | `string`                        | Y    | 1    | owin.RequestMethod        | See spec. |
-| `RequestPath`               | `string`                        | Y    | 1    | owin.RequestPath          | See spec. |
-| `RequestPathBase`           | `string`                        | Y    | 1    | owin.RequestPathBase      | See spec. |
-| `RequestPathFlattened`      | `string`                        | Y    | N    | -                         | `RequestPathNormalised` with directory traversal path parts resolved |
-| `RequestPathNormalised`     | `string`                        | Y    | N    | -                         | `RequestPath` with backslashes translated to forward-slashes and an empty path expressed as a single forward-slash |
-| `RequestPathParts`          | `string[]`                      | Y    | N    | -                         | `RequestPath` split into chunks at the forward-slashes. Backslashes in chunks are preserved. |
-| `RequestProtocol`           | `string`                        | Y    | 1    | owin.RequestProtocol      | See spec. |
-| `RequestQueryString`        | `string`                        | Y    | 1    | owin.RequestQueryString   | See spec. |
-| `RequestScheme`             | `string`                        | Y    | 1    | owin.RequestScheme        | See spec. |
-| `ResponseBody`              | `Stream`                        | Y    | 1    | owin.ResponseBody         | See spec. |
-| `ResponseHeaders`           | `IDictionary<string, string[]>` | Y    | 1    | owin.ResponseHeaders      | See spec. |
-| `ResponseHeadersDictionary` | `ResponseHeadersDictionary`     | Y    | N    | -                         | Wrapper around `ResponseHeadersDictionary` |
-| `ResponseHttpStatusCode`    | `System.Net.HttpStatusCode`     | Y    | Y    | -                         | `ResponseStatusCode` expressed as an enum |
-| `ResponseProtocol`          | `string`                        | Y    | Y    | owin.ResponseProtocol     | See spec. |
-| `ResponseReasonPhrase`      | `string`                        | Y    | Y    | owin.ResponseReasonPhrase | See spec. |
-| `ResponseStatusCode`        | `int?`                          | Y    | Y    | owin.ResponseStatusCode   | See spec. |
-| `ServerIsLocal`             | `bool?`                         | Y    | 1    | server.IsLocal            | See common keys in spec. |
-| `ServerLocalIpAddress`      | `string`                        | Y    | 1    | server.LocalIpAddress     | See common keys in spec. |
-| `ServerLocalPort`           | `string`                        | Y    | 1    | server.LocalPort          | See common keys in spec. |
-| `ServerRemoteIpAddress`     | `string`                        | Y    | 1    | server.RemoteIpAddress    | See common keys in spec. |
-| `ServerRemotePort`          | `string`                        | Y    | 1    | server.RemotePort         | See common keys in spec. |
-| `SslClientCertificate`      | `X509Certificate`               | Y    | 1    | ssl.ClientCertificate     | See common keys in spec. |
-| `Version`                   | `string`                        | Y    | 1    | owin.Version              | See spec. |
+| Property                    | Type                            | Set? | Environment Key or Notes |
+|-                            |-                                |:-:   |- |
+| `CallCancelled`             | `CancellationToken?`            | 1    | `owin.CallCancelled` |
+| `Environment`               | `IDictionary<string, object>`   | N    | The OWIN environment that is being wrapped. |
+| `RequestBody`               | `Stream`                        | 1    | `owin.RequestBody` |
+| `RequestHeaders`            | `IDictionary<string, string[]>` | 1    | `owin.RequestHeaders`  |
+| `RequestHeadersDictionary`  | `RequestHeadersDictionary`      | N    | Wrapper around *RequestHeaders* |
+| `RequestHttpMethod`         | `HttpMethod`                    | N    | *RequestMethod* parsed into an enum |
+| `RequestHttpProtocol`       | `HttpProtocol`                  | N    | *RequestProtocol* parsed into an enum |
+| `RequestHttpScheme`         | `HttpScheme`                    | N    | *RequestScheme* parsed into an enum |
+| `RequestMethod`             | `string`                        | 1    | `owin.RequestMethod` |
+| `RequestPath`               | `string`                        | 1    | `owin.RequestPath` |
+| `RequestPathBase`           | `string`                        | 1    | `owin.RequestPathBase` |
+| `RequestPathFlattened`      | `string`                        | N    | *RequestPathNormalised* with directory traversal path parts resolved |
+| `RequestPathNormalised`     | `string`                        | N    | *RequestPath* with backslashes translated to forward-slashes and an empty path expressed as a single forward-slash |
+| `RequestPathParts`          | `string[]`                      | N    | *RequestPath* split into chunks at the forward-slashes. Backslashes in chunks are preserved. |
+| `RequestProtocol`           | `string`                        | 1    | `owin.RequestProtocol` |
+| `RequestQueryString`        | `string`                        | 1    | `owin.RequestQueryString` |
+| `RequestScheme`             | `string`                        | 1    | `owin.RequestScheme` |
+| `ResponseBody`              | `Stream`                        | 1    | `owin.ResponseBody` |
+| `ResponseHeaders`           | `IDictionary<string, string[]>` | 1    | `owin.ResponseHeaders` |
+| `ResponseHeadersDictionary` | `ResponseHeadersDictionary`     | N    | Wrapper around *ResponseHeadersDictionary* |
+| `ResponseHttpStatusCode`    | `System.Net.HttpStatusCode`     | Y    | *ResponseStatusCode* cast to an enum |
+| `ResponseProtocol`          | `string`                        | Y    | `owin.ResponseProtocol` |
+| `ResponseReasonPhrase`      | `string`                        | Y    | `owin.ResponseReasonPhrase` |
+| `ResponseStatusCode`        | `int?`                          | Y    | `owin.ResponseStatusCode` |
+| `ServerIsLocal`             | `bool?`                         | 1    | `server.IsLocal` |
+| `ServerLocalIpAddress`      | `string`                        | 1    | `server.LocalIpAddress` |
+| `ServerLocalPort`           | `string`                        | 1    | `server.LocalPort` |
+| `ServerRemoteIpAddress`     | `string`                        | 1    | `server.RemoteIpAddress` |
+| `ServerRemotePort`          | `string`                        | 1    | `server.RemotePort` |
+| `SslClientCertificate`      | `X509Certificate`               | 1    | `ssl.ClientCertificate` |
+| `Version`                   | `string`                        | 1    | `owin.Version` |
