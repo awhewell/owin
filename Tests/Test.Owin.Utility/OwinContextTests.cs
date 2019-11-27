@@ -264,6 +264,48 @@ namespace Test.AWhewell.Owin.Utility
         }
 
         [TestMethod]
+        [DataRow(@"/file.txt",                      "/file.txt")]       // Simple case
+        [DataRow(null,                              "/")]               // NULL returns root
+        [DataRow(@"",                               "/")]               // Empty string returns root
+        [DataRow(@"/1/../2",                        "/2")]              // Processes directory traveersal parts
+        [DataRow(@"/1/2/3/4/5/6/../../../../3.1",   "/1/2/3.1")]        // Can traverse multiple levels
+        [DataRow(@"/1/2/3/../a/b/../../X/y/z",      "/1/2/X/y/z")]      // Can traverse more than one group
+        [DataRow(@"/1/2/..",                        "/1/")]             // Handles case when last part is directory up
+        [DataRow(@"/1/2/../",                       "/1/")]             // Handles case when last part is folder
+        [DataRow(@"/../../../1",                    "/1")]              // Cannot traverse out of root
+        [DataRow(@"/1/..",                          "/")]               // Can traverse to root
+        [DataRow(@"/..",                            "/")]               // Cannot traverse out of root from root
+        [DataRow(@"/1/./2",                         "/1/2")]            // Removes current directory parts
+        [DataRow(@"/././1",                         "/1")]              // Removes run of current directory parts
+        [DataRow(@"/1/.",                           "/1/")]             // Handles current directory as last part filename
+        [DataRow(@"/1/./",                          "/1/")]             // Handles current directory as last part folder
+        [DataRow(@"/.",                             "/")]               // Handles current directory part in root
+        [DataRow(@"/1//2",                          "/1/2")]            // Removes empty path parts
+        [DataRow(@"/1//",                           "/1/")]             // Handles trailing empty path parts
+        [DataRow(@"//",                             "/")]               // Removes empty path parts from root
+        [DataRow(@"/1/",                            "/1/")]             // Leaves trailing slash intact
+        [DataRow(@"/a\b",                           "/a/b")]            // Backslashes are transformed to forward slashes
+        [DataRow(@"/..\../a",                       "/a")]              // Cannot use backslashes to traverse out of root
+        public void RequestPathFlattened_Returns_Expected_Value(string requestPath, string expected)
+        {
+            _Environment[EnvironmentKey.RequestPath] = requestPath;
+
+            Assert.AreEqual(expected, _Context.RequestPathFlattened);
+        }
+
+        [TestMethod]
+        [DataRow(null,      "/")]
+        [DataRow(@"",       "/")]
+        [DataRow(@"/a",     "/a")]
+        [DataRow(@"/a\b",   "/a/b")]
+        public void RequestPathNormalised_Returns_Expected_Value(string requestPath, string expected)
+        {
+            _Environment[EnvironmentKey.RequestPath] = requestPath;
+
+            Assert.AreEqual(expected, _Context.RequestPathNormalised);
+        }
+
+        [TestMethod]
         public void RequestPathParts_Responds_To_Changes_In_Underlying_RequestPath()
         {
             var pathParts = _Context.RequestPathParts;

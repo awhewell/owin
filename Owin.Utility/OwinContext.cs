@@ -125,6 +125,66 @@ namespace AWhewell.Owin.Utility
         }
 
         /// <summary>
+        /// As per <see cref="RequestPathNormalised"/> except any directory traversal characters are expanded out.
+        /// </summary>
+        public string RequestPathFlattened
+        {
+            get {
+                var result = new StringBuilder();
+
+                void TerminatePathWithSlash()
+                {
+                    if(result.Length == 0 || result[result.Length - 1] != '/') {
+                        result.Append('/');
+                    }
+                }
+
+                int FindLastFolderIndex()
+                {
+                    var startIndex = result.Length > 0 && result[result.Length - 1] == '/' ? result.Length - 2 : result.Length - 1;
+                    return result.LastIndexOf('/', startIndex);
+                }
+
+                var pathParts = RequestPathNormalised.Split('/');
+                for(var i = 0;i < pathParts.Length;++i) {
+                    var pathPart = pathParts[i];
+                    switch(pathPart) {
+                        case ".":
+                            TerminatePathWithSlash();
+                            break;
+                        case "..":
+                            var lastFolderIdx = FindLastFolderIndex();
+                            if(lastFolderIdx != -1) {
+                                ++lastFolderIdx;
+                                result.Remove(lastFolderIdx, result.Length - lastFolderIdx);
+                            }
+                            TerminatePathWithSlash();
+                            break;
+                        default:
+                            TerminatePathWithSlash();
+                            result.Append(pathPart);
+                            break;
+                    }
+                }
+
+                return result.ToString();
+            }
+        }
+
+        /// <summary>
+        /// The same as <see cref="RequestPath"/> except if it is an empty path (i.e. the request specified just the path base) then it
+        /// returns a forward-slash to indicate a request for the root folder under the path base and backslashes are transformed into
+        /// forward-slashes.
+        /// </summary>
+        public string RequestPathNormalised
+        {
+            get {
+                var result = RequestPath;
+                return String.IsNullOrEmpty(result) ? "/" : result.Replace('\\', '/');
+            }
+        }
+
+        /// <summary>
         /// Gets the request path split into parts.
         /// </summary>
         public string[] RequestPathParts => OwinPath.RequestPathParts(Environment, createAndUseCachedResult: true);
