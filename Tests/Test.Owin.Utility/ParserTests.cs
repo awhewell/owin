@@ -20,127 +20,6 @@ namespace Test.AWhewell.Owin.Utility
     [TestClass]
     public class ParserTests
     {
-        static Regex ExpectedDateTimeRegex = new Regex(
-            @"^" +
-            @"(" +
-                @"((?<year>\d\d\d\d)-(?<month>\d\d)-(?<day>\d\d))" +
-                @"|" +
-                @"(?<named>today)" +
-            @")" +
-            @"( " +
-                @"(?<hour>\d\d):(?<minute>\d\d):(?<second>\d\d)" +
-                @"(.(?<ms>\d\d\d))?" +
-            @")?" +
-            @"( " +
-                @"(?<kind>local|utc|unspecified)" +
-            @")?" +
-            @"$",
-            RegexOptions.IgnoreCase
-        );
-
-        static Regex ExpectedDateTimeOffsetRegex = new Regex(
-            @"^" +
-            @"(" +
-                @"((?<year>\d\d\d\d)-(?<month>\d\d)-(?<day>\d\d))" +
-                @"|" +
-                @"(?<named>today)" +
-            @")" +
-            @"( " +
-                @"(?<hour>\d\d):(?<minute>\d\d):(?<second>\d\d)" +
-                @"(.(?<ms>\d\d\d))?" +
-            @")?" +
-            @"( " +
-                @"(?<offset>[+|-]\d+)" +
-            @")?" +
-            @"$",
-            RegexOptions.IgnoreCase
-        );
-
-        public static DateTime? ExpectedDateTime(string expected, Action expectedIsUtc)
-        {
-            DateTime? result = null;
-
-            if(expected != null) {
-                var match = ExpectedDateTimeRegex.Match(expected);
-                if(match.Success) {
-                    int groupToInt(string group, int missingValue)
-                    {
-                        var text = match.Groups[group].Value;
-                        return text == "" ? missingValue : int.Parse(text);
-                    }
-
-                    var year =   groupToInt("year", 1);
-                    var month =  groupToInt("month", 1);
-                    var day =    groupToInt("day", 1);
-                    var hour =   groupToInt("hour", 0);
-                    var minute = groupToInt("minute", 0);
-                    var second = groupToInt("second", 0);
-                    var ms =     groupToInt("ms", 0);
-
-                    switch(match.Groups["named"].Value.ToLower()) {
-                        case "today":
-                            var today = DateTime.Today;
-                            year = today.Year;
-                            month = today.Month;
-                            day = today.Day;
-                            break;
-                    }
-
-                    var kind = DateTimeKind.Unspecified;
-                    switch(match.Groups["kind"].Value.ToLower()) {
-                        case "local":   kind = DateTimeKind.Local; break;
-                        case "utc":     kind = DateTimeKind.Utc; break;
-                    }
-
-                    result = new DateTime(year, month, day, hour, minute, second, ms, kind);
-
-                    if(result.Value.Kind == DateTimeKind.Utc) {
-                        expectedIsUtc();
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        public static DateTimeOffset? ExpectedDateTimeOffset(string expected)
-        {
-            DateTimeOffset? result = null;
-
-            if(expected != null) {
-                var match = ExpectedDateTimeOffsetRegex.Match(expected);
-                if(match.Success) {
-                    int groupToInt(string group, int missingValue)
-                    {
-                        var text = match.Groups[group].Value;
-                        return text == "" ? missingValue : int.Parse(text);
-                    }
-
-                    var year =   groupToInt("year", 1);
-                    var month =  groupToInt("month", 1);
-                    var day =    groupToInt("day", 1);
-                    var hour =   groupToInt("hour", 0);
-                    var minute = groupToInt("minute", 0);
-                    var second = groupToInt("second", 0);
-                    var ms =     groupToInt("ms", 0);
-                    var offset = groupToInt("offset", 0);
-
-                    switch(match.Groups["named"].Value.ToLower()) {
-                        case "today":
-                            var today = DateTime.Today;
-                            year = today.Year;
-                            month = today.Month;
-                            day = today.Day;
-                            break;
-                    }
-
-                    result = new DateTimeOffset(year, month, day, hour, minute, second, ms, new TimeSpan(0, offset, 0));
-                }
-            }
-
-            return result;
-        }
-
         [TestMethod]
         [DataRow(null,      "en-GB",    null)]
         [DataRow("",        "en-GB",    null)]
@@ -459,7 +338,6 @@ namespace Test.AWhewell.Owin.Utility
         [DataRow("01/02/2019",                  "en-US", "2019-01-02 Unspecified")]
         [DataRow("2019-01-30 13:14:15",         "en-GB", "2019-01-30 13:14:15 Utc")]
         [DataRow("2019-01-30 13:14:15.123",     "en-US", "2019-01-30 13:14:15.123 Utc")]
-        [DataRow("2019-07-01T22:53:47+01:00",   "en-GB", "2019-07-01 22:53:47 Local")]
         [DataRow("2019-07-01T22:53:47+01:00",   "en-GB", "2019-07-01 21:53:47 Utc")]
         [DataRow("13:14:15",                    "en-GB", "today 13:14:15 Utc")]
         [DataRow("13:14:15.123",                "en-US", "today 13:14:15.123 Utc")]
@@ -473,11 +351,7 @@ namespace Test.AWhewell.Owin.Utility
                 if(expectedString == null) {
                     Assert.IsNull(actual);
                 } else {
-                    var expected = ExpectedDateTime(expectedString, () => {
-                        if(actual.Value.Kind == DateTimeKind.Local) {
-                            actual = actual.Value.ToUniversalTime();
-                        }
-                    });
+                    var expected = DataRowParser.DateTime(expectedString);
                     Assert.AreEqual(expected, actual);
                 }
             }
@@ -505,7 +379,7 @@ namespace Test.AWhewell.Owin.Utility
                 if(expectedString == null) {
                     Assert.IsNull(actual);
                 } else {
-                    var expected = ExpectedDateTimeOffset(expectedString);
+                    var expected = DataRowParser.DateTimeOffset(expectedString);
                     Assert.AreEqual(expected, actual);
                 }
             }
@@ -597,6 +471,8 @@ namespace Test.AWhewell.Owin.Utility
         [DataRow(typeof(bool),              "0",                                    "en-GB",    false)]
         [DataRow(typeof(bool),              "2",                                    "en-GB",    null)]
         [DataRow(typeof(bool),              "ja",                                   "de-DE",    null)]
+        [DataRow(typeof(bool?),             "true",                                 "en-GB",    true)]
+        [DataRow(typeof(bool?),             "false",                                "en-GB",    false)]
         [DataRow(typeof(byte),              null,                                   "en-GB",    null)]
         [DataRow(typeof(byte),              "",                                     "en-GB",    null)]
         [DataRow(typeof(byte),              "0 ",                                   "en-GB",    0)]
@@ -822,7 +698,6 @@ namespace Test.AWhewell.Owin.Utility
         [DataRow(typeof(DateTime),          "01/02/2019",                           "en-US", "2019-01-02 Unspecified")]
         [DataRow(typeof(DateTime),          "2019-01-30 13:14:15",                  "en-GB", "2019-01-30 13:14:15 Utc")]
         [DataRow(typeof(DateTime),          "2019-01-30 13:14:15",                  "en-US", "2019-01-30 13:14:15 Utc")]
-        [DataRow(typeof(DateTime),          "2019-07-01T22:53:47+01:00",            "en-GB", "2019-07-01 22:53:47 Local")]
         [DataRow(typeof(DateTime),          "2019-07-01T22:53:47+01:00",            "en-GB", "2019-07-01 21:53:47 Utc")]
         [DataRow(typeof(DateTime),          "13:14:15",                             "en-GB", "today 13:14:15 Utc")]
         [DataRow(typeof(DateTime),          "13:14:15.123",                         "en-US", "today 13:14:15.123 Utc")]
@@ -836,7 +711,6 @@ namespace Test.AWhewell.Owin.Utility
         [DataRow(typeof(DateTime?),         "01/02/2019",                           "en-US", "2019-01-02 Unspecified")]
         [DataRow(typeof(DateTime?),         "2019-01-30 13:14:15",                  "en-GB", "2019-01-30 13:14:15 Utc")]
         [DataRow(typeof(DateTime?),         "2019-01-30 13:14:15",                  "en-US", "2019-01-30 13:14:15 Utc")]
-        [DataRow(typeof(DateTime?),         "2019-07-01T22:53:47+01:00",            "en-GB", "2019-07-01 22:53:47 Local")]
         [DataRow(typeof(DateTime?),         "2019-07-01T22:53:47+01:00",            "en-GB", "2019-07-01 21:53:47 Utc")]
         [DataRow(typeof(DateTime?),         "13:14:15",                             "en-GB", "today 13:14:15 Utc")]
         [DataRow(typeof(DateTime?),         "13:14:15.123",                         "en-US", "today 13:14:15.123 Utc")]
@@ -920,15 +794,11 @@ namespace Test.AWhewell.Owin.Utility
                 object expected;
 
                 if(type == typeof(DateTime) || type == typeof(DateTime?)) {
-                    expected = ExpectedDateTime((string)rawExpected, () => {
-                        if(((DateTime?)actual).Value.Kind == DateTimeKind.Local) {
-                            actual = ((DateTime?)actual).Value.ToUniversalTime();
-                        }
-                    });
+                    expected = DataRowParser.DateTime((string)rawExpected);
                 } else if(type == typeof(DateTimeOffset) || type == typeof(DateTimeOffset?)) {
-                    expected = ExpectedDateTimeOffset((string)rawExpected);
+                    expected = DataRowParser.DateTimeOffset((string)rawExpected);
                 } else if(type == typeof(Guid) || type == typeof(Guid?)) {
-                    expected = Guid.Parse((string)rawExpected);
+                    expected = DataRowParser.Guid((string)rawExpected);
                 } else {
                     var convertType = type;
                     if(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>)) {

@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using AWhewell.Owin.Utility.Parsers;
 
 namespace AWhewell.Owin.Utility
 {
@@ -24,6 +25,11 @@ namespace AWhewell.Owin.Utility
     /// </remarks>
     public static class Parser
     {
+        private static readonly ByteArray_HexString_Parser      _ByteArray_HexString_Parser = new ByteArray_HexString_Parser();
+        private static readonly ByteArray_Mime64_Parser         _ByteArray_Mime64_Parser = new ByteArray_Mime64_Parser();
+        private static readonly DateTime_Invariant_Parser       _DateTime_Invariant_Parser = new DateTime_Invariant_Parser();
+        private static readonly DateTimeOffset_Invariant_Parser _DateTimeOffset_Invariant_Parser = new DateTimeOffset_Invariant_Parser();
+
         /// <summary>
         /// Extracts a bool from the text or null if no bool could be extracted.
         /// </summary>
@@ -205,7 +211,7 @@ namespace AWhewell.Owin.Utility
         /// <returns></returns>
         public static DateTime? ParseDateTime(string text)
         {
-            if(DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.None, out var result)) {
+            if(_DateTime_Invariant_Parser.TryParse(text, out var result)) {
                 return result;
             } else {
                 return (DateTime?)null;
@@ -247,23 +253,11 @@ namespace AWhewell.Owin.Utility
         /// <returns></returns>
         public static byte[] ParseHexBytes(string text)
         {
-            byte[] result = null;
-
-            if(text != null && text.Length % 2 == 0) {
-                var textStart = text.StartsWith("0x") ? 2 : 0;
-                var textLength = text.Length - textStart;
-
-                result = new byte[textLength / 2];
-                try {
-                    for(int arrayIdx = 0, textIdx = textStart;arrayIdx < result.Length;++arrayIdx, textIdx += 2) {
-                        result[arrayIdx] = Convert.ToByte(text.Substring(textIdx, 2), 16);
-                    }
-                } catch(FormatException) {
-                    result = null;
-                }
+            if(_ByteArray_HexString_Parser.TryParse(text, out var result)) {
+                return result;
+            } else {
+                return (byte[])null;
             }
-
-            return result;
         }
 
         /// <summary>
@@ -273,17 +267,11 @@ namespace AWhewell.Owin.Utility
         /// <returns></returns>
         public static byte[] ParseMime64Bytes(string text)
         {
-            byte[] result = null;
-
-            if(text != null) {
-                try {
-                    result = Convert.FromBase64String(text);
-                } catch(FormatException) {
-                    result = null;
-                }
+            if(_ByteArray_Mime64_Parser.TryParse(text, out var result)) {
+                return result;
+            } else {
+                return (byte[])null;
             }
-
-            return result;
         }
 
         /// <summary>
@@ -304,7 +292,7 @@ namespace AWhewell.Owin.Utility
             if(type == typeof(string)) {
                 result = text;
             } else if(!String.IsNullOrWhiteSpace(text)) {
-                if(type == typeof(bool)) {
+                if(type == typeof(bool) || type == typeof(bool?)) {
                     result = ParseBool(text);
                 } else if(type == typeof(byte) || type == typeof(byte?)) {
                     result = ParseByte(text);

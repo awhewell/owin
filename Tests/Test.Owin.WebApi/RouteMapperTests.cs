@@ -31,6 +31,11 @@ namespace Test.AWhewell.Owin.WebApi
             public IDictionary<string, object> OwinEnvironment { get; set; }
         }
 
+        public class StringModel
+        {
+            public string StringValue { get; set; }
+        }
+
         private IRouteMapper        _RouteMapper;
         private MockOwinEnvironment _Environment;
 
@@ -526,6 +531,27 @@ namespace Test.AWhewell.Owin.WebApi
             parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
             Assert.IsTrue(parameters.IsValid);
             Assert.AreEqual("1", parameters.Parameters[0]);
+        }
+
+        public class QueryStringModelController : Controller
+        {
+            [HttpGet, Route("x1")] public int StringModelFunc(StringModel model) { return 0; }
+        }
+
+        [TestMethod]
+        public void BuildRouteParameters_Can_Build_Model_Object_From_Query_String()
+        {
+            var route = RouteTests.CreateRoute(typeof(QueryStringModelController), nameof(QueryStringModelController.StringModelFunc));
+            _RouteMapper.Initialise(new Route[] { route });
+            _Environment.SetRequestPath(route.PathParts[0].Part);
+
+            _Environment.RequestQueryString = "StringValue=Ab";
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
+
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual(1, parameters.Parameters.Length);
+            var model = parameters.Parameters[0] as StringModel;
+            Assert.AreEqual("Ab", model.StringValue);
         }
     }
 }

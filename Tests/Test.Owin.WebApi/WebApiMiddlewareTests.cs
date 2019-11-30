@@ -163,15 +163,5 @@ namespace Test.AWhewell.Owin.WebApi
 
             Assert.AreEqual(400, _Environment.ResponseStatusCode);
         }
-
-        [TestMethod]
-        public void Middleware_Calls_Route_With_Parameters()
-        {
-            var middleware = _WebApi.CreateMiddleware(MockMiddleware.Stub);
-
-            MockMiddleware.Call(middleware, _Environment.Environment);
-
-            throw new NotImplementedException();
-        }
     }
 }
