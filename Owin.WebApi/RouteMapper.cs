@@ -293,7 +293,7 @@ namespace AWhewell.Owin.WebApi
                             Parser.ParseType(
                                 methodParameter.ElementType,
                                 queryStringArray[idx],
-                                null
+                                (TypeParserResolver)null
                             ),
                             idx
                         );

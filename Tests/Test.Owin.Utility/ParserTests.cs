@@ -9,11 +9,14 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using System;
+using System.Collections;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using AWhewell.Owin.Utility;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 
 namespace Test.AWhewell.Owin.Utility
 {
@@ -22,7 +25,7 @@ namespace Test.AWhewell.Owin.Utility
     {
         [TestMethod]
         [DataRow(null,      "en-GB",    null)]
-        [DataRow("",        "en-GB",    null)]
+        [DataRow("",        "en-GB",    false)]
         [DataRow("true",    "en-GB",    true)]
         [DataRow("true",    "de-DE",    true)]
         [DataRow("True",    "en-GB",    true)]
@@ -435,6 +438,24 @@ namespace Test.AWhewell.Owin.Utility
         [TestMethod]
         [DataRow(null,      "en-GB", null)]
         [DataRow("",        "en-GB", new byte[0])]
+        [DataRow("000B",    "en-GB", new byte[] { 0x00, 0x0b })]
+        [DataRow("0x0102",  "en-GB", new byte[] { 0x01, 0x02 })]
+        public void ParseByteArray_Parses_String_In_HexBytes_Format(string input, string culture, byte[] expected)
+        {
+            using(new CultureSwap(culture)) {
+                var actual = Parser.ParseByteArray(input);
+
+                if(expected == null) {
+                    Assert.IsNull(actual);
+                } else {
+                    Assert.IsTrue(expected.SequenceEqual(actual));
+                }
+            }
+        }
+
+        [TestMethod]
+        [DataRow(null,      "en-GB", null)]
+        [DataRow("",        "en-GB", new byte[0])]
         [DataRow("DwoL",    "en-GB", new byte[] { 0x0f, 0x0a, 0x0b })]
         [DataRow("A",       "en-GB", null)]
         public void ParseMime64Bytes_Parses_String_Into_Nullable_Byte_Array(string input, string culture, byte[] expected)
@@ -458,7 +479,7 @@ namespace Test.AWhewell.Owin.Utility
         [DataRow(typeof(String),            "a ",                                   "en-GB",    "a ")]
         [DataRow(typeof(String),            " a ",                                  "en-GB",    " a ")]
         [DataRow(typeof(bool),              null,                                   "en-GB",    null)]
-        [DataRow(typeof(bool),              "",                                     "en-GB",    null)]
+        [DataRow(typeof(bool),              "",                                     "en-GB",    false)]
         [DataRow(typeof(bool),              "true",                                 "en-GB",    true)]
         [DataRow(typeof(bool),              "false",                                "en-GB",    false)]
         [DataRow(typeof(bool),              " true",                                "en-GB",    true)]
@@ -809,6 +830,138 @@ namespace Test.AWhewell.Owin.Utility
 
                 Assert.AreEqual(expected, actual);
             }
+        }
+
+        [TestMethod]
+        [DataRow(typeof(bool),              nameof(Parser.ParseBool),           "false",                                false,                                  true)]
+        [DataRow(typeof(byte),              nameof(Parser.ParseByte),           "255",                                  (byte)255,                              (byte)127)]
+        [DataRow(typeof(char),              nameof(Parser.ParseChar),           "1",                                    '1',                                    '2')]
+        [DataRow(typeof(Int16),             nameof(Parser.ParseInt16),          "-32768",                               (short)-32768,                          (short)32767)]
+        [DataRow(typeof(UInt16),            nameof(Parser.ParseUInt16),         "32767",                                (ushort)32767,                          (ushort)7892)]
+        [DataRow(typeof(Int32),             nameof(Parser.ParseInt32),          "-2147483648",                          -2147483648,                            2147483647)]
+        [DataRow(typeof(UInt32),            nameof(Parser.ParseUInt32),         "4294967295",                           4294967295U,                            88U)]
+        [DataRow(typeof(Int64),             nameof(Parser.ParseInt64),          "-9223372036854775808",                 -9223372036854775808L,                  9223372036854775807L)]
+        [DataRow(typeof(UInt64),            nameof(Parser.ParseUInt64),         "9223372036854775807",                  9223372036854775807UL,                  2382UL)]
+        [DataRow(typeof(float),             nameof(Parser.ParseFloat),          "12.342",                               12.342F,                                98.12F)]
+        [DataRow(typeof(double),            nameof(Parser.ParseDouble),         "12.342",                               12.342,                                 98.12)]
+        [DataRow(typeof(decimal),           nameof(Parser.ParseDecimal),        "12.342",                               "12.342",                               "98.12")]
+        [DataRow(typeof(DateTime),          nameof(Parser.ParseDateTime),       "2019-01-02",                           "2019-01-02",                           "1816-04-21")]
+        [DataRow(typeof(DateTimeOffset),    nameof(Parser.ParseDateTimeOffset), "2019-01-02",                           "2019-01-02",                           "1816-04-21")]
+        [DataRow(typeof(Guid),              nameof(Parser.ParseGuid),           "48cd065e-f78d-465b-af07-49e3b1b7cc92", "48cd065e-f78d-465b-af07-49e3b1b7cc92", "c08f84fd-c572-4bba-94c5-f22804442e62")]
+        [DataRow(typeof(byte[]),            nameof(Parser.ParseByteArray),      "0x0A0B",                               new byte[] { 10, 11 },                  new byte[] { 99, 100 })]
+        public void Parse_Explicit_Type_Methods_Use_TypeResolver_When_Supplied(Type valueType, string parserMethodName, string text, object expectedNormalRaw, object expectedCustomRaw)
+        {
+            Mock mockParser = null;
+            var tryParseResult = true;
+
+            void createMock<T>(T expectedValue)
+            {
+                var mock = MockHelper.CreateMock<ITypeParser<T>>();
+                mock.Setup(r => r.TryParse(text, out expectedValue)).Returns(() => tryParseResult);
+                mockParser = mock;
+            }
+
+            Func<string, TypeParserResolver, object> callParser;
+            var expectedNormal = DataRowParser.ConvertExpected(valueType, expectedNormalRaw);
+            var expectedCustom = DataRowParser.ConvertExpected(valueType, expectedCustomRaw);
+
+            var parserMethod = typeof(Parser)
+                .GetMethods(BindingFlags.Static | BindingFlags.Public)
+                .Single(r => r.Name == parserMethodName && r.GetParameters().Length == 2);
+
+            callParser = (t, r) => parserMethod.Invoke(null, new object[] { t, r });
+
+            if(valueType == typeof(bool))                   createMock<bool>((bool)expectedCustom);
+            else if(valueType == typeof(byte))              createMock<byte>((byte)expectedCustom);
+            else if(valueType == typeof(char))              createMock<char>((char)expectedCustom);
+            else if(valueType == typeof(Int16))             createMock<short>((short)expectedCustom);
+            else if(valueType == typeof(UInt16))            createMock<ushort>((ushort)expectedCustom);
+            else if(valueType == typeof(Int32))             createMock<int>((int)expectedCustom);
+            else if(valueType == typeof(UInt32))            createMock<uint>((uint)expectedCustom);
+            else if(valueType == typeof(Int64))             createMock<long>((long)expectedCustom);
+            else if(valueType == typeof(UInt64))            createMock<ulong>((ulong)expectedCustom);
+            else if(valueType == typeof(float))             createMock<float>((float)expectedCustom);
+            else if(valueType == typeof(double))            createMock<double>((double)expectedCustom);
+            else if(valueType == typeof(decimal))           createMock<decimal>((decimal)expectedCustom);
+            else if(valueType == typeof(DateTime))          createMock<DateTime>((DateTime)expectedCustom);
+            else if(valueType == typeof(DateTimeOffset))    createMock<DateTimeOffset>((DateTimeOffset)expectedCustom);
+            else if(valueType == typeof(Guid))              createMock<Guid>((Guid)expectedCustom);
+            else if(valueType == typeof(byte[]))            createMock<byte[]>((byte[])expectedCustom);
+            else                                            throw new NotImplementedException();
+
+            void areEqual(object expected, object actual)
+            {
+                var expectedCollection = expected as IList;
+                var actualCollection = actual as IList;
+
+                if(expectedCollection == null && actualCollection == null) {
+                    Assert.AreEqual(expected, actual);
+                } else {
+                    if(expectedCollection == null) {
+                        Assert.IsNull(actual);
+                    } else {
+                        Assert.AreEqual(expectedCollection.Count, actualCollection.Count);
+                        for(var i = 0;i < expectedCollection.Count;++i) {
+                            Assert.AreEqual(expectedCollection[i], actualCollection[i]);
+                        }
+                    }
+                }
+            }
+
+            // Null type resolver should call normal parser
+            areEqual(expectedNormal, callParser(text, null));
+
+            // Type resolver with no parser for type should call normal parser
+            var typeResolver = new TypeParserResolver();
+            areEqual(expectedNormal, callParser(text, typeResolver));
+
+            // Type resolver with parser for type should call custom parser
+            typeResolver.Assign((ITypeParser)mockParser.Object);
+
+            // If custom parser returns true then use the parsed value
+            tryParseResult = true;
+            areEqual(expectedCustom, callParser(text, typeResolver));
+
+            // If custom parser returns false then it cannot be parsed
+            tryParseResult = false;
+            areEqual(null, callParser(text, typeResolver));
+        }
+
+        [TestMethod]
+        [DataRow(typeof(bool),              typeof(Mock<ITypeParser<bool>>))]
+        [DataRow(typeof(byte),              typeof(Mock<ITypeParser<byte>>))]
+        [DataRow(typeof(char),              typeof(Mock<ITypeParser<char>>))]
+        [DataRow(typeof(Int16),             typeof(Mock<ITypeParser<Int16>>))]
+        [DataRow(typeof(UInt16),            typeof(Mock<ITypeParser<UInt16>>))]
+        [DataRow(typeof(Int32),             typeof(Mock<ITypeParser<Int32>>))]
+        [DataRow(typeof(UInt32),            typeof(Mock<ITypeParser<UInt32>>))]
+        [DataRow(typeof(Int64),             typeof(Mock<ITypeParser<Int64>>))]
+        [DataRow(typeof(UInt64),            typeof(Mock<ITypeParser<UInt64>>))]
+        [DataRow(typeof(float),             typeof(Mock<ITypeParser<float>>))]
+        [DataRow(typeof(double),            typeof(Mock<ITypeParser<double>>))]
+        [DataRow(typeof(decimal),           typeof(Mock<ITypeParser<decimal>>))]
+        [DataRow(typeof(DateTime),          typeof(Mock<ITypeParser<DateTime>>))]
+        [DataRow(typeof(DateTimeOffset),    typeof(Mock<ITypeParser<DateTimeOffset>>))]
+        [DataRow(typeof(Guid),              typeof(Mock<ITypeParser<Guid>>))]
+        [DataRow(typeof(byte[]),            typeof(Mock<ITypeParser<byte[]>>))]
+        public void ParseType_Uses_TypeResolver_If_Supplied(Type valueType, Type mockType)
+        {
+            var mockParser = MockHelper.CreateMock(mockType);
+            var mockTypeParser = (ITypeParser)mockParser.Object;
+
+            var resolver = new TypeParserResolver();
+            resolver.Assign(mockTypeParser);
+
+            Parser.ParseType(valueType, "text", resolver);
+
+            var tryParseCalls = mockParser
+                .Invocations
+                .Where(r => r.Method.Name == nameof(ITypeParser<int>.TryParse))
+                .ToArray();
+
+            Assert.AreEqual(1, tryParseCalls.Length);
+            Assert.AreEqual(2, tryParseCalls[0].Arguments.Count);
+            Assert.AreEqual("text", tryParseCalls[0].Arguments[0]);
         }
 
         [TestMethod]

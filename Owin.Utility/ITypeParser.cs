@@ -17,7 +17,7 @@ namespace AWhewell.Owin.Utility
     /// <summary>
     /// The interface for objects that can parse strings into concrete type values.
     /// </summary>
-    public interface ITypeParser<T>
+    public interface ITypeParser<T> : ITypeParser
     {
         /// <summary>
         /// Tries to parses a string into a value. Does not throw exceptions.
@@ -26,8 +26,16 @@ namespace AWhewell.Owin.Utility
         /// <param name="value">The parsed value if successful or default(T) if unsuccessful.</param>
         /// <returns>True if successfully parsed, otherwise false.</returns>
         /// <remarks>
-        /// This method is thread-safe.
+        /// This method is thread-safe. It is idempotent.
         /// </remarks>
         bool TryParse(string text, out T value);
+    }
+
+    /// <summary>
+    /// The non-generic base interface for <see cref="ITypeParser{T}"/>. All objects that implement
+    /// <see cref="ITypeParser"/> must also implement <see cref="ITypeParser{T}"/>
+    /// </summary>
+    public interface ITypeParser
+    {
     }
 }

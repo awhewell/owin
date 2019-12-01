@@ -206,5 +206,30 @@ namespace Test.AWhewell.Owin
 
             return result;
         }
+
+        /// <summary>
+        /// Returns the <paramref name="expected"/> object unchanged unless <paramref name="type"/> is one of
+        /// the types that you can't use in attributes, in which case <paramref name="expected"/> is expected
+        /// to be a string and it is parsed into an object of type <paramref name="type"/>.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="expected"></param>
+        /// <returns></returns>
+        public static object ConvertExpected(Type type, object expected)
+        {
+            var result = expected;
+
+            if(type == typeof(decimal)) {
+                result = Decimal((string)expected);
+            } else if(type == typeof(DateTime)) {
+                result = DateTime((string)expected);
+            } else if(type == typeof(DateTimeOffset)) {
+                result = DateTimeOffset((string)expected);
+            } else if(type == typeof(Guid)) {
+                result = Guid((string)expected);
+            }
+
+            return result;
+        }
     }
 }

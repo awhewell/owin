@@ -69,5 +69,18 @@ namespace Test.AWhewell.Owin
             }
             .SetupAllProperties();
         }
+
+        /// <summary>
+        /// Creates the Mock type passed across.
+        /// </summary>
+        /// <param name="mockType"></param>
+        /// <returns></returns>
+        public static Mock CreateMock(Type mockType)
+        {
+            var result = (Mock)Activator.CreateInstance(mockType);
+            result.DefaultValue = DefaultValue.Mock;
+
+            return result;
+        }
     }
 }
