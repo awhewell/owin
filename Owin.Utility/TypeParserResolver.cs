@@ -25,7 +25,10 @@ namespace AWhewell.Owin.Utility
             public ITypeParser  Parser;
         }
 
-        private const string ITypeParserGenericName = nameof(ITypeParser) + "`1";
+        /// <summary>
+        /// The name of the <see cref="ITypeParser{T}"/> generic interface for type parsers.
+        /// </summary>
+        public const string ITypeParserGenericName = nameof(ITypeParser) + "`1";
 
         /// <summary>
         /// A list of resolver objects and their type.

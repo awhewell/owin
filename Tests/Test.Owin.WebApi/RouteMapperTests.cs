@@ -250,8 +250,8 @@ namespace Test.AWhewell.Owin.WebApi
         [DataRow(nameof(PathPartTypeController.NIntPP),             "1",                            "en-GB", 1)]
         [DataRow(nameof(PathPartTypeController.DoublePP),           "1.2",                          "en-GB", 1.2)]
         [DataRow(nameof(PathPartTypeController.DoublePP),           "1.2",                          "de-DE", 1.2)]
-        [DataRow(nameof(PathPartTypeController.DateTimePP),         "2019-07-01T22:53:47+00:00",    "en-GB", "2019-07-01T22:53:47+00:00")]
-        [DataRow(nameof(PathPartTypeController.DateTimeOffsetPP),   "2019-07-01T22:53:47+00:00",    "en-US", "2019-07-01T22:53:47+00:00")]
+        [DataRow(nameof(PathPartTypeController.DateTimePP),         "2019-07-01T22:53:47Z",         "en-GB", "2019-07-01 22:53:47")]
+        [DataRow(nameof(PathPartTypeController.DateTimeOffsetPP),   "2019-07-01T22:53:47Z",         "en-US", "2019-07-01 22:53:47")]
         [DataRow(nameof(PathPartTypeController.DefaultByteArrayPP), "0x01",  /* mime encoded */     "en-GB", new byte[] { 211, 29, 53 })]
         [DataRow(nameof(PathPartTypeController.HexByteArrayPP),     "0x01",                         "en-GB", new byte[] { 1 })]
         [DataRow(nameof(PathPartTypeController.HexByteArrayPP),     "01",                           "en-GB", new byte[] { 1 })]
@@ -268,12 +268,8 @@ namespace Test.AWhewell.Owin.WebApi
 
                 var expected = rawExpected;
                 switch(methodName) {
-                    case nameof(PathPartTypeController.DateTimePP):
-                        expected = DateTime.Parse((string)rawExpected, CultureInfo.InvariantCulture);
-                        break;
-                    case nameof(PathPartTypeController.DateTimeOffsetPP):
-                        expected = DateTimeOffset.Parse((string)rawExpected, CultureInfo.InvariantCulture);
-                        break;
+                    case nameof(PathPartTypeController.DateTimePP):         expected = DataRowParser.DateTime((string)expected); break;
+                    case nameof(PathPartTypeController.DateTimeOffsetPP):   expected = DataRowParser.DateTimeOffset((string)expected); break;
                 }
 
                 Assert.IsTrue(parameters.IsValid);
@@ -370,8 +366,8 @@ namespace Test.AWhewell.Owin.WebApi
         [DataRow(nameof(QueryStringController.NullableInt),         "param", "param=",                          "en-GB", null)]
         [DataRow(nameof(QueryStringController.DoubleParam),         "param", "param=12.3",                      "en-GB", 12.3)]
         [DataRow(nameof(QueryStringController.DoubleParam),         "param", "param=12.3",                      "de-DE", 12.3)]
-        [DataRow(nameof(QueryStringController.DateParam),           "param", "param=2019-07-01T22:53:47+00:00", "en-US", "2019-07-01T22:53:47+00:00")]
-        [DataRow(nameof(QueryStringController.DateOffsetParam),     "param", "param=2019-07-01T22:53:47+00:00", "de-DE", "2019-07-01T22:53:47+00:00")]
+        [DataRow(nameof(QueryStringController.DateParam),           "param", "param=2019-07-01T22:53:47Z",      "en-US", "2019-07-01 22:53:47")]
+        [DataRow(nameof(QueryStringController.DateOffsetParam),     "param", "param=2019-07-01T22:53:47Z",      "de-DE", "2019-07-01 22:53:47")]
         [DataRow(nameof(QueryStringController.StringArrayParam),    "param", "param=1&param=2;param=3",         "en-GB", new string[] { "1", "2", "3" })]
         [DataRow(nameof(QueryStringController.IntArrayParam),       "param", "param=1&param=2;param=3",         "en-GB", new int[] { 1, 2, 3 })]
         [DataRow(nameof(QueryStringController.ByteArray1Param),     "param", "param=0x01",  /* mime encoded */  "en-GB", new byte[] { 211, 29, 53 })]
@@ -391,12 +387,8 @@ namespace Test.AWhewell.Owin.WebApi
 
                 var expected = rawExpected;
                 switch(methodName) {
-                    case nameof(QueryStringController.DateParam):
-                        expected = DateTime.Parse((string)rawExpected, CultureInfo.InvariantCulture);
-                        break;
-                    case nameof(QueryStringController.DateOffsetParam):
-                        expected = DateTimeOffset.Parse((string)rawExpected, CultureInfo.InvariantCulture);
-                        break;
+                    case nameof(QueryStringController.DateParam):       expected = DataRowParser.DateTime((string)expected); break;
+                    case nameof(QueryStringController.DateOffsetParam): expected = DataRowParser.DateTimeOffset((string)expected); break;
                 }
 
                 Assert.IsTrue(parameters.IsValid);

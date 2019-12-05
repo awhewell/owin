@@ -37,6 +37,11 @@ namespace AWhewell.Owin.WebApi
         /// <summary>
         /// See interface docs.
         /// </summary>
+        public IList<ITypeParser> DefaultParsers { get; } = new List<ITypeParser>();
+
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
         /// <param name="next"></param>
         /// <returns></returns>
         public AppFunc CreateMiddleware(AppFunc next)

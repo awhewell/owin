@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using AWhewell.Owin.Utility;
 
 namespace AWhewell.Owin.Interface.WebApi
 {
@@ -42,6 +43,16 @@ namespace AWhewell.Owin.Interface.WebApi
         /// to URL-encoded forms. Other body formats infer their own case sensitivity.
         /// </remarks>
         bool AreFormNamesCaseSensitive { get; set; }
+
+        /// <summary>
+        /// Gets the default list of parsers to use. If no parsers are specified then by default dates are
+        /// invariant culture DateTime/DateTimeOffset.TryParse (no single format) and byte arrays are hex strings.
+        /// </summary>
+        /// <remarks>
+        /// Any defaults established here can be overridden at the class, method and parameter levels with
+        /// <see cref="UseParserAttribute"/> attributes.
+        /// </remarks>
+        IList<ITypeParser> DefaultParsers { get; }
 
         /// <summary>
         /// Creates the web API middleware.

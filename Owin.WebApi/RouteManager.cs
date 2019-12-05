@@ -26,7 +26,7 @@ namespace AWhewell.Owin.WebApi
         /// See interface docs.
         /// </summary>
         /// <param name="controllerTypes"></param>
-        public IEnumerable<Route> DiscoverRoutes(IEnumerable<Type> controllerTypes)
+        public IEnumerable<Route> DiscoverRoutes(IEnumerable<ControllerType> controllerTypes)
         {
             if(controllerTypes == null) {
                 throw new ArgumentNullException(nameof(controllerTypes));
@@ -35,11 +35,11 @@ namespace AWhewell.Owin.WebApi
             var result = new List<Route>();
 
             foreach(var controllerType in controllerTypes) {
-                foreach(var methodInfo in controllerType.GetMethods(BindingFlags.Public | BindingFlags.Instance)) {
+                foreach(var methodInfo in controllerType.Type.GetMethods(BindingFlags.Public | BindingFlags.Instance)) {
                     var routeAttribute = methodInfo.GetCustomAttributes().OfType<RouteAttribute>().FirstOrDefault();
                     if(routeAttribute != null) {
                         result.Add(new Route(
-                            controllerType,
+                            controllerType.Type,
                             methodInfo,
                             routeAttribute
                         ));

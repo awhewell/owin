@@ -92,6 +92,7 @@ namespace Test.AWhewell.Owin.WebApi
         [DataRow(nameof(AllNativeTypes.Boolean),    "on",           true,           "en-GB")]
         [DataRow(nameof(AllNativeTypes.Boolean),    "off",          false,          "en-GB")]
         [DataRow(nameof(AllNativeTypes.NBoolean),   null,           null,           "en-GB")]
+        [DataRow(nameof(AllNativeTypes.NBoolean),   "",             null,           "en-GB")]
         [DataRow(nameof(AllNativeTypes.NBoolean),   "null",         null,           "en-GB")]
         [DataRow(nameof(AllNativeTypes.NBoolean),   "true",         true,           "en-GB")]
         [DataRow(nameof(AllNativeTypes.NBoolean),   "false",        false,          "en-GB")]
@@ -131,12 +132,12 @@ namespace Test.AWhewell.Owin.WebApi
         [DataRow(nameof(AllNativeTypes.NDouble),    "null",         null,           "en-GB")]
         [DataRow(nameof(AllNativeTypes.NDouble),    "782.123",      782.123,        "en-GB")]
         [DataRow(nameof(AllNativeTypes.NDouble),    "-782.123",     -782.123,       "en-DE")]
-        [DataRow(nameof(AllNativeTypes.Decimal),    "782.123",      782.123,        "en-GB")]
-        [DataRow(nameof(AllNativeTypes.Decimal),    "-782.123",     -782.123,       "en-DE")]
+        [DataRow(nameof(AllNativeTypes.Decimal),    "782.123",      "782.123",      "en-GB")]
+        [DataRow(nameof(AllNativeTypes.Decimal),    "-782.123",     "-782.123",     "en-DE")]
         [DataRow(nameof(AllNativeTypes.NDecimal),   null,           null,           "en-GB")]
         [DataRow(nameof(AllNativeTypes.NDecimal),   "null",         null,           "en-GB")]
-        [DataRow(nameof(AllNativeTypes.NDecimal),   "782.123",      782.123,        "en-GB")]
-        [DataRow(nameof(AllNativeTypes.NDecimal),   "-782.123",     -782.123,       "en-DE")]
+        [DataRow(nameof(AllNativeTypes.NDecimal),   "782.123",      "782.123",      "en-GB")]
+        [DataRow(nameof(AllNativeTypes.NDecimal),   "-782.123",     "-782.123",     "en-DE")]
         public void BuildModel_QueryStringDictionary_Can_Parse_All_Native_Types(string propertyName, string value, object expected, string culture)
         {
             using(new CultureSwap(culture)) {
@@ -146,10 +147,7 @@ namespace Test.AWhewell.Owin.WebApi
                 var model = _ModelBuilder.BuildModel(typeof(AllNativeTypes), dictionary) as AllNativeTypes;
                 var actual = propertyInfo.GetValue(model, null);
 
-                // Work around issue with not being allowed to have decimals in attributes
-                if(propertyInfo.PropertyType == typeof(decimal) || propertyInfo.PropertyType == typeof(decimal?)) {
-                    expected = expected == null ? null : Convert.ChangeType(expected, typeof(decimal));
-                }
+                expected = DataRowParser.ConvertExpected(propertyInfo.PropertyType, expected);
 
                 Assert.AreEqual(expected, actual);
             }

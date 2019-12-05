@@ -26,7 +26,7 @@ namespace AWhewell.Owin.WebApi
         /// <summary>
         /// See interface docs.
         /// </summary>
-        public IEnumerable<Type> DiscoverControllers()
+        public IEnumerable<ControllerType> DiscoverControllers()
         {
             var appDomainWrapper = Factory.Resolve<IAppDomainWrapper>();
             return appDomainWrapper
@@ -36,6 +36,7 @@ namespace AWhewell.Owin.WebApi
                         iface == typeof(IApiController)
                     )
                 )
+                .Select(r => new ControllerType(r))
                 .ToArray();
         }
     }

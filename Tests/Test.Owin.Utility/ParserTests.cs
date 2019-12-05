@@ -25,7 +25,7 @@ namespace Test.AWhewell.Owin.Utility
     {
         [TestMethod]
         [DataRow(null,      "en-GB",    null)]
-        [DataRow("",        "en-GB",    false)]
+        [DataRow("",        "en-GB",    null)]
         [DataRow("true",    "en-GB",    true)]
         [DataRow("true",    "de-DE",    true)]
         [DataRow("True",    "en-GB",    true)]
@@ -479,7 +479,7 @@ namespace Test.AWhewell.Owin.Utility
         [DataRow(typeof(String),            "a ",                                   "en-GB",    "a ")]
         [DataRow(typeof(String),            " a ",                                  "en-GB",    " a ")]
         [DataRow(typeof(bool),              null,                                   "en-GB",    null)]
-        [DataRow(typeof(bool),              "",                                     "en-GB",    false)]
+        [DataRow(typeof(bool),              "",                                     "en-GB",    null)]
         [DataRow(typeof(bool),              "true",                                 "en-GB",    true)]
         [DataRow(typeof(bool),              "false",                                "en-GB",    false)]
         [DataRow(typeof(bool),              " true",                                "en-GB",    true)]

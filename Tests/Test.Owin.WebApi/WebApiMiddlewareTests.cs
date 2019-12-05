@@ -28,7 +28,7 @@ namespace Test.AWhewell.Owin.WebApi
         private MockPipeline                _Pipeline;
         private MockOwinEnvironment         _Environment;
         private Mock<IControllerManager>    _ControllerManager;
-        private List<Type>                  _ControllerTypes;
+        private List<ControllerType>        _ControllerTypes;
         private Mock<IRouteManager>         _RouteManager;
         private List<Route>                 _Routes;
         private Mock<IRouteMapper>          _RouteMapper;
@@ -41,12 +41,12 @@ namespace Test.AWhewell.Owin.WebApi
             _Snapshot = Factory.TakeSnapshot();
 
             _ControllerManager = MockHelper.FactoryImplementation<IControllerManager>();
-            _ControllerTypes = new List<Type>();
+            _ControllerTypes = new List<ControllerType>();
             _ControllerManager.Setup(r => r.DiscoverControllers()).Returns(_ControllerTypes);
 
             _RouteManager = MockHelper.FactoryImplementation<IRouteManager>();
             _Routes = new List<Route>();
-            _RouteManager.Setup(r => r.DiscoverRoutes(It.IsAny<IEnumerable<Type>>())).Returns(_Routes);
+            _RouteManager.Setup(r => r.DiscoverRoutes(It.IsAny<IEnumerable<ControllerType>>())).Returns(_Routes);
 
             _RouteMapper = MockHelper.FactoryImplementation<IRouteMapper>();
             _FoundRoute = new Route();
@@ -67,6 +67,12 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         private void CallMiddleware() => _Pipeline.CallMiddleware(_WebApi.CreateMiddleware, _Environment.Environment);
+
+        [TestMethod]
+        public void Ctor_Initialises_Default_Parsers()
+        {
+            Assert.AreEqual(0, _WebApi.DefaultParsers.Count);
+        }
 
         [TestMethod]
         public void Middleware_Calls_Next_Delegate()

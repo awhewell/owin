@@ -219,13 +219,13 @@ namespace Test.AWhewell.Owin
         {
             var result = expected;
 
-            if(type == typeof(decimal)) {
+            if(type == typeof(decimal) || type == typeof(decimal?)) {
                 result = Decimal((string)expected);
-            } else if(type == typeof(DateTime)) {
+            } else if(type == typeof(DateTime) || type == typeof(DateTime?)) {
                 result = DateTime((string)expected);
-            } else if(type == typeof(DateTimeOffset)) {
+            } else if(type == typeof(DateTimeOffset) || type == typeof(DateTimeOffset?)) {
                 result = DateTimeOffset((string)expected);
-            } else if(type == typeof(Guid)) {
+            } else if(type == typeof(Guid) || type == typeof(Guid?)) {
                 result = Guid((string)expected);
             }
 

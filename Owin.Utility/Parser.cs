@@ -43,7 +43,6 @@ namespace AWhewell.Owin.Utility
                     case "yes":
                     case "1":
                     case "true":    return true;
-                    case "":
                     case "off":
                     case "no":
                     case "0":

@@ -1,4 +1,4 @@
-// Copyright © 2019 onwards, Andrew Whewell
+﻿// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -10,57 +10,44 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using InterfaceFactory;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using AWhewell.Owin.Interface.WebApi;
+using AWhewell.Owin.Utility.Parsers;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Test.AWhewell.Owin.WebApi
 {
     [TestClass]
-    public class ControllerManagerTests
+    public class ControllerTypeTests
     {
-        class MockController1 : IApiController
+        public class SampleController1 : IApiController
         {
             public IDictionary<string, object> OwinEnvironment { get; set; }
         }
 
-        private IClassFactory           _Snapshot;
-        private Mock<IAppDomainWrapper> _AppDomainWrapper;
-        private List<Type>              _AllTypes;
-        private IControllerManager      _ControllerManager;
-
-        [TestInitialize]
-        public void TestInitialise()
+        [UseParser(typeof(DateTime_Iso8601_Parser))]
+        public class SampleController2 : IApiController
         {
-            _Snapshot = Factory.TakeSnapshot();
-
-            _AppDomainWrapper = MockHelper.FactoryImplementation<IAppDomainWrapper>();
-            _AllTypes = new List<Type>();
-            _AppDomainWrapper.Setup(r => r.GetAllTypes()).Returns(_AllTypes);
-
-            _ControllerManager = Factory.Resolve<IControllerManager>();
-        }
-
-        [TestCleanup]
-        public void TestCleanup()
-        {
-            Factory.RestoreSnapshot(_Snapshot);
+            public IDictionary<string, object> OwinEnvironment { get; set; }
         }
 
         [TestMethod]
-        public void DiscoverControllers_Finds_Controllers_Using_AppDomainWrapper()
+        public void Ctor_Fills_Type_Correctly()
         {
-            _AllTypes.Add(typeof(ControllerManagerTests));
-            _AllTypes.Add(typeof(MockController1));
-            _AllTypes.Add(typeof(string));
+            var ctype = new ControllerType(typeof(SampleController1));
 
-            var controllerTypes = _ControllerManager.DiscoverControllers();
+            Assert.AreEqual(typeof(SampleController1), ctype.Type);
+        }
 
-            _AppDomainWrapper.Verify(r => r.GetAllTypes(), Times.Once());
-            Assert.AreSame(typeof(MockController1), controllerTypes.Single().Type);
+        [TestMethod]
+        public void Ctor_Fills_TypeParserResolver_Correctly()
+        {
+            var ctype1 = new ControllerType(typeof(SampleController1));
+            var ctype2 = new ControllerType(typeof(SampleController2));
+
+            Assert.IsNull(ctype1.TypeParserResolver);
+            Assert.IsNotNull(ctype2.TypeParserResolver);
+            Assert.IsInstanceOfType(ctype2.TypeParserResolver.Find<DateTime>(), typeof(DateTime_Iso8601_Parser));
         }
     }
 }

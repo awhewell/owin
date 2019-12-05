@@ -24,6 +24,6 @@ namespace AWhewell.Owin.Interface.WebApi
         /// </summary>
         /// <param name="controllerTypes"></param>
         /// <returns></returns>
-        IEnumerable<Route> DiscoverRoutes(IEnumerable<Type> controllerTypes);
+        IEnumerable<Route> DiscoverRoutes(IEnumerable<ControllerType> controllerTypes);
     }
 }
