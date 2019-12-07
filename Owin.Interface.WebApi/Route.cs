@@ -32,9 +32,9 @@ namespace AWhewell.Owin.Interface.WebApi
         public long ID { get; }
 
         /// <summary>
-        /// Gets the controller that exposes the route.
+        /// Gets the controller type that handles the route.
         /// </summary>
-        public Type Controller { get; }
+        public ControllerType ControllerType { get; }
 
         /// <summary>
         /// Gets the method that handles the route.
@@ -77,9 +77,9 @@ namespace AWhewell.Owin.Interface.WebApi
         /// <param name="controller"></param>
         /// <param name="method"></param>
         /// <param name="routeAttribute"></param>
-        public Route(Type controller, MethodInfo method, RouteAttribute routeAttribute) : this()
+        public Route(ControllerType controller, MethodInfo method, RouteAttribute routeAttribute) : this()
         {
-            Controller = controller;
+            ControllerType = controller;
             Method = method;
             RouteAttribute = routeAttribute;
 

@@ -39,7 +39,7 @@ namespace AWhewell.Owin.WebApi
                     var routeAttribute = methodInfo.GetCustomAttributes().OfType<RouteAttribute>().FirstOrDefault();
                     if(routeAttribute != null) {
                         result.Add(new Route(
-                            controllerType.Type,
+                            controllerType,
                             methodInfo,
                             routeAttribute
                         ));

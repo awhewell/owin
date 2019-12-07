@@ -87,7 +87,7 @@ namespace Test.AWhewell.Owin.WebApi
             var route = routes.Single();
             Assert.AreEqual("path-to-example1", route.RouteAttribute.Route);
             Assert.AreSame(typeof(ValidRoutes).GetMethod(nameof(ValidRoutes.Example1)), route.Method);
-            Assert.AreSame(typeof(ValidRoutes), route.Controller);
+            Assert.AreSame(typeof(ValidRoutes), route.ControllerType.Type);
         }
 
         [TestMethod]

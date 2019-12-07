@@ -50,9 +50,10 @@ namespace Test.AWhewell.Owin.WebApi
             public int Duplicate_Methods_Not_Allowed() { return 200; }
         }
 
-        public static Route CreateRoute(Type controllerType, string methodName, string choosePath = null)
+        public static Route CreateRoute(Type controllerNativeType, string methodName, string choosePath = null)
         {
-            var method = controllerType.GetMethod(methodName);
+            var controllerType = new ControllerType(controllerNativeType);
+            var method = controllerNativeType.GetMethod(methodName);
             var routeAttributes = method.GetCustomAttributes(inherit: false).OfType<RouteAttribute>().ToArray();
             var routeAttribute = routeAttributes.Length == 1
                 ? routeAttributes[0]
@@ -66,12 +67,12 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void Route_Ctor_Copies_Arguments_Properties()
         {
-            var controller = typeof(Controller);
-            var methodInfo = controller.GetMethod(nameof(Controller.Example));
+            var controller = new ControllerType(typeof(Controller));
+            var methodInfo = controller.Type.GetMethod(nameof(Controller.Example));
             var routeAttribute = methodInfo.GetCustomAttributes(inherit: false).OfType<RouteAttribute>().Single();
 
             var route = new Route(controller, methodInfo, routeAttribute);
-            Assert.AreSame(controller, route.Controller);
+            Assert.AreSame(controller, route.ControllerType);
             Assert.AreSame(methodInfo, route.Method);
             Assert.AreSame(routeAttribute, route.RouteAttribute);
         }
