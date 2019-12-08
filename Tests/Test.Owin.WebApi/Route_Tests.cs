@@ -63,7 +63,15 @@ namespace Test.AWhewell.Owin.WebApi
             return new Route(controllerType, method, routeAttribute);
         }
 
-        public static Route CreateRoute<T>(string methodName, string choosePath = null) => CreateRoute(typeof(T), methodName, choosePath);
+        public static Route CreateRoute<T>(string methodName, string choosePath = null, TypeParserResolver resolver = null)
+        {
+            return CreateRoute(typeof(T), methodName, choosePath, resolver);
+        }
+
+        public static RouteParameters CreateRouteParameters(params object[] parameters)
+        {
+            return new RouteParameters(new string[0], parameters);
+        }
 
         [TestMethod]
         public void Ctor_Copies_Arguments_Properties()

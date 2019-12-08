@@ -59,12 +59,17 @@ namespace AWhewell.Owin.WebApi
             routeMapper.AreQueryStringNamesCaseSensitive =  AreQueryStringNamesCaseSensitive;
             routeMapper.Initialise(routes);
 
+            var routeCaller = Factory.Resolve<IRouteCaller>();
+
             return async(IDictionary<string, object> environment) =>
             {
                 var route = routeMapper.FindRouteForRequest(environment);
                 if(route != null) {
-                    routeMapper.BuildRouteParameters(route, environment);
+                    var parameters = routeMapper.BuildRouteParameters(route, environment);
                     environment[EnvironmentKey.ResponseStatusCode] = 400;
+                    if(parameters.IsValid) {
+                        routeCaller.CallRoute(environment, route, parameters);
+                    }
                 }
 
                 await next(environment);
