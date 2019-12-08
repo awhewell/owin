@@ -409,6 +409,22 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
+        public void BuildRouteParameters_Uses_TypeParserResolver_When_Parsing_Array_Elements()
+        {
+            var resolver = new TypeParserResolver(new ModelBuilder_Tests.String_Reverse_Parser());
+            var route = Route_Tests.CreateRoute(typeof(QueryStringController), nameof(QueryStringController.StringArrayParam), resolver: resolver);
+            _RouteMapper.Initialise(new Route[] { route });
+            _Environment.RequestQueryString = "param=Abc";
+
+            _Environment.SetRequestPath(route.PathParts[0].Part);
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
+
+            Assert.AreEqual(true, parameters.IsValid);
+            Assert.AreEqual(1, parameters.Parameters.Length);
+            Assert.AreEqual("cbA", ((string[])parameters.Parameters[0])[0]);
+        }
+
+        [TestMethod]
         public void BuildRouteParameters_Can_Use_Case_Sensitive_Query_String_Matching()
         {
             var route = Route_Tests.CreateRoute(typeof(QueryStringController), nameof(QueryStringController.StringParam));

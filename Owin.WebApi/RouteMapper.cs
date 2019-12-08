@@ -308,7 +308,7 @@ namespace AWhewell.Owin.WebApi
                             Parser.ParseType(
                                 methodParameter.ElementType,
                                 queryStringArray[idx],
-                                (TypeParserResolver)null
+                                methodParameter.TypeParserResolver
                             ),
                             idx
                         );
