@@ -27,9 +27,7 @@ namespace Test.AWhewell.Owin.WebApi
 
             public Controller()
             {
-                if(RouteCaller_Tests._ControllerInstance != null) {
-                    throw new InvalidOperationException($"2+ instances of {nameof(Controller)} have been created");
-                }
+                Assert.IsNull(RouteCaller_Tests._ControllerInstance);
                 RouteCaller_Tests._ControllerInstance = this;
             }
 
@@ -43,6 +41,19 @@ namespace Test.AWhewell.Owin.WebApi
                 ++Route_1_CallCount;
                 Route_1_LastInput = input;
                 return input + 1;
+            }
+
+            public static int Route_2_CallCount { get; set; }
+            public static int Route_2_LastInput { get; set; }
+
+            [HttpGet, Route("2")]
+            public static int Route_2(IDictionary<string, object> owinEnvironment, int input)
+            {
+                Assert.IsNull(RouteCaller_Tests._ControllerInstance);
+                Assert.AreSame(owinEnvironment, RouteCaller_Tests._ExpectedEnvironment);
+                ++Route_2_CallCount;
+                Route_2_LastInput = input;
+                return input * 2;
             }
         }
 
@@ -59,11 +70,41 @@ namespace Test.AWhewell.Owin.WebApi
             // Initialise STATIC fields - these tests must not be run in parallel
             _ControllerInstance = null;
             _ExpectedEnvironment = null;
+            Controller.Route_2_CallCount = 0;
+            Controller.Route_2_LastInput = 0;
 
             _Environment = new MockOwinEnvironment();
             _ExpectedEnvironment = _Environment.Environment;
 
             _RouteCaller = Factory.Resolve<IRouteCaller>();
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void CallRoute_Throws_If_Environment_Is_Null()
+        {
+            var route = Route_Tests.CreateRoute<Controller>(nameof(Controller.Route_1));
+            var routeParameters = Route_Tests.CreateRouteParameters(41);
+
+            _RouteCaller.CallRoute(null, route, routeParameters);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void CallRoute_Throws_If_Route_Is_Null()
+        {
+            var routeParameters = Route_Tests.CreateRouteParameters(41);
+
+            _RouteCaller.CallRoute(_Environment.Environment, null, routeParameters);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void CallRoute_Throws_If_RouteParameters_Are_Null()
+        {
+            var route = Route_Tests.CreateRoute<Controller>(nameof(Controller.Route_1));
+
+            _RouteCaller.CallRoute(_Environment.Environment, route, null);
         }
 
         [TestMethod]
@@ -78,6 +119,20 @@ namespace Test.AWhewell.Owin.WebApi
             Assert.AreEqual(1, _ControllerInstance.Route_1_CallCount);
             Assert.AreEqual(41, _ControllerInstance.Route_1_LastInput);
             Assert.AreEqual(42, outcome);
+        }
+
+        [TestMethod]
+        public void CallRoute_Can_Call_Static_Routes()
+        {
+            var route = Route_Tests.CreateRoute<Controller>(nameof(Controller.Route_2));
+            var routeParameters = Route_Tests.CreateRouteParameters(_Environment.Environment, 32);
+
+            var outcome = _RouteCaller.CallRoute(_Environment.Environment, route, routeParameters);
+
+            Assert.IsNull(_ControllerInstance);
+            Assert.AreEqual(1, Controller.Route_2_CallCount);
+            Assert.AreEqual(32, Controller.Route_2_LastInput);
+            Assert.AreEqual(64, outcome);
         }
     }
 }

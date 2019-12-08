@@ -25,14 +25,28 @@ namespace AWhewell.Owin.WebApi
         /// </summary>
         /// <param name="owinEnvironment"></param>
         /// <param name="route"></param>
-        /// <param name="parameters"></param>
+        /// <param name="routeParameters"></param>
         /// <returns></returns>
-        public object CallRoute(IDictionary<string, object> owinEnvironment, Route route, RouteParameters parameters)
+        public object CallRoute(IDictionary<string, object> owinEnvironment, Route route, RouteParameters routeParameters)
         {
-            var controller = (IApiController)Activator.CreateInstance(route.ControllerType.Type);
-            controller.OwinEnvironment = owinEnvironment;
+            if(owinEnvironment == null) {
+                throw new ArgumentNullException(nameof(owinEnvironment));
+            }
+            if(route == null) {
+                throw new ArgumentNullException(nameof(route));
+            }
+            if(routeParameters == null) {
+                throw new ArgumentNullException(nameof(routeParameters));
+            }
 
-            var result = route.Method.Invoke(controller, parameters.Parameters);
+            object result;
+            if(route.Method.IsStatic) {
+                result = route.Method.Invoke(null, routeParameters.Parameters);
+            } else {
+                var controller = (IApiController)Activator.CreateInstance(route.ControllerType.Type);
+                controller.OwinEnvironment = owinEnvironment;
+                result = route.Method.Invoke(controller, routeParameters.Parameters);
+            }
 
             return result;
         }
