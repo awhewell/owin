@@ -24,6 +24,7 @@ namespace Test.AWhewell.Owin
     [TestClass]
     public class Pipeline_Tests
     {
+        private IClassFactory                       _Snapshot;
         private IPipeline                           _Pipeline;
         private Mock<IPipelineBuilderEnvironment>   _BuilderEnvironment;
         private List<Func<AppFunc, AppFunc>>        _MiddlewareChain;
@@ -33,6 +34,8 @@ namespace Test.AWhewell.Owin
         [TestInitialize]
         public void TestInitialise()
         {
+            _Snapshot = Factory.TakeSnapshot();
+
             _MiddlewareChain = new List<Func<AppFunc, AppFunc>>();
             _StreamManipulatorChain = new List<Func<AppFunc, AppFunc>>();
             _BuilderEnvironment = MockHelper.FactoryImplementation<IPipelineBuilderEnvironment>();
@@ -42,6 +45,12 @@ namespace Test.AWhewell.Owin
             _Environment = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
             _Pipeline = Factory.Resolve<IPipeline>();
+        }
+
+        [TestCleanup]
+        public void TestCleanup()
+        {
+            Factory.RestoreSnapshot(_Snapshot);
         }
 
         [TestMethod]
