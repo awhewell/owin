@@ -39,20 +39,29 @@ namespace Test.AWhewell.Owin.WebApi
             [HttpGet, Route("1")]
             public int Route_1(int input)
             {
+                Assert.AreSame(RouteCaller_Tests._ExpectedEnvironment, OwinEnvironment);
                 ++Route_1_CallCount;
                 Route_1_LastInput = input;
                 return input + 1;
             }
         }
 
+        private static Controller                   _ControllerInstance;
+        private static IDictionary<string, object>  _ExpectedEnvironment;
+
         private IRouteCaller        _RouteCaller;
-        private static Controller   _ControllerInstance;
+        private MockOwinEnvironment _Environment;
+
 
         [TestInitialize]
         public void TestInitialise()
         {
             // Initialise STATIC fields - these tests must not be run in parallel
             _ControllerInstance = null;
+            _ExpectedEnvironment = null;
+
+            _Environment = new MockOwinEnvironment();
+            _ExpectedEnvironment = _Environment.Environment;
 
             _RouteCaller = Factory.Resolve<IRouteCaller>();
         }
@@ -63,7 +72,7 @@ namespace Test.AWhewell.Owin.WebApi
             var route = Route_Tests.CreateRoute<Controller>(nameof(Controller.Route_1));
             var routeParameters = Route_Tests.CreateRouteParameters(41);
 
-            var outcome = _RouteCaller.CallRoute(null, route, routeParameters);
+            var outcome = _RouteCaller.CallRoute(_Environment.Environment, route, routeParameters);
 
             Assert.IsNotNull(_ControllerInstance);
             Assert.AreEqual(1, _ControllerInstance.Route_1_CallCount);

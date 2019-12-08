@@ -29,7 +29,9 @@ namespace AWhewell.Owin.WebApi
         /// <returns></returns>
         public object CallRoute(IDictionary<string, object> owinEnvironment, Route route, RouteParameters parameters)
         {
-            var controller = Activator.CreateInstance(route.ControllerType.Type);
+            var controller = (IApiController)Activator.CreateInstance(route.ControllerType.Type);
+            controller.OwinEnvironment = owinEnvironment;
+
             var result = route.Method.Invoke(controller, parameters.Parameters);
 
             return result;
