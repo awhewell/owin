@@ -60,6 +60,11 @@ namespace AWhewell.Owin.Interface.WebApi
         public bool IsOptional { get; }
 
         /// <summary>
+        /// Gets a value indicating that the parameter is a model object.
+        /// </summary>
+        public bool IsObject { get; }
+
+        /// <summary>
         /// Gets the parameter's default value.
         /// </summary>
         public object DefaultValue { get; }
@@ -83,6 +88,7 @@ namespace AWhewell.Owin.Interface.WebApi
             ElementType =                parameterInfo.ParameterType.IsArray ? parameterInfo.ParameterType.GetElementType() : null;
             IsArray =                    ElementType != null;
             IsOptional =                 parameterInfo.IsOptional;
+            IsObject =                   !IsArray && ParameterType.IsClass && ParameterType != typeof(string);
             DefaultValue =               parameterInfo.DefaultValue;
             TypeParserResolver =         BuildTypeParserResolver(parameterInfo, defaultParserResolver);
             IsArrayPassedAsSingleValue = IsArray

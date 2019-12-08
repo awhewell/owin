@@ -25,9 +25,10 @@ namespace AWhewell.Owin.WebApi
         /// See interface docs.
         /// </summary>
         /// <param name="modelType"></param>
+        /// <param name="typeParserResolver"></param>
         /// <param name="values"></param>
         /// <returns></returns>
-        public object BuildModel(Type modelType, QueryStringDictionary values)
+        public object BuildModel(Type modelType, TypeParserResolver typeParserResolver, QueryStringDictionary values)
         {
             if(modelType == null) {
                 throw new ArgumentNullException(nameof(modelType));
@@ -41,7 +42,11 @@ namespace AWhewell.Owin.WebApi
             foreach(var propertyInfo in modelType.GetProperties()) {
                 if(values.ContainsKey(propertyInfo.Name)) {
                     var valueText = values.GetValue(propertyInfo.Name);
-                    var parsedValue = Parser.ParseType(propertyInfo.PropertyType, valueText);
+                    var parsedValue = Parser.ParseType(
+                        propertyInfo.PropertyType,
+                        valueText,
+                        typeParserResolver
+                    );
                     propertyInfo.SetValue(result, parsedValue);
                 }
             }

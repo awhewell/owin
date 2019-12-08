@@ -70,6 +70,30 @@ namespace AWhewell.Owin.Utility
         }
 
         /// <summary>
+        /// Returns the text passed across.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static string ParseString(string text) => text;
+
+        /// <summary>
+        /// Returns the text passed across unless <paramref name="resolver"/> is supplied, in which case
+        /// it is passed through the resolver. Null is returned if the resolver rejects the string.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="resolver"></param>
+        /// <returns></returns>
+        public static string ParseString(string text, TypeParserResolver resolver)
+        {
+            var parser = resolver?.StringParser;
+            return parser == null
+                ? text
+                : parser.TryParse(text, out var result)
+                    ? result
+                    : null;
+        }
+
+        /// <summary>
         /// Extracts an unsigned byte from the text or null if no byte could be extracted.
         /// </summary>
         /// <param name="text"></param>
@@ -470,7 +494,9 @@ namespace AWhewell.Owin.Utility
             object result = null;
 
             if(type == typeof(string)) {
-                result = text;
+                result = typeParserResolver == null
+                    ? text
+                    : ParseString(text, typeParserResolver);
             } else if(text != null) {
                 if(type == typeof(bool) || type == typeof(bool?)) {
                     result = typeParserResolver == null

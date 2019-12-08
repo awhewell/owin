@@ -10,6 +10,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using AWhewell.Owin.Interface.WebApi;
 using AWhewell.Owin.Utility;
@@ -25,6 +26,16 @@ namespace Test.AWhewell.Owin.WebApi
         {
             public string A { get; set; }
         }
+
+        class String_Reverse_Parser : ITypeParser<string>
+        {
+            public bool TryParse(string text, out string value)
+            {
+                value = text == null ? null : new String(text.Reverse().ToArray());
+                return true;
+            }
+        }
+
 
         class AllNativeTypes
         {
@@ -58,14 +69,14 @@ namespace Test.AWhewell.Owin.WebApi
         [ExpectedException(typeof(ArgumentNullException))]
         public void BuildModel_QueryStringDictionary_Throws_If_Passed_Null_Type()
         {
-            _ModelBuilder.BuildModel(null, new QueryStringDictionary("a=b"));
+            _ModelBuilder.BuildModel(null, new TypeParserResolver(), new QueryStringDictionary("a=b"));
         }
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
         public void BuildModel_QueryStringDictionary_Throws_If_Passed_Null_QueryStringDictionary()
         {
-            _ModelBuilder.BuildModel(typeof(StringA), null);
+            _ModelBuilder.BuildModel(typeof(StringA), new TypeParserResolver(), null);
         }
 
         [TestMethod]
@@ -73,9 +84,20 @@ namespace Test.AWhewell.Owin.WebApi
         {
             var dictionary = new QueryStringDictionary("A=Abc");
 
-            var actual = _ModelBuilder.BuildModel(typeof(StringA), dictionary) as StringA;
+            var actual = _ModelBuilder.BuildModel(typeof(StringA), null, dictionary) as StringA;
 
             Assert.AreEqual("Abc", actual.A);
+        }
+
+        [TestMethod]
+        public void BuildModel_QueryStringDictionary_Uses_TypeParserResolver()
+        {
+            var dictionary = new QueryStringDictionary("A=Abc");
+            var resolver = new TypeParserResolver(new String_Reverse_Parser());
+
+            var actual = _ModelBuilder.BuildModel(typeof(StringA), resolver, dictionary) as StringA;
+
+            Assert.AreEqual("cbA", actual.A);
         }
 
         [TestMethod]
@@ -144,7 +166,7 @@ namespace Test.AWhewell.Owin.WebApi
                 var propertyInfo = typeof(AllNativeTypes).GetProperty(propertyName);
                 var dictionary = new QueryStringDictionary($"{propertyName}={value ?? ""}");
 
-                var model = _ModelBuilder.BuildModel(typeof(AllNativeTypes), dictionary) as AllNativeTypes;
+                var model = _ModelBuilder.BuildModel(typeof(AllNativeTypes), null, dictionary) as AllNativeTypes;
                 var actual = propertyInfo.GetValue(model, null);
 
                 expected = DataRowParser.ConvertExpected(propertyInfo.PropertyType, expected);

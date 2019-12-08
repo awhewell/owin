@@ -15,6 +15,7 @@ using System.Linq;
 using System.Net;
 using AWhewell.Owin.Interface.WebApi;
 using AWhewell.Owin.Utility;
+using InterfaceFactory;
 
 namespace AWhewell.Owin.WebApi
 {
@@ -25,6 +26,9 @@ namespace AWhewell.Owin.WebApi
     {
         // The routes that the mapper was initialised with. These do not change over the lifetime of the object.
         private Dictionary<long, Route> _Routes;
+
+        // The object that builds models for us.
+        private IModelBuilder _ModelBuilder;
 
         /// <summary>
         /// True if the mapper has been initialised.
@@ -77,6 +81,8 @@ namespace AWhewell.Owin.WebApi
             if(Initialised) {
                 throw new InvalidOperationException($"You cannot call {nameof(Initialise)} twice");
             }
+
+            _ModelBuilder = Factory.Resolve<IModelBuilder>();
 
             _Routes = new Dictionary<long, Route>();
             foreach(var route in routes) {
@@ -169,18 +175,28 @@ namespace AWhewell.Owin.WebApi
                 for(var paramIdx = 0;paramIdx < methodParameters.Length && failedValidationMessage == null;++paramIdx) {
                     var methodParameter = methodParameters[paramIdx];
                     object parameterValue = null;
+                    var filledParameter = false;
 
-                    var filledParameter = UseInjectedValueForParameter(ref parameterValue, ref failedValidationMessage, methodParameter, route, context);
+                    if(methodParameter.IsObject) {
+                        parameterValue = _ModelBuilder.BuildModel(
+                            methodParameter.ParameterType,
+                            null,
+                            context.RequestQueryStringDictionary(false)
+                        );
+                        filledParameter = true;
+                    } else {
+                        filledParameter = UseInjectedValueForParameter(ref parameterValue, ref failedValidationMessage, methodParameter, route, context);
 
-                    if(!filledParameter && failedValidationMessage == null) {
-                        filledParameter = ExtractParameterFromRequestPathParts(ref parameterValue, ref failedValidationMessage, methodParameter, route, pathParts);
-                    }
+                        if(!filledParameter && failedValidationMessage == null) {
+                            filledParameter = ExtractParameterFromRequestPathParts(ref parameterValue, ref failedValidationMessage, methodParameter, route, pathParts);
+                        }
 
-                    if(!filledParameter && failedValidationMessage == null) {
-                        filledParameter = ExtractParameterFromQueryString(ref parameterValue, methodParameter, context);
-                    }
-                    if(!filledParameter && failedValidationMessage == null) {
-                        filledParameter = ExtractParameterFromRequestBody(ref parameterValue, methodParameter, context);
+                        if(!filledParameter && failedValidationMessage == null) {
+                            filledParameter = ExtractParameterFromQueryString(ref parameterValue, methodParameter, context);
+                        }
+                        if(!filledParameter && failedValidationMessage == null) {
+                            filledParameter = ExtractParameterFromRequestBody(ref parameterValue, methodParameter, context);
+                        }
                     }
 
                     if(filledParameter && failedValidationMessage == null) {

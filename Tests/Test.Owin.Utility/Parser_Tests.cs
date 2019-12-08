@@ -24,6 +24,23 @@ namespace Test.AWhewell.Owin.Utility
     public class Parser_Tests
     {
         [TestMethod]
+        [DataRow(null,  "en-GB", null)]
+        [DataRow("",    "en-GB", "")]
+        [DataRow("Abc", "en-GB", "Abc")]
+        public void ParseString_Parses_String(string input, string culture, string expected)
+        {
+            using(new CultureSwap(culture)) {
+                var actual = Parser.ParseString(input);
+
+                if(expected == null) {
+                    Assert.IsNull(actual);
+                } else {
+                    Assert.AreEqual(expected, actual);
+                }
+            }
+        }
+
+        [TestMethod]
         [DataRow(null,      "en-GB",    null)]
         [DataRow("",        "en-GB",    null)]
         [DataRow("true",    "en-GB",    true)]
@@ -818,6 +835,7 @@ namespace Test.AWhewell.Owin.Utility
         }
 
         [TestMethod]
+        [DataRow(typeof(string),            nameof(Parser.ParseString),         "Diskopunk",                            "Diskopunk",                            "Soaked")]
         [DataRow(typeof(bool),              nameof(Parser.ParseBool),           "false",                                false,                                  true)]
         [DataRow(typeof(byte),              nameof(Parser.ParseByte),           "255",                                  (byte)255,                              (byte)127)]
         [DataRow(typeof(char),              nameof(Parser.ParseChar),           "1",                                    '1',                                    '2')]
@@ -872,6 +890,7 @@ namespace Test.AWhewell.Owin.Utility
             else if(valueType == typeof(DateTimeOffset))    createMock<DateTimeOffset>((DateTimeOffset)expectedCustom);
             else if(valueType == typeof(Guid))              createMock<Guid>((Guid)expectedCustom);
             else if(valueType == typeof(byte[]))            createMock<byte[]>((byte[])expectedCustom);
+            else if(valueType == typeof(string))            createMock<string>((string)expectedCustom);
             else                                            throw new NotImplementedException();
 
             void areEqual(object expected, object actual)

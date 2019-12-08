@@ -21,6 +21,10 @@ namespace Test.AWhewell.Owin.WebApi
     [TestClass]
     public class MethodParameter_Tests
     {
+        public class Model
+        {
+        }
+
         private void ExampleMethod(
             string stringParameter,
 
@@ -32,12 +36,15 @@ namespace Test.AWhewell.Owin.WebApi
 
             int[] intArray,
 
+            Model model,
+
             int optionalInt = 123
         ) { ; }
 
         private ParameterInfo _ExampleMethod_string;
         private ParameterInfo _ExampleMethod_optionalInt;
         private ParameterInfo _ExampleMethod_intArray;
+        private ParameterInfo _ExampleMethod_model;
         private ParameterInfo _ExampleMethod_byteArrayWithExpect;
         private ParameterInfo _ExampleMethod_byteArrayPassedAsBytes;
 
@@ -62,6 +69,7 @@ namespace Test.AWhewell.Owin.WebApi
             _ExampleMethod_string =                 example1Method.GetParameters().Single(r => r.Name == "stringParameter");
             _ExampleMethod_optionalInt =            example1Method.GetParameters().Single(r => r.Name == "optionalInt");
             _ExampleMethod_intArray =               example1Method.GetParameters().Single(r => r.Name == "intArray");
+            _ExampleMethod_model =                  example1Method.GetParameters().Single(r => r.Name == "model");
             _ExampleMethod_byteArrayWithExpect =    example1Method.GetParameters().Single(r => r.Name == "byteArrayWithExpect");
             _ExampleMethod_byteArrayPassedAsBytes = example1Method.GetParameters().Single(r => r.Name == "byteArrayPassedAsBytes");
         }
@@ -171,6 +179,38 @@ namespace Test.AWhewell.Owin.WebApi
 
             Assert.IsTrue(param.IsArray);
             Assert.IsFalse(param.IsArrayPassedAsSingleValue);
+        }
+
+        [TestMethod]
+        public void MethodParameter_Ctor_Clears_IsObject_For_Value_Type_Parameters()
+        {
+            var param = new MethodParameter(_ExampleMethod_optionalInt, null);
+
+            Assert.IsFalse(param.IsObject);
+        }
+
+        [TestMethod]
+        public void MethodParameter_Ctor_Clears_IsObject_For_Array_Type_Parameters()
+        {
+            var param = new MethodParameter(_ExampleMethod_intArray, null);
+
+            Assert.IsFalse(param.IsObject);
+        }
+
+        [TestMethod]
+        public void MethodParameter_Ctor_Sets_IsObject_For_Class_Type_Parameters()
+        {
+            var param = new MethodParameter(_ExampleMethod_model, null);
+
+            Assert.IsTrue(param.IsObject);
+        }
+
+        [TestMethod]
+        public void MethodParameter_Ctor_Sets_IsObject_For_String_Class_Type_Parameters()
+        {
+            var param = new MethodParameter(_ExampleMethod_string, null);
+
+            Assert.IsFalse(param.IsObject);
         }
     }
 }

@@ -53,6 +53,7 @@ namespace Test.AWhewell.Owin.Utility
         }
 
         [TestMethod]
+        [DataRow(typeof(Mock<ITypeParser<string>>),          nameof(TypeParserResolver.StringParser))]
         [DataRow(typeof(Mock<ITypeParser<bool>>),            nameof(TypeParserResolver.BoolParser))]
         [DataRow(typeof(Mock<ITypeParser<byte>>),            nameof(TypeParserResolver.ByteParser))]
         [DataRow(typeof(Mock<ITypeParser<char>>),            nameof(TypeParserResolver.CharParser))]

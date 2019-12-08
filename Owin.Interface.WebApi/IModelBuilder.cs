@@ -23,8 +23,9 @@ namespace AWhewell.Owin.Interface.WebApi
         /// Builds a model from a flat set of key value pairs.
         /// </summary>
         /// <param name="modelType">The type of model to build.</param>
+        /// <param name="typeParserResolver">The resolver to use to convert strings to values.</param>
         /// <param name="values">The query string or URL encoded form body values to populate the model with.</param>
         /// <returns>The populated model.</returns>
-        object BuildModel(Type modelType, QueryStringDictionary values);
+        object BuildModel(Type modelType, TypeParserResolver typeParserResolver, QueryStringDictionary values);
     }
 }

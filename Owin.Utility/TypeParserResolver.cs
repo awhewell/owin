@@ -37,6 +37,11 @@ namespace AWhewell.Owin.Utility
         private List<ParserAndType> _ParserList = new List<ParserAndType>();
 
         /// <summary>
+        /// Gets the last assigned parser for strings.
+        /// </summary>
+        public ITypeParser<string> StringParser { get; private set; }
+
+        /// <summary>
         /// Gets the last assigned parser for bools.
         /// </summary>
         public ITypeParser<bool> BoolParser { get; private set; }
@@ -318,6 +323,7 @@ namespace AWhewell.Owin.Utility
             else if(type == typeof(DateTimeOffset)) DateTimeOffsetParser = (ITypeParser<DateTimeOffset>)typeParser;
             else if(type == typeof(Guid))           GuidParser = (ITypeParser<Guid>)typeParser;
             else if(type == typeof(byte[]))         ByteArrayParser = (ITypeParser<byte[]>)typeParser;
+            else if(type == typeof(string))         StringParser = (ITypeParser<string>)typeParser;
         }
     }
 }
