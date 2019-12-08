@@ -47,6 +47,12 @@ namespace AWhewell.Owin.Interface.WebApi
         public MethodParameter[] MethodParameters { get; }
 
         /// <summary>
+        /// Gets the default type parser resolver to use for all parameters on the method. This will be null if
+        /// the default parsers are to be used.
+        /// </summary>
+        public TypeParserResolver TypeParserResolver { get; }
+
+        /// <summary>
         /// Gets the attribute that denotes the controller and method as an API endpoint.
         /// </summary>
         public RouteAttribute RouteAttribute { get; }
@@ -74,26 +80,37 @@ namespace AWhewell.Owin.Interface.WebApi
         /// <summary>
         /// Creates a new object.
         /// </summary>
-        /// <param name="controller"></param>
+        /// <param name="controllerType"></param>
         /// <param name="method"></param>
         /// <param name="routeAttribute"></param>
-        public Route(ControllerType controller, MethodInfo method, RouteAttribute routeAttribute) : this()
+        public Route(ControllerType controllerType, MethodInfo method, RouteAttribute routeAttribute) : this()
         {
-            ControllerType = controller;
+            ControllerType = controllerType;
             Method = method;
             RouteAttribute = routeAttribute;
 
-            MethodParameters = ExtractMethodParameters(method);
+            TypeParserResolver = BuildTypeParserResolver(controllerType, method);
+            MethodParameters = ExtractMethodParameters(method, TypeParserResolver);
             HttpMethod = ExtractHttpMethod(method);
             PathParts = ExtractPathParts(MethodParameters, routeAttribute);
 
             ID = Interlocked.Increment(ref _NextID);
         }
 
-        private MethodParameter[] ExtractMethodParameters(MethodInfo method)
+        private TypeParserResolver BuildTypeParserResolver(ControllerType controllerType, MethodInfo method)
+        {
+            var useParserAttribute = method
+                .GetCustomAttributes(inherit: true)
+                .OfType<UseParserAttribute>()
+                .LastOrDefault();
+
+            return UseParserAttribute.ToTypeParserResolver(useParserAttribute, controllerType.TypeParserResolver);
+        }
+
+        private MethodParameter[] ExtractMethodParameters(MethodInfo method, TypeParserResolver methodTypeParserResolver)
         {
             return method.GetParameters()
-                .Select(r => new MethodParameter(r))
+                .Select(r => new MethodParameter(r, methodTypeParserResolver))
                 .ToArray();
         }
 

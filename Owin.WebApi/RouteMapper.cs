@@ -239,7 +239,7 @@ namespace AWhewell.Owin.WebApi
                     parameterValue = Parser.ParseType(
                         methodParameter.ParameterType,
                         pathPart,
-                        ExpectFormatConverter.ToParserOptions(methodParameter.Expect?.ExpectFormat)
+                        methodParameter.TypeParserResolver
                     );
 
                     if(parameterValue == null) {
@@ -276,14 +276,13 @@ namespace AWhewell.Owin.WebApi
             var filled = false;
 
             if(queryStringDictionary.TryGetValue(methodParameter.Name, out var queryStringArray)) {
-                var parseSingleValue = !methodParameter.IsArray
-                                    || (methodParameter.ElementType == typeof(byte) && methodParameter.Expect.ExpectFormat != ExpectFormat.Array);
+                var parseSingleValue = !methodParameter.IsArray || methodParameter.IsArrayPassedAsSingleValue;
 
                 if(parseSingleValue) {
                     parameterValue = Parser.ParseType(
                         methodParameter.ParameterType,
                         QueryStringDictionary.JoinValue(queryStringArray),
-                        ExpectFormatConverter.ToParserOptions(methodParameter.Expect?.ExpectFormat)
+                        methodParameter.TypeParserResolver
                     );
                     filled = true;
                 } else {

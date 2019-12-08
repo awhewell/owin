@@ -392,12 +392,11 @@ namespace AWhewell.Owin.Utility
         }
 
         /// <summary>
-        /// Extracts a byte array from text formatted as case insensitive hex digits, no spaces between the
-        /// digits, optional case-sensitive '0x' prefix.
+        /// Extracts a byte array from a MIME64 encoded string.
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
-        public static byte[] ParseByteArray(string text) => ParseHexBytes(text);
+        public static byte[] ParseByteArray(string text) => ParseMime64Bytes(text);
 
         /// <summary>
         /// Extracts a byte array from text with an optional type parser resolver.
@@ -453,67 +452,7 @@ namespace AWhewell.Owin.Utility
         /// <remarks>
         /// This should be faster than TypeDescriptor.GetConverter().ConvertFrom() for the stock types.
         /// </remarks>
-        public static object ParseType(Type type, string text) => ParseType(type, text, (ParserOptions)null);
-
-        /// <summary>
-        /// Parses the <paramref name="text"/> into an object of type <paramref name="type"/>. If the
-        /// text cannot be parsed then null is returned.
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="text"></param>
-        /// <param name="options"></param>
-        /// <returns></returns>
-        /// <remarks>
-        /// This should be faster than TypeDescriptor.GetConverter().ConvertFrom() for the stock types.
-        /// </remarks>
-        public static object ParseType(Type type, string text, ParserOptions options)
-        {
-            object result = null;
-
-            if(type == typeof(string)) {
-                result = text;
-            } else if(text != null) {
-                if(type == typeof(bool) || type == typeof(bool?)) {
-                    result = ParseBool(text);
-                } else if(type == typeof(byte) || type == typeof(byte?)) {
-                    result = ParseByte(text);
-                } else if(type == typeof(char) || type == typeof(char?)) {
-                    result = ParseChar(text);
-                } else if(type == typeof(Int16) || type == typeof(Int16?)) {
-                    result = ParseInt16(text);
-                } else if(type == typeof(UInt16) || type == typeof(UInt16?)) {
-                    result = ParseUInt16(text);
-                } else if(type == typeof(Int32) || type == typeof(Int32?)) {
-                    result = ParseInt32(text);
-                } else if(type == typeof(UInt32) || type == typeof(UInt32?)) {
-                    result = ParseUInt32(text);
-                } else if(type == typeof(Int64) || type == typeof(Int64?)) {
-                    result = ParseInt64(text);
-                } else if(type == typeof(UInt64) || type == typeof(UInt64?)) {
-                    result = ParseUInt64(text);
-                } else if(type == typeof(float) || type == typeof(float?)) {
-                    result = ParseFloat(text);
-                } else if(type == typeof(double) || type == typeof(double?)) {
-                    result = ParseDouble(text);
-                } else if(type == typeof(decimal) || type == typeof(decimal?)) {
-                    result = ParseDecimal(text);
-                } else if(type == typeof(DateTime) || type == typeof(DateTime?)) {
-                    result = ParseDateTime(text);
-                } else if(type == typeof(DateTimeOffset) || type == typeof(DateTimeOffset?)) {
-                    result = ParseDateTimeOffset(text);
-                } else if(type == typeof(Guid) || type == typeof(Guid?)) {
-                    result = ParseGuid(text);
-                } else if(type == typeof(byte[])) {
-                    if(options?.ByteArray == ParserOptions.ByteArrayFormat.HexString) {
-                        result = ParseHexBytes(text);
-                    } else {
-                        result = ParseMime64Bytes(text);
-                    }
-                }
-            }
-
-            return result;
-        }
+        public static object ParseType(Type type, string text) => ParseType(type, text, null);
 
         /// <summary>
         /// Parses the <paramref name="text"/> into an object of type <paramref name="type"/>. If the

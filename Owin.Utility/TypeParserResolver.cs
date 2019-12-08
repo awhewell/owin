@@ -10,12 +10,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace AWhewell.Owin.Utility
 {
     /// <summary>
-    /// Keeps track of a set of <see cref="ITypeParser{T}"/> objects for different types.
+    /// Immutable class that keeps track of a set of <see cref="ITypeParser{T}"/> objects for different types.
     /// </summary>
     public class TypeParserResolver
     {
@@ -118,64 +119,148 @@ namespace AWhewell.Owin.Utility
         /// <summary>
         /// Creates a new object.
         /// </summary>
-        public TypeParserResolver()
+        public TypeParserResolver() : this((ITypeParser[])null)
         {
         }
 
         /// <summary>
         /// Creates a new object.
         /// </summary>
-        /// <param name="parsers"></param>
+        /// <param name="parsers">The parsers that the resolver will offer up.</param>
         public TypeParserResolver(params ITypeParser[] parsers)
         {
-            foreach(var parser in parsers) {
-                Assign(parser);
-            }
-        }
-
-        /// <summary>
-        /// Assigns the type parser for type <typeparamref name="T"/>.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="typeParser"></param>
-        public void Assign<T>(ITypeParser<T> typeParser)
-        {
-            var type = typeof(T);
-
-            if(typeParser != null) {
-                AddParser(type, typeParser);
-            } else {
-                RemoveParser(type);
-            }
-        }
-
-        /// <summary>
-        /// Assigns an abstract ITypeParser. The typeParser must implement <see cref="ITypeParser{T}"/>.
-        /// </summary>
-        /// <param name="typeParser"></param>
-        public void Assign(ITypeParser typeParser)
-        {
-            if(typeParser != null) {
-                var type = typeParser
-                    .GetType()
-                    .GetInterface(ITypeParserGenericName)
-                    .GetGenericArguments()[0];
-                AddParser(type, typeParser);
-            }
-        }
-
-        /// <summary>
-        /// Copies assignments from the other resolver passed in. These override the
-        /// existing assignments.
-        /// </summary>
-        /// <param name="otherResolver"></param>
-        public void CopyAssignmentsFrom(TypeParserResolver otherResolver)
-        {
-            if(otherResolver._ParserList != null) {
-                foreach(var parserAndType in otherResolver._ParserList) {
-                    AddParser(parserAndType.Type, parserAndType.Parser);
+            if(parsers != null) {
+                foreach(var parser in parsers) {
+                    if(parser != null) {
+                        var type = parser
+                            .GetType()
+                            .GetInterface(ITypeParserGenericName)
+                            .GetGenericArguments()[0];
+                        AddParser(_ParserList, type, parser);
+                    }
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns true if both resolvers have the same set of parsers by type (references
+        /// can be different).
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            var result = Object.ReferenceEquals(this, obj);
+            if(!result && obj is TypeParserResolver other) {
+                result = ParsersEquals(other._ParserList.Select(r => r.Parser));
+            }
+
+            return result;
+        }
+
+        public static bool operator ==(TypeParserResolver lhs, TypeParserResolver rhs) => Object.Equals(lhs, rhs);
+
+        public static bool operator !=(TypeParserResolver lhs, TypeParserResolver rhs) => !Object.Equals(lhs, rhs);
+
+        /// <summary>
+        /// See base docs.
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            var result = 17;
+            for(var i = 0;i < _ParserList.Count;++i) {
+                unchecked {
+                    result *= 31 + _ParserList[i].Parser.GetType().GetHashCode();
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Returns true if the parsers passed across match the parsers held by the resolver. Only types are significant,
+        /// the instances and order in which they appear are not significant.
+        /// </summary>
+        /// <param name="parsers"></param>
+        /// <returns></returns>
+        public bool ParsersEquals(IEnumerable<ITypeParser> parsers)
+        {
+            var otherParsers = (parsers ?? new ITypeParser[0])
+                .Where(r => r != null)
+                .ToArray();
+
+            var result = parsers != null && _ParserList.Count == otherParsers.Length;
+            if(result) {
+                var unmatchedOtherParsers = new LinkedList<Type>();
+                for(var i = 0;i < otherParsers.Length;++i) {
+                    unmatchedOtherParsers.AddLast(otherParsers[i].GetType());
+                }
+
+                for(var i = 0;i < _ParserList.Count;++i) {
+                    var findParserType = _ParserList[i].Parser.GetType();
+                    var matched = false;
+                    for(var node = unmatchedOtherParsers.First;node != null;node = node.Next) {
+                        matched = node.Value == findParserType;
+                        if(matched) {
+                            unmatchedOtherParsers.Remove(node);
+                            break;
+                        }
+                    }
+                    if(!matched) {
+                        result = false;
+                        break;
+                    }
+                }
+
+                if(unmatchedOtherParsers.Count > 0) {
+                    result = false;
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Returns a collection of all parsers registered with the resolver.
+        /// </summary>
+        /// <returns></returns>
+        public ITypeParser[] GetParsers()
+        {
+            return _ParserList
+                .Select(r => r.Parser)
+                .ToArray();
+        }
+
+        /// <summary>
+        /// Returns a collection of all parsers registered with the resolver after applying overrides passed
+        /// across.
+        /// </summary>
+        /// <param name="parsers"></param>
+        /// <returns>
+        /// A concatenation of registered parsers and <paramref name="parsers"/>. If there is a parser for the
+        /// same Type in both sets then the parser in <paramref name="parsers"/> takes priority.
+        /// </returns>
+        public ITypeParser[] GetAugmentedParsers(params ITypeParser[] parsers)
+        {
+            var parserList = new List<ParserAndType>(_ParserList);
+
+            if(parsers != null) {
+                for(var i = 0;i < parsers.Length;++i) {
+                    var parser = parsers[i];
+                    if(parser != null) {
+                        var type = parsers[i]
+                            .GetType()
+                            .GetInterface(ITypeParserGenericName)
+                            .GetGenericArguments()[0];
+                        AddParser(parserList, type, parser);
+                    }
+                }
+            }
+
+            return parserList
+                .Select(r => r.Parser)
+                .ToArray();
         }
 
         /// <summary>
@@ -196,31 +281,23 @@ namespace AWhewell.Owin.Utility
             return null;
         }
 
-        private void AddParser(Type type, ITypeParser typeParser)
+        private void AddParser(List<ParserAndType> parserList, Type type, ITypeParser typeParser)
         {
             var record = new ParserAndType() {
                 Type =      type,
                 Parser =    typeParser,
             };
 
-            var idx = _ParserList.FindIndex(r => r.Type == type);
+            var idx = parserList.FindIndex(r => r.Type == type);
             if(idx != -1) {
-                _ParserList[idx] = record;
+                parserList[idx] = record;
             } else {
-                _ParserList.Add(record);
+                parserList.Add(record);
             }
 
-            SetDirectAccessProperty(type, typeParser);
-        }
-
-        private void RemoveParser(Type type)
-        {
-            var idx = _ParserList.FindIndex(r => r.Type == type);
-            if(idx != -1) {
-                _ParserList.RemoveAt(idx);
+            if(parserList == _ParserList) {
+                SetDirectAccessProperty(type, typeParser);
             }
-
-            SetDirectAccessProperty(type, null);
         }
 
         private void SetDirectAccessProperty(Type type, ITypeParser typeParser)

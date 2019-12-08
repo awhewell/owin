@@ -11,6 +11,7 @@
 using System;
 using System.Linq;
 using AWhewell.Owin.Interface.WebApi;
+using AWhewell.Owin.Utility;
 using AWhewell.Owin.Utility.Parsers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -89,22 +90,65 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        public void ToTypeParserResolver_Returns_Resolver_Filled_With_Parsers_From_Ctor()
+        public void ToTypeParserResolver_NullDefault_Returns_Resolver_Filled_With_Parsers_From_Ctor()
         {
             var attr = new UseParserAttribute(typeof(DateTime_Iso8601_Parser), typeof(DateTimeOffset_Iso8601_Parser));
 
-            var resolver = attr.ToTypeParserResolver();
+            var resolver = UseParserAttribute.ToTypeParserResolver(attr, null);
 
             Assert.IsInstanceOfType(resolver.Find<DateTime>(),       typeof(DateTime_Iso8601_Parser));
             Assert.IsInstanceOfType(resolver.Find<DateTimeOffset>(), typeof(DateTimeOffset_Iso8601_Parser));
         }
 
         [TestMethod]
-        public void ToTypeParserResolver_Returns_Null_If_Invalid()
+        public void ToTypeParserResolver_NullDefault_Returns_Null_When_Attribute_Is_Null()
+        {
+            Assert.IsNull(UseParserAttribute.ToTypeParserResolver(null, null));
+        }
+
+        [TestMethod]
+        public void ToTypeParserResolver_NullDefault_Returns_Null_If_Invalid()
         {
             var attr = new UseParserAttribute(typeof(string));
 
-            Assert.IsNull(attr.ToTypeParserResolver());
+            Assert.IsNull(UseParserAttribute.ToTypeParserResolver(attr, null));
+        }
+
+        [TestMethod]
+        public void ToTypeParserResolver_WithDefault_Returns_Resolver_Filled_With_Parsers_From_Ctor()
+        {
+            var attr = new UseParserAttribute(typeof(DateTime_Iso8601_Parser), typeof(DateTimeOffset_Iso8601_Parser));
+
+            var defaultResolver = new TypeParserResolver(new DateTime_Local_Parser(), new ByteArray_Mime64_Parser());
+            var resolver = UseParserAttribute.ToTypeParserResolver(attr, defaultResolver);
+
+            Assert.AreEqual(3, resolver.GetParsers().Length);
+            Assert.IsInstanceOfType(resolver.DateTimeParser,       typeof(DateTime_Iso8601_Parser));
+            Assert.IsInstanceOfType(resolver.DateTimeOffsetParser, typeof(DateTimeOffset_Iso8601_Parser));
+            Assert.IsInstanceOfType(resolver.ByteArrayParser,      typeof(ByteArray_Mime64_Parser));
+        }
+
+        [TestMethod]
+        public void ToTypeParserResolver_WithDefault_Returns_Default_When_Attribute_Is_Null()
+        {
+            var defaultResolver = new TypeParserResolver(new DateTime_Local_Parser(), new ByteArray_Mime64_Parser());
+            var resolver = UseParserAttribute.ToTypeParserResolver(null, defaultResolver);
+
+            Assert.AreEqual(2, resolver.GetParsers().Length);
+            Assert.IsInstanceOfType(resolver.DateTimeParser,       typeof(DateTime_Local_Parser));
+            Assert.IsInstanceOfType(resolver.ByteArrayParser,      typeof(ByteArray_Mime64_Parser));
+        }
+
+        [TestMethod]
+        public void ToTypeParserResolver_WithDefault_Returns_Default_If_Invalid()
+        {
+            var attr = new UseParserAttribute(typeof(string));
+            var defaultResolver = new TypeParserResolver(new DateTime_Local_Parser(), new ByteArray_Mime64_Parser());
+            var resolver = UseParserAttribute.ToTypeParserResolver(attr, defaultResolver);
+
+            Assert.AreEqual(2, resolver.GetParsers().Length);
+            Assert.IsInstanceOfType(resolver.DateTimeParser,       typeof(DateTime_Local_Parser));
+            Assert.IsInstanceOfType(resolver.ByteArrayParser,      typeof(ByteArray_Mime64_Parser));
         }
     }
 }

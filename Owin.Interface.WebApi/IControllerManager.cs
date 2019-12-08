@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using AWhewell.Owin.Utility;
 
 namespace AWhewell.Owin.Interface.WebApi
 {
@@ -19,6 +20,14 @@ namespace AWhewell.Owin.Interface.WebApi
     /// </summary>
     public interface IControllerManager
     {
+        /// <summary>
+        /// Gets or sets the default type parser resolver. Will be null if default parsers are to be used.
+        /// </summary>
+        /// <remarks>
+        /// This is built from <see cref="IWebApiMiddleware.DefaultParsers"/>.
+        /// </remarks>
+        TypeParserResolver DefaultTypeParserResolver { get; set; }
+
         /// <summary>
         /// Returns all public types that implement <see cref="IApiController"/> in all loaded assemblies.
         /// </summary>

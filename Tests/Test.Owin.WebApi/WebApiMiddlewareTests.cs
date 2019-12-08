@@ -17,6 +17,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using AWhewell.Owin.Interface;
 using AWhewell.Owin.Interface.WebApi;
+using AWhewell.Owin.Utility.Parsers;
 
 namespace Test.AWhewell.Owin.WebApi
 {
@@ -79,6 +80,20 @@ namespace Test.AWhewell.Owin.WebApi
         {
             CallMiddleware();
             Assert.IsTrue(_Pipeline.NextMiddlewareCalled);
+        }
+
+        [TestMethod]
+        public void CreateMiddleware_Populates_ControllerManager()
+        {
+            _WebApi.DefaultParsers.Add(new DateTime_Local_Parser());
+            _WebApi.CreateMiddleware(null);
+
+            var defaultTypeParserResolver = _ControllerManager.Object.DefaultTypeParserResolver;
+            Assert.IsNotNull(defaultTypeParserResolver);
+
+            var defaultParsers = defaultTypeParserResolver.GetParsers();
+            Assert.AreEqual(1, defaultParsers.Length);
+            Assert.AreEqual(typeof(DateTime_Local_Parser), defaultParsers[0].GetType());
         }
 
         [TestMethod]

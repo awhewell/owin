@@ -11,29 +11,15 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using AWhewell.Owin.Interface.WebApi;
-using AWhewell.Owin.Utility;
 
-namespace AWhewell.Owin.WebApi
+namespace AWhewell.Owin.Interface.WebApi
 {
     /// <summary>
-    /// Converts various <see cref="ExpectFormat"/> formats to parser options etc.
+    /// Tags byte array parameters that are to be passed as an array of individual
+    /// bytes instead of a single string that needs to be decoded into bytes.
     /// </summary>
-    static class ExpectFormatConverter
+    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
+    public class ExpectArrayAttribute : Attribute
     {
-        private static ParserOptions _HexString =   new ParserOptions() { ByteArray = ParserOptions.ByteArrayFormat.HexString, };
-        private static ParserOptions _Mime64 =      new ParserOptions() { ByteArray = ParserOptions.ByteArrayFormat.Mime64, };
-
-        public static ParserOptions ToParserOptions(ExpectFormat? expectFormat)
-        {
-            switch(expectFormat) {
-                case ExpectFormat.HexString:    return _HexString;
-                case ExpectFormat.Mime64:       return _Mime64;
-                case ExpectFormat.Array:
-                case ExpectFormat.Default:
-                case null:                      return null;
-                default:                        throw new NotImplementedException();
-            }
-        }
     }
 }

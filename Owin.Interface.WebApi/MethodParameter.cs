@@ -10,8 +10,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
+using AWhewell.Owin.Utility;
 
 namespace AWhewell.Owin.Interface.WebApi
 {
@@ -43,7 +45,14 @@ namespace AWhewell.Owin.Interface.WebApi
         /// <summary>
         /// Gets a value indicating that <see cref="ParameterType"/> is an array.
         /// </summary>
-        public bool IsArray => ElementType != null;
+        public bool IsArray { get; }
+
+        /// <summary>
+        /// Gets a value indicating that <see cref="IsArray"/> is set and the array is
+        /// sent as a single string (e.g. a byte array passed as a MIME64 string). This can be overridden
+        /// by tagging the parameter with <see cref="ExpectArrayAttribute"/>.
+        /// </summary>
+        public bool IsArrayPassedAsSingleValue { get; }
 
         /// <summary>
         /// Gets a value indicating that the parameter is optional.
@@ -56,24 +65,39 @@ namespace AWhewell.Owin.Interface.WebApi
         public object DefaultValue { get; }
 
         /// <summary>
-        /// Gets the <see cref="ExpectAttribute"/> that the parameter has been tagged with, if any.
+        /// Gets the <see cref="TypeParserResolver"/> to use when parsing values for this type. This
+        /// is null if the default parser is to be used.
         /// </summary>
-        public ExpectAttribute Expect { get; }
+        public TypeParserResolver TypeParserResolver { get; }
 
         /// <summary>
         /// Creates a new object.
         /// </summary>
         /// <param name="parameterInfo"></param>
-        public MethodParameter(ParameterInfo parameterInfo)
+        /// <param name="defaultParserResolver"></param>
+        public MethodParameter(ParameterInfo parameterInfo, TypeParserResolver defaultParserResolver)
         {
-            Name =              parameterInfo.Name;
-            NormalisedName =    PathPart.Normalise(parameterInfo.Name);
-            ParameterType =     parameterInfo.ParameterType;
-            ElementType =       parameterInfo.ParameterType.IsArray ? parameterInfo.ParameterType.GetElementType() : null;
-            IsOptional =        parameterInfo.IsOptional;
-            DefaultValue =      parameterInfo.DefaultValue;
-            Expect =            (ExpectAttribute)parameterInfo.GetCustomAttribute(typeof(ExpectAttribute))
-                                ?? ExpectAttribute.Default;
+            Name =                       parameterInfo.Name;
+            NormalisedName =             PathPart.Normalise(parameterInfo.Name);
+            ParameterType =              parameterInfo.ParameterType;
+            ElementType =                parameterInfo.ParameterType.IsArray ? parameterInfo.ParameterType.GetElementType() : null;
+            IsArray =                    ElementType != null;
+            IsOptional =                 parameterInfo.IsOptional;
+            DefaultValue =               parameterInfo.DefaultValue;
+            TypeParserResolver =         BuildTypeParserResolver(parameterInfo, defaultParserResolver);
+            IsArrayPassedAsSingleValue = IsArray
+                                      && ElementType == typeof(byte)
+                                      && parameterInfo.GetCustomAttribute(typeof(ExpectArrayAttribute), inherit: false) == null;
+        }
+
+        private TypeParserResolver BuildTypeParserResolver(ParameterInfo parameterInfo, TypeParserResolver defaultParserResolver)
+        {
+            var useParserAttribute = parameterInfo
+                .GetCustomAttributes(inherit: false)
+                .OfType<UseParserAttribute>()
+                .FirstOrDefault();
+
+            return UseParserAttribute.ToTypeParserResolver(useParserAttribute, defaultParserResolver);
         }
 
         /// <summary>

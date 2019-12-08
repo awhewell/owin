@@ -438,9 +438,9 @@ namespace Test.AWhewell.Owin.Utility
         [TestMethod]
         [DataRow(null,      "en-GB", null)]
         [DataRow("",        "en-GB", new byte[0])]
-        [DataRow("000B",    "en-GB", new byte[] { 0x00, 0x0b })]
-        [DataRow("0x0102",  "en-GB", new byte[] { 0x01, 0x02 })]
-        public void ParseByteArray_Parses_String_In_HexBytes_Format(string input, string culture, byte[] expected)
+        [DataRow("DwoL",    "en-GB", new byte[] { 0x0f, 0x0a, 0x0b })]
+        [DataRow("A",       "en-GB", null)]
+        public void ParseByteArray_Parses_String_In_MIME64_Format(string input, string culture, byte[] expected)
         {
             using(new CultureSwap(culture)) {
                 var actual = Parser.ParseByteArray(input);
@@ -789,21 +789,6 @@ namespace Test.AWhewell.Owin.Utility
             }
         }
 
-        [TestMethod]
-        [DataRow(typeof(byte[]), "0x01", ParserOptions.ByteArrayFormat.HexString, "en-GB", new byte[] { 1 })]
-        [DataRow(typeof(byte[]), "0102", ParserOptions.ByteArrayFormat.HexString, "en-GB", new byte[] { 1, 2 })]
-        [DataRow(typeof(byte[]), "0x01", ParserOptions.ByteArrayFormat.Mime64,    "en-GB", new byte[] { 211, 29, 53 })]
-        public void ParseType_Honours_ParserOptions_For_Byte_Array(Type type, string text, ParserOptions.ByteArrayFormat byteArrayFormat, string culture, object rawExpected)
-        {
-            using(new CultureSwap(culture)) {
-                var options = new ParserOptions() {
-                    ByteArray = byteArrayFormat,
-                };
-                var actual = Parser.ParseType(type, text, options);
-                AssertParseTypeOutcome(type, rawExpected, actual);
-            }
-        }
-
         private static void AssertParseTypeOutcome(Type type, object rawExpected, object actual)
         {
             if(rawExpected == null) {
@@ -848,7 +833,7 @@ namespace Test.AWhewell.Owin.Utility
         [DataRow(typeof(DateTime),          nameof(Parser.ParseDateTime),       "2019-01-02",                           "2019-01-02",                           "1816-04-21")]
         [DataRow(typeof(DateTimeOffset),    nameof(Parser.ParseDateTimeOffset), "2019-01-02",                           "2019-01-02",                           "1816-04-21")]
         [DataRow(typeof(Guid),              nameof(Parser.ParseGuid),           "48cd065e-f78d-465b-af07-49e3b1b7cc92", "48cd065e-f78d-465b-af07-49e3b1b7cc92", "c08f84fd-c572-4bba-94c5-f22804442e62")]
-        [DataRow(typeof(byte[]),            nameof(Parser.ParseByteArray),      "0x0A0B",                               new byte[] { 10, 11 },                  new byte[] { 99, 100 })]
+        [DataRow(typeof(byte[]),            nameof(Parser.ParseByteArray),      "DwoL",                                 new byte[] { 0x0f, 0x0a, 0x0b },        new byte[] { 99, 100 })]
         public void Parse_Explicit_Type_Methods_Use_TypeResolver_When_Supplied(Type valueType, string parserMethodName, string text, object expectedNormalRaw, object expectedCustomRaw)
         {
             Mock mockParser = null;
@@ -912,11 +897,10 @@ namespace Test.AWhewell.Owin.Utility
             areEqual(expectedNormal, callParser(text, null));
 
             // Type resolver with no parser for type should call normal parser
-            var typeResolver = new TypeParserResolver();
-            areEqual(expectedNormal, callParser(text, typeResolver));
+            var emptyTypeResolver = new TypeParserResolver();
+            areEqual(expectedNormal, callParser(text, emptyTypeResolver));
 
-            // Type resolver with parser for type should call custom parser
-            typeResolver.Assign((ITypeParser)mockParser.Object);
+            var typeResolver = new TypeParserResolver((ITypeParser)mockParser.Object);
 
             // If custom parser returns true then use the parsed value
             tryParseResult = true;
@@ -949,8 +933,7 @@ namespace Test.AWhewell.Owin.Utility
             var mockParser = MockHelper.CreateMock(mockType);
             var mockTypeParser = (ITypeParser)mockParser.Object;
 
-            var resolver = new TypeParserResolver();
-            resolver.Assign(mockTypeParser);
+            var resolver = new TypeParserResolver(mockTypeParser);
 
             Parser.ParseType(valueType, "text", resolver);
 

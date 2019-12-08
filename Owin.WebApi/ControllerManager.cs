@@ -15,6 +15,7 @@ using System.Reflection;
 using System.Text;
 using InterfaceFactory;
 using AWhewell.Owin.Interface.WebApi;
+using AWhewell.Owin.Utility;
 
 namespace AWhewell.Owin.WebApi
 {
@@ -23,6 +24,11 @@ namespace AWhewell.Owin.WebApi
     /// </summary>
     class ControllerManager : IControllerManager
     {
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        public TypeParserResolver DefaultTypeParserResolver { get; set; }
+
         /// <summary>
         /// See interface docs.
         /// </summary>
@@ -36,7 +42,7 @@ namespace AWhewell.Owin.WebApi
                         iface == typeof(IApiController)
                     )
                 )
-                .Select(r => new ControllerType(r))
+                .Select(r => new ControllerType(r, DefaultTypeParserResolver))
                 .ToArray();
         }
     }

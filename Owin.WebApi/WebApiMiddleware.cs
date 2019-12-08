@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using InterfaceFactory;
 using AWhewell.Owin.Interface.WebApi;
 using AWhewell.Owin.Utility;
+using System.Linq;
 
 namespace AWhewell.Owin.WebApi
 {
@@ -47,6 +48,7 @@ namespace AWhewell.Owin.WebApi
         public AppFunc CreateMiddleware(AppFunc next)
         {
             var controllerManager = Factory.Resolve<IControllerManager>();
+            controllerManager.DefaultTypeParserResolver = TypeParserResolverCache.Find(DefaultParsers.ToArray());
             var controllerTypes = controllerManager.DiscoverControllers();
 
             var routeManager = Factory.Resolve<IRouteManager>();

@@ -15,6 +15,7 @@ using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AWhewell.Owin.Interface.WebApi;
 using AWhewell.Owin.Utility;
+using AWhewell.Owin.Utility.Parsers;
 
 namespace Test.AWhewell.Owin.WebApi
 {
@@ -52,7 +53,7 @@ namespace Test.AWhewell.Owin.WebApi
 
         public static Route CreateRoute(Type controllerNativeType, string methodName, string choosePath = null)
         {
-            var controllerType = new ControllerType(controllerNativeType);
+            var controllerType = new ControllerType(controllerNativeType, null);
             var method = controllerNativeType.GetMethod(methodName);
             var routeAttributes = method.GetCustomAttributes(inherit: false).OfType<RouteAttribute>().ToArray();
             var routeAttribute = routeAttributes.Length == 1
@@ -65,9 +66,9 @@ namespace Test.AWhewell.Owin.WebApi
         public static Route CreateRoute<T>(string methodName, string choosePath = null) => CreateRoute(typeof(T), methodName, choosePath);
 
         [TestMethod]
-        public void Route_Ctor_Copies_Arguments_Properties()
+        public void Ctor_Copies_Arguments_Properties()
         {
-            var controller = new ControllerType(typeof(Controller));
+            var controller = new ControllerType(typeof(Controller), null);
             var methodInfo = controller.Type.GetMethod(nameof(Controller.Example));
             var routeAttribute = methodInfo.GetCustomAttributes(inherit: false).OfType<RouteAttribute>().Single();
 
@@ -78,7 +79,7 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        public void Route_Ctor_Defaults_Method_To_Post()
+        public void Ctor_Defaults_Method_To_Post()
         {
             var route = CreateRoute<Controller>(nameof(Controller.Example));
 
@@ -92,7 +93,7 @@ namespace Test.AWhewell.Owin.WebApi
         [DataRow("Patch",   HttpMethod.Patch)]
         [DataRow("Post",    HttpMethod.Post)]
         [DataRow("Put",     HttpMethod.Put)]
-        public void Route_Ctor_Sets_HttpMethod_From_Method_Attribute(string methodName, HttpMethod expected)
+        public void Ctor_Sets_HttpMethod_From_Method_Attribute(string methodName, HttpMethod expected)
         {
             var route = CreateRoute<Controller>(methodName);
 
@@ -100,7 +101,7 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        public void Route_Ctor_Sets_Unknown_HttpMethod_If_Multiple_Attributes_Present()
+        public void Ctor_Sets_Unknown_HttpMethod_If_Multiple_Attributes_Present()
         {
             var route = CreateRoute<Controller>(nameof(Controller.Duplicate_Methods_Not_Allowed));
 
@@ -131,7 +132,7 @@ namespace Test.AWhewell.Owin.WebApi
         [DataRow(typeof(SpacesRoute2),      "Method", new string[] { "A B" })]
         [DataRow(typeof(EmptyPartRoute),    "Method", new string[] { "api", "", "entity" })]
         [DataRow(typeof(LeadingSlashRoute), "Method", new string[] { "", "api", "entity" })]
-        public void Route_Ctor_Sets_Correct_PathParts(Type controllerType, string methodName, string[] expectedPathParts)
+        public void Ctor_Sets_Correct_PathParts(Type controllerType, string methodName, string[] expectedPathParts)
         {
             var route = CreateRoute(controllerType, methodName);
 
@@ -146,7 +147,7 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        public void Route_Ctor_Assigns_A_New_ID_For_Each_New_Object()
+        public void Ctor_Assigns_A_New_ID_For_Each_New_Object()
         {
             var route1 = CreateRoute(typeof(NullRoute), nameof(NullRoute.Method));
             var route2 = CreateRoute(typeof(EmptyRoute), nameof(EmptyRoute.Method));
@@ -157,7 +158,7 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        public void Route_Ctor_Assigns_Different_ID_Even_If_Routes_Are_For_Same_Method()
+        public void Ctor_Assigns_Different_ID_Even_If_Routes_Are_For_Same_Method()
         {
             var route1 = CreateRoute(typeof(NullRoute), nameof(NullRoute.Method));
             var route2 = CreateRoute(typeof(NullRoute), nameof(NullRoute.Method));
@@ -175,7 +176,7 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        public void Route_Ctor_Fills_MethodParameters_Correctly_For_Routes_With_No_Parameters()
+        public void Ctor_Fills_MethodParameters_Correctly_For_Routes_With_No_Parameters()
         {
             var route = CreateRoute(typeof(MethodParametersController), nameof(MethodParametersController.NoParams));
 
@@ -183,7 +184,7 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        public void Route_Ctor_Fills_MethodParameters_Correctly_For_Routes_With_Parameters()
+        public void Ctor_Fills_MethodParameters_Correctly_For_Routes_With_Parameters()
         {
             var route = CreateRoute(typeof(MethodParametersController), nameof(MethodParametersController.ThreeParams));
 
@@ -194,7 +195,7 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        public void Route_Ctor_Uses_Same_MethodParameters_For_MethodParameters_Property_And_PathPartParameter_Objects()
+        public void Ctor_Uses_Same_MethodParameters_For_MethodParameters_Property_And_PathPartParameter_Objects()
         {
             var route = CreateRoute(typeof(MethodParametersController), nameof(MethodParametersController.OnePathPart));
 
@@ -203,6 +204,51 @@ namespace Test.AWhewell.Owin.WebApi
 
             var pathPartParameter = (PathPartParameter)route.PathParts[1];
             Assert.AreSame(route.MethodParameters[0], pathPartParameter.MethodParameter);
+        }
+
+        public class NoDefaultResolverController : Controller
+        {
+            [HttpGet, Route("a1"), UseParser(typeof(DateTime_Local_Parser))] public int A1(int x) { return x + 1; }
+        }
+
+        [UseParser(typeof(DateTime_Iso8601_Parser), typeof(ByteArray_Mime64_Parser))]
+        public class DefaultResolverController : Controller
+        {
+            [HttpGet, Route("a1"), UseParser(typeof(DateTime_Local_Parser), typeof(DateTimeOffset_Local_Parser))] public int A1() { return 1; }
+        }
+
+        [TestMethod]
+        public void Ctor_Builds_TypeParserResolver_From_UseParserAttribute_On_Method()
+        {
+            var route = CreateRoute(typeof(NoDefaultResolverController), nameof(NoDefaultResolverController.A1));
+
+            Assert.IsNotNull(route.TypeParserResolver);
+            var parsers = route.TypeParserResolver.GetParsers();
+            Assert.AreEqual(1, parsers.Length);
+            Assert.IsInstanceOfType(parsers[0], typeof(DateTime_Local_Parser));
+        }
+
+        [TestMethod]
+        public void Ctor_Uses_Default_TypeParserResolver_From_Controller()
+        {
+            var route = CreateRoute(typeof(DefaultResolverController), nameof(DefaultResolverController.A1));
+
+            Assert.IsNotNull(route.TypeParserResolver);
+            var parsers = route.TypeParserResolver.GetParsers();
+            Assert.AreEqual(3, parsers.Length);
+            Assert.IsInstanceOfType(route.TypeParserResolver.DateTimeParser,        typeof(DateTime_Local_Parser));
+            Assert.IsInstanceOfType(route.TypeParserResolver.DateTimeOffsetParser,  typeof(DateTimeOffset_Local_Parser));
+            Assert.IsInstanceOfType(route.TypeParserResolver.ByteArrayParser,       typeof(ByteArray_Mime64_Parser));
+        }
+
+        [TestMethod]
+        public void Ctor_Passes_Method_TypeParserResolver_To_MethodParameter_Ctor()
+        {
+            var route = CreateRoute(typeof(NoDefaultResolverController), nameof(NoDefaultResolverController.A1));
+            var parameter = route.MethodParameters.Single();
+
+            Assert.IsNotNull(parameter.TypeParserResolver);
+            Assert.AreEqual(parameter.TypeParserResolver, route.TypeParserResolver);
         }
     }
 }

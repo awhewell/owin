@@ -20,6 +20,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AWhewell.Owin.Interface.WebApi;
 using System.Collections;
 using AWhewell.Owin.Utility;
+using AWhewell.Owin.Utility.Parsers;
 
 namespace Test.AWhewell.Owin.WebApi
 {
@@ -233,15 +234,15 @@ namespace Test.AWhewell.Owin.WebApi
         // be a lot of effort to reproduce them all here. These tests just cover the basics re. types and corner cases.
         public class PathPartTypeController : Controller
         {
-            [HttpGet, Route("string/{param}")]          public int StringPP(string param)                                           { return 0; }
-            [HttpGet, Route("int/{param}")]             public int IntPP(int param)                                                 { return 0; }
-            [HttpGet, Route("n-int/{param}")]           public int NIntPP(int? param)                                               { return 0; }
-            [HttpGet, Route("double/{param}")]          public int DoublePP(double param)                                           { return 0; }
-            [HttpGet, Route("datetime/{param}")]        public int DateTimePP(DateTime param)                                       { return 0; }
-            [HttpGet, Route("datetimeoffset/{param}")]  public int DateTimeOffsetPP(DateTimeOffset param)                           { return 0; }
-            [HttpGet, Route("default-bytes/{param}")]   public int DefaultByteArrayPP(byte[] param)                                 { return 0; }
-            [HttpGet, Route("hex-bytes/{param}")]       public int HexByteArrayPP([Expect(ExpectFormat.HexString)] byte[] param)    { return 0; }
-            [HttpGet, Route("mime64-bytes/{param}")]    public int Mime64ByteArrayPP([Expect(ExpectFormat.Mime64)] byte[] param)    { return 0; }
+            [HttpGet, Route("string/{param}")]          public int StringPP(string param)                                                       { return 0; }
+            [HttpGet, Route("int/{param}")]             public int IntPP(int param)                                                             { return 0; }
+            [HttpGet, Route("n-int/{param}")]           public int NIntPP(int? param)                                                           { return 0; }
+            [HttpGet, Route("double/{param}")]          public int DoublePP(double param)                                                       { return 0; }
+            [HttpGet, Route("datetime/{param}")]        public int DateTimePP(DateTime param)                                                   { return 0; }
+            [HttpGet, Route("datetimeoffset/{param}")]  public int DateTimeOffsetPP(DateTimeOffset param)                                       { return 0; }
+            [HttpGet, Route("default-bytes/{param}")]   public int DefaultByteArrayPP(byte[] param)                                             { return 0; }
+            [HttpGet, Route("hex-bytes/{param}")]       public int HexByteArrayPP([UseParser(typeof(ByteArray_HexString_Parser))] byte[] param) { return 0; }
+            [HttpGet, Route("mime64-bytes/{param}")]    public int Mime64ByteArrayPP([UseParser(typeof(ByteArray_Mime64_Parser))] byte[] param) { return 0; }
 
         }
 
@@ -344,18 +345,18 @@ namespace Test.AWhewell.Owin.WebApi
         // of basic tests to make sure things appear to be working OK
         public class QueryStringController : Controller
         {
-            [HttpGet, Route("string")]      public int StringParam(string param)                                        { return 0; }
-            [HttpGet, Route("int")]         public int IntParam(int param)                                              { return 0; }
-            [HttpGet, Route("nint")]        public int NullableInt(int? param)                                          { return 0; }
-            [HttpGet, Route("double")]      public int DoubleParam(double param)                                        { return 0; }
-            [HttpGet, Route("date")]        public int DateParam(DateTime param)                                        { return 0; }
-            [HttpGet, Route("dateoffset")]  public int DateOffsetParam(DateTimeOffset param)                            { return 0; }
-            [HttpGet, Route("string-arr")]  public int StringArrayParam(string[] param)                                 { return 0; }
-            [HttpGet, Route("int-arr")]     public int IntArrayParam(int[] param)                                       { return 0; }
-            [HttpGet, Route("byte-arr-1")]  public int ByteArray1Param(byte[] param)                                    { return 0; }
-            [HttpGet, Route("byte-arr-2")]  public int ByteArray2Param([Expect(ExpectFormat.HexString)] byte[] param)   { return 0; }
-            [HttpGet, Route("byte-arr-3")]  public int ByteArray3Param([Expect(ExpectFormat.Mime64)] byte[] param)      { return 0; }
-            [HttpGet, Route("byte-arr-4")]  public int ByteArray4Param([Expect(ExpectFormat.Array)] byte[] param)       { return 0; }
+            [HttpGet, Route("string")]      public int StringParam(string param)                                                     { return 0; }
+            [HttpGet, Route("int")]         public int IntParam(int param)                                                           { return 0; }
+            [HttpGet, Route("nint")]        public int NullableInt(int? param)                                                       { return 0; }
+            [HttpGet, Route("double")]      public int DoubleParam(double param)                                                     { return 0; }
+            [HttpGet, Route("date")]        public int DateParam(DateTime param)                                                     { return 0; }
+            [HttpGet, Route("dateoffset")]  public int DateOffsetParam(DateTimeOffset param)                                         { return 0; }
+            [HttpGet, Route("string-arr")]  public int StringArrayParam(string[] param)                                              { return 0; }
+            [HttpGet, Route("int-arr")]     public int IntArrayParam(int[] param)                                                    { return 0; }
+            [HttpGet, Route("byte-arr-1")]  public int ByteArray1Param(byte[] param)                                                 { return 0; }
+            [HttpGet, Route("byte-arr-2")]  public int ByteArray2Param([UseParser(typeof(ByteArray_HexString_Parser))] byte[] param) { return 0; }
+            [HttpGet, Route("byte-arr-3")]  public int ByteArray3Param([UseParser(typeof(ByteArray_Mime64_Parser))] byte[] param)    { return 0; }
+            [HttpGet, Route("byte-arr-4")]  public int ByteArray4Param([ExpectArray] byte[] param)                                   { return 0; }
         }
 
         [TestMethod]

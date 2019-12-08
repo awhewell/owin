@@ -77,14 +77,22 @@ namespace AWhewell.Owin.Interface.WebApi
         }
 
         /// <summary>
-        /// Returns a <see cref="TypeParserResolver"/> filled with the parsers instantiated by the ctor.
+        /// Returns a <see cref="TypeParserResolver"/> filled with the parsers from the <see cref="UseParserAttribute"/> attribute.
         /// </summary>
+        /// <param name="useParser"></param>
+        /// <param name="defaultResolver"></param>
         /// <returns></returns>
-        public TypeParserResolver ToTypeParserResolver()
+        public static TypeParserResolver ToTypeParserResolver(UseParserAttribute useParser, TypeParserResolver defaultResolver)
         {
-            return IsValid
-                ? new TypeParserResolver(Parsers)
-                : null;
+            var result = defaultResolver;
+
+            if(useParser?.IsValid ?? false) {
+                result = result == null
+                    ? TypeParserResolverCache.Find(useParser.Parsers)
+                    : TypeParserResolverCache.Find(result.GetAugmentedParsers(useParser.Parsers));
+            }
+
+            return result;
         }
     }
 }

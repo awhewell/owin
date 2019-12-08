@@ -46,7 +46,8 @@ namespace AWhewell.Owin.Interface.WebApi
 
         /// <summary>
         /// Gets the default list of parsers to use. If no parsers are specified then by default dates are
-        /// invariant culture DateTime/DateTimeOffset.TryParse (no single format) and byte arrays are hex strings.
+        /// invariant culture DateTime/DateTimeOffset.TryParse (no single format) and byte arrays are MIME64
+        /// strings.
         /// </summary>
         /// <remarks>
         /// Any defaults established here can be overridden at the class, method and parameter levels with

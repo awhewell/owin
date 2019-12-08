@@ -16,6 +16,8 @@ using InterfaceFactory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using AWhewell.Owin.Interface.WebApi;
+using AWhewell.Owin.Utility;
+using AWhewell.Owin.Utility.Parsers;
 
 namespace Test.AWhewell.Owin.WebApi
 {
@@ -57,10 +59,26 @@ namespace Test.AWhewell.Owin.WebApi
             _AllTypes.Add(typeof(MockController1));
             _AllTypes.Add(typeof(string));
 
-            var controllerTypes = _ControllerManager.DiscoverControllers();
+            var controllerTypes = _ControllerManager.DiscoverControllers().ToArray();
 
             _AppDomainWrapper.Verify(r => r.GetAllTypes(), Times.Once());
-            Assert.AreSame(typeof(MockController1), controllerTypes.Single().Type);
+            Assert.AreEqual(1, controllerTypes.Length);
+
+            Assert.AreEqual(typeof(MockController1), controllerTypes[0].Type);
+            Assert.IsNull(controllerTypes[0].TypeParserResolver);
+        }
+
+        [TestMethod]
+        public void DiscoverControllers_Uses_Default_TypeParserResolver()
+        {
+            _AllTypes.Add(typeof(MockController1));
+            var resolver = new TypeParserResolver(new DateTime_Local_Parser());
+            _ControllerManager.DefaultTypeParserResolver = resolver;
+
+            var controllerTypes = _ControllerManager.DiscoverControllers().ToArray();
+
+            _AppDomainWrapper.Verify(r => r.GetAllTypes(), Times.Once());
+            Assert.AreEqual(resolver, controllerTypes[0].TypeParserResolver);
         }
     }
 }

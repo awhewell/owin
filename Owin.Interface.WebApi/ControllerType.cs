@@ -25,8 +25,8 @@ namespace AWhewell.Owin.Interface.WebApi
         public Type Type { get; }
 
         /// <summary>
-        /// Gets the type parser resolver to use for this controller. This is null if the controller
-        /// does not have a <see cref="UseParserAttribute"/> attribute.
+        /// Gets the type parser resolver to use for this controller. This is null if the controller does not
+        /// have a <see cref="UseParserAttribute"/> attribute and there are no defaults in force.
         /// </summary>
         public TypeParserResolver TypeParserResolver { get; }
 
@@ -34,14 +34,16 @@ namespace AWhewell.Owin.Interface.WebApi
         /// Creates a new object.
         /// </summary>
         /// <param name="type"></param>
-        public ControllerType(Type type)
+        /// <param name="defaultParserResolver"></param>
+        public ControllerType(Type type, TypeParserResolver defaultParserResolver)
         {
             Type = type;
 
             var useParserAttr = Type.GetCustomAttributes(typeof(UseParserAttribute), inherit: true)
                 .OfType<UseParserAttribute>()
                 .FirstOrDefault();
-            TypeParserResolver = useParserAttr?.ToTypeParserResolver();
+
+            TypeParserResolver = UseParserAttribute.ToTypeParserResolver(useParserAttr, defaultParserResolver);
         }
     }
 }
