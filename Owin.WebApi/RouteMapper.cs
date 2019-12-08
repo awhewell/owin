@@ -180,8 +180,8 @@ namespace AWhewell.Owin.WebApi
                     if(methodParameter.IsObject) {
                         parameterValue = _ModelBuilder.BuildModel(
                             methodParameter.ParameterType,
-                            null,
-                            context.RequestQueryStringDictionary(false)
+                            methodParameter.TypeParserResolver,
+                            context.RequestQueryStringDictionary(AreQueryStringNamesCaseSensitive)
                         );
                         filledParameter = true;
                     } else {

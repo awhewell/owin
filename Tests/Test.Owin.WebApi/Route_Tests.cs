@@ -51,9 +51,9 @@ namespace Test.AWhewell.Owin.WebApi
             public int Duplicate_Methods_Not_Allowed() { return 200; }
         }
 
-        public static Route CreateRoute(Type controllerNativeType, string methodName, string choosePath = null)
+        public static Route CreateRoute(Type controllerNativeType, string methodName, string choosePath = null, TypeParserResolver resolver = null)
         {
-            var controllerType = new ControllerType(controllerNativeType, null);
+            var controllerType = new ControllerType(controllerNativeType, resolver);
             var method = controllerNativeType.GetMethod(methodName);
             var routeAttributes = method.GetCustomAttributes(inherit: false).OfType<RouteAttribute>().ToArray();
             var routeAttribute = routeAttributes.Length == 1

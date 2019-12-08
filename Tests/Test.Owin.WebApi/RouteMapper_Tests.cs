@@ -546,5 +546,56 @@ namespace Test.AWhewell.Owin.WebApi
             var model = parameters.Parameters[0] as StringModel;
             Assert.AreEqual("Ab", model.StringValue);
         }
+
+        [TestMethod]
+        public void BuildRouteParameters_Can_Be_Case_Insensitive_For_Building_Models_From_Query_String()
+        {
+            var route = Route_Tests.CreateRoute(typeof(QueryStringModelController), nameof(QueryStringModelController.StringModelFunc));
+            _RouteMapper.AreQueryStringNamesCaseSensitive = false;
+            _RouteMapper.Initialise(new Route[] { route });
+            _Environment.SetRequestPath(route.PathParts[0].Part);
+
+            _Environment.RequestQueryString = "stringVALUE=Ab";
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
+
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual(1, parameters.Parameters.Length);
+            var model = parameters.Parameters[0] as StringModel;
+            Assert.AreEqual("Ab", model.StringValue);
+        }
+
+        [TestMethod]
+        public void BuildRouteParameters_Can_Be_Case_Sensitive_For_Building_Models_From_Query_String()
+        {
+            var route = Route_Tests.CreateRoute(typeof(QueryStringModelController), nameof(QueryStringModelController.StringModelFunc));
+            _RouteMapper.AreQueryStringNamesCaseSensitive = true;
+            _RouteMapper.Initialise(new Route[] { route });
+            _Environment.SetRequestPath(route.PathParts[0].Part);
+
+            _Environment.RequestQueryString = "stringVALUE=NotAb&StringValue=Ab";
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
+
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual(1, parameters.Parameters.Length);
+            var model = parameters.Parameters[0] as StringModel;
+            Assert.AreEqual("Ab", model.StringValue);
+        }
+
+        [TestMethod]
+        public void BuildRouteParameters_Passes_TypeParserResolver_To_Model_Builder_For_Query_String_Models()
+        {
+            var resolver = new TypeParserResolver(new ModelBuilder_Tests.String_Reverse_Parser());
+            var route = Route_Tests.CreateRoute(typeof(QueryStringModelController), nameof(QueryStringModelController.StringModelFunc), resolver: resolver);
+            _RouteMapper.Initialise(new Route[] { route });
+            _Environment.SetRequestPath(route.PathParts[0].Part);
+
+            _Environment.RequestQueryString = "StringValue=Ab";
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
+
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual(1, parameters.Parameters.Length);
+            var model = parameters.Parameters[0] as StringModel;
+            Assert.AreEqual("bA", model.StringValue);
+        }
     }
 }

@@ -27,7 +27,7 @@ namespace Test.AWhewell.Owin.WebApi
             public string A { get; set; }
         }
 
-        class String_Reverse_Parser : ITypeParser<string>
+        public class String_Reverse_Parser : ITypeParser<string>
         {
             public bool TryParse(string text, out string value)
             {
