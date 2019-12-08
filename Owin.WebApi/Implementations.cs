@@ -24,9 +24,9 @@ namespace AWhewell.Owin.WebApi
         public static void Register(IClassFactory factory)
         {
             factory.Register<AWhewell.Owin.Interface.WebApi.IAppDomainWrapper, AppDomainWrapper>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IControllerManager, ControllerManager>();
+            factory.Register<AWhewell.Owin.Interface.WebApi.IControllerFinder, ControllerFinder>();
             factory.Register<AWhewell.Owin.Interface.WebApi.IModelBuilder, ModelBuilder>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IRouteManager, RouteManager>();
+            factory.Register<AWhewell.Owin.Interface.WebApi.IRouteFinder, RouteFinder>();
             factory.Register<AWhewell.Owin.Interface.WebApi.IRouteMapper, RouteMapper>();
             factory.Register<AWhewell.Owin.Interface.WebApi.IWebApiMiddleware, WebApiMiddleware>();
         }

@@ -22,7 +22,7 @@ using AWhewell.Owin.Utility.Parsers;
 namespace Test.AWhewell.Owin.WebApi
 {
     [TestClass]
-    public class ControllerManagerTests
+    public class ControllerFinder_Tests
     {
         class MockController1 : IApiController
         {
@@ -32,7 +32,7 @@ namespace Test.AWhewell.Owin.WebApi
         private IClassFactory           _Snapshot;
         private Mock<IAppDomainWrapper> _AppDomainWrapper;
         private List<Type>              _AllTypes;
-        private IControllerManager      _ControllerManager;
+        private IControllerFinder       _ControllerFinder;
 
         [TestInitialize]
         public void TestInitialise()
@@ -43,7 +43,7 @@ namespace Test.AWhewell.Owin.WebApi
             _AllTypes = new List<Type>();
             _AppDomainWrapper.Setup(r => r.GetAllTypes()).Returns(_AllTypes);
 
-            _ControllerManager = Factory.Resolve<IControllerManager>();
+            _ControllerFinder = Factory.Resolve<IControllerFinder>();
         }
 
         [TestCleanup]
@@ -55,11 +55,11 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void DiscoverControllers_Finds_Controllers_Using_AppDomainWrapper()
         {
-            _AllTypes.Add(typeof(ControllerManagerTests));
+            _AllTypes.Add(typeof(ControllerFinder_Tests));
             _AllTypes.Add(typeof(MockController1));
             _AllTypes.Add(typeof(string));
 
-            var controllerTypes = _ControllerManager.DiscoverControllers().ToArray();
+            var controllerTypes = _ControllerFinder.DiscoverControllers().ToArray();
 
             _AppDomainWrapper.Verify(r => r.GetAllTypes(), Times.Once());
             Assert.AreEqual(1, controllerTypes.Length);
@@ -73,9 +73,9 @@ namespace Test.AWhewell.Owin.WebApi
         {
             _AllTypes.Add(typeof(MockController1));
             var resolver = new TypeParserResolver(new DateTime_Local_Parser());
-            _ControllerManager.DefaultTypeParserResolver = resolver;
+            _ControllerFinder.DefaultTypeParserResolver = resolver;
 
-            var controllerTypes = _ControllerManager.DiscoverControllers().ToArray();
+            var controllerTypes = _ControllerFinder.DiscoverControllers().ToArray();
 
             _AppDomainWrapper.Verify(r => r.GetAllTypes(), Times.Once());
             Assert.AreEqual(resolver, controllerTypes[0].TypeParserResolver);

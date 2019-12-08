@@ -10,40 +10,20 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Text;
-using InterfaceFactory;
-using AWhewell.Owin.Interface.WebApi;
-using AWhewell.Owin.Utility;
 
-namespace AWhewell.Owin.WebApi
+namespace AWhewell.Owin.Interface.WebApi
 {
     /// <summary>
-    /// Default implementation of <see cref="IControllerManager"/>.
+    /// The interface for an object that can extract route information out of API controllers.
     /// </summary>
-    class ControllerManager : IControllerManager
+    public interface IRouteFinder
     {
         /// <summary>
-        /// See interface docs.
+        /// Returns routes extracted from the controller types passed across.
         /// </summary>
-        public TypeParserResolver DefaultTypeParserResolver { get; set; }
-
-        /// <summary>
-        /// See interface docs.
-        /// </summary>
-        public IEnumerable<ControllerType> DiscoverControllers()
-        {
-            var appDomainWrapper = Factory.Resolve<IAppDomainWrapper>();
-            return appDomainWrapper
-                .GetAllTypes()
-                .Where(type =>
-                    type.GetInterfaces().Any(iface =>
-                        iface == typeof(IApiController)
-                    )
-                )
-                .Select(r => new ControllerType(r, DefaultTypeParserResolver))
-                .ToArray();
-        }
+        /// <param name="controllerTypes"></param>
+        /// <returns></returns>
+        IEnumerable<Route> DiscoverRoutes(IEnumerable<ControllerType> controllerTypes);
     }
 }

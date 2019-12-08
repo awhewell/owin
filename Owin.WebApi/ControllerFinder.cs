@@ -13,41 +13,37 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using InterfaceFactory;
 using AWhewell.Owin.Interface.WebApi;
+using AWhewell.Owin.Utility;
 
 namespace AWhewell.Owin.WebApi
 {
     /// <summary>
-    /// Default implementation of <see cref="IRouteManager"/>.
+    /// Default implementation of <see cref="IControllerFinder"/>.
     /// </summary>
-    class RouteManager : IRouteManager
+    class ControllerFinder : IControllerFinder
     {
         /// <summary>
         /// See interface docs.
         /// </summary>
-        /// <param name="controllerTypes"></param>
-        public IEnumerable<Route> DiscoverRoutes(IEnumerable<ControllerType> controllerTypes)
+        public TypeParserResolver DefaultTypeParserResolver { get; set; }
+
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        public IEnumerable<ControllerType> DiscoverControllers()
         {
-            if(controllerTypes == null) {
-                throw new ArgumentNullException(nameof(controllerTypes));
-            }
-
-            var result = new List<Route>();
-
-            foreach(var controllerType in controllerTypes) {
-                foreach(var methodInfo in controllerType.Type.GetMethods(BindingFlags.Public | BindingFlags.Instance)) {
-                    var routeAttribute = methodInfo.GetCustomAttributes().OfType<RouteAttribute>().FirstOrDefault();
-                    if(routeAttribute != null) {
-                        result.Add(new Route(
-                            controllerType,
-                            methodInfo,
-                            routeAttribute
-                        ));
-                    }
-                }
-            }
-
-            return result;
+            var appDomainWrapper = Factory.Resolve<IAppDomainWrapper>();
+            return appDomainWrapper
+                .GetAllTypes()
+                .Where(type =>
+                    type.GetInterfaces().Any(iface =>
+                        iface == typeof(IApiController)
+                    )
+                )
+                .Select(r => new ControllerType(r, DefaultTypeParserResolver))
+                .ToArray();
         }
     }
 }

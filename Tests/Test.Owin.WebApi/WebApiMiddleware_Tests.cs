@@ -28,9 +28,9 @@ namespace Test.AWhewell.Owin.WebApi
         private IWebApiMiddleware           _WebApi;
         private MockPipeline                _Pipeline;
         private MockOwinEnvironment         _Environment;
-        private Mock<IControllerManager>    _ControllerManager;
+        private Mock<IControllerFinder>     _ControllerFinder;
         private List<ControllerType>        _ControllerTypes;
-        private Mock<IRouteManager>         _RouteManager;
+        private Mock<IRouteFinder>          _RouteFinder;
         private List<Route>                 _Routes;
         private Mock<IRouteMapper>          _RouteMapper;
         private Route                       _FoundRoute;
@@ -41,13 +41,13 @@ namespace Test.AWhewell.Owin.WebApi
         {
             _Snapshot = Factory.TakeSnapshot();
 
-            _ControllerManager = MockHelper.FactoryImplementation<IControllerManager>();
+            _ControllerFinder = MockHelper.FactoryImplementation<IControllerFinder>();
             _ControllerTypes = new List<ControllerType>();
-            _ControllerManager.Setup(r => r.DiscoverControllers()).Returns(_ControllerTypes);
+            _ControllerFinder.Setup(r => r.DiscoverControllers()).Returns(_ControllerTypes);
 
-            _RouteManager = MockHelper.FactoryImplementation<IRouteManager>();
+            _RouteFinder = MockHelper.FactoryImplementation<IRouteFinder>();
             _Routes = new List<Route>();
-            _RouteManager.Setup(r => r.DiscoverRoutes(It.IsAny<IEnumerable<ControllerType>>())).Returns(_Routes);
+            _RouteFinder.Setup(r => r.DiscoverRoutes(It.IsAny<IEnumerable<ControllerType>>())).Returns(_Routes);
 
             _RouteMapper = MockHelper.FactoryImplementation<IRouteMapper>();
             _FoundRoute = new Route();
@@ -88,7 +88,7 @@ namespace Test.AWhewell.Owin.WebApi
             _WebApi.DefaultParsers.Add(new DateTime_Local_Parser());
             _WebApi.CreateMiddleware(null);
 
-            var defaultTypeParserResolver = _ControllerManager.Object.DefaultTypeParserResolver;
+            var defaultTypeParserResolver = _ControllerFinder.Object.DefaultTypeParserResolver;
             Assert.IsNotNull(defaultTypeParserResolver);
 
             var defaultParsers = defaultTypeParserResolver.GetParsers();
@@ -101,7 +101,7 @@ namespace Test.AWhewell.Owin.WebApi
         {
             _WebApi.CreateMiddleware(null);
 
-            _ControllerManager.Verify(r => r.DiscoverControllers(), Times.Once());
+            _ControllerFinder.Verify(r => r.DiscoverControllers(), Times.Once());
         }
 
         [TestMethod]
@@ -109,7 +109,7 @@ namespace Test.AWhewell.Owin.WebApi
         {
             _WebApi.CreateMiddleware(null);
 
-            _RouteManager.Verify(r => r.DiscoverRoutes(_ControllerTypes), Times.Once());
+            _RouteFinder.Verify(r => r.DiscoverRoutes(_ControllerTypes), Times.Once());
         }
 
         [TestMethod]

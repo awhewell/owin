@@ -10,20 +10,44 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Text;
+using AWhewell.Owin.Interface.WebApi;
 
-namespace AWhewell.Owin.Interface.WebApi
+namespace AWhewell.Owin.WebApi
 {
     /// <summary>
-    /// The interface for an object that can extract routes out of API controllers.
+    /// Default implementation of <see cref="IRouteFinder"/>.
     /// </summary>
-    public interface IRouteManager
+    class RouteFinder : IRouteFinder
     {
         /// <summary>
-        /// Returns routes extracted from the controller types passed across.
+        /// See interface docs.
         /// </summary>
         /// <param name="controllerTypes"></param>
-        /// <returns></returns>
-        IEnumerable<Route> DiscoverRoutes(IEnumerable<ControllerType> controllerTypes);
+        public IEnumerable<Route> DiscoverRoutes(IEnumerable<ControllerType> controllerTypes)
+        {
+            if(controllerTypes == null) {
+                throw new ArgumentNullException(nameof(controllerTypes));
+            }
+
+            var result = new List<Route>();
+
+            foreach(var controllerType in controllerTypes) {
+                foreach(var methodInfo in controllerType.Type.GetMethods(BindingFlags.Public | BindingFlags.Instance)) {
+                    var routeAttribute = methodInfo.GetCustomAttributes().OfType<RouteAttribute>().FirstOrDefault();
+                    if(routeAttribute != null) {
+                        result.Add(new Route(
+                            controllerType,
+                            methodInfo,
+                            routeAttribute
+                        ));
+                    }
+                }
+            }
+
+            return result;
+        }
     }
 }

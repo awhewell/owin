@@ -47,12 +47,12 @@ namespace AWhewell.Owin.WebApi
         /// <returns></returns>
         public AppFunc CreateMiddleware(AppFunc next)
         {
-            var controllerManager = Factory.Resolve<IControllerManager>();
-            controllerManager.DefaultTypeParserResolver = TypeParserResolverCache.Find(DefaultParsers.ToArray());
-            var controllerTypes = controllerManager.DiscoverControllers();
+            var controllerFinder = Factory.Resolve<IControllerFinder>();
+            controllerFinder.DefaultTypeParserResolver = TypeParserResolverCache.Find(DefaultParsers.ToArray());
+            var controllerTypes = controllerFinder.DiscoverControllers();
 
-            var routeManager = Factory.Resolve<IRouteManager>();
-            var routes = routeManager.DiscoverRoutes(controllerTypes);
+            var routeFinder = Factory.Resolve<IRouteFinder>();
+            var routes = routeFinder.DiscoverRoutes(controllerTypes);
 
             var routeMapper = Factory.Resolve<IRouteMapper>();
             routeMapper.AreFormNamesCaseSensitive =         AreFormNamesCaseSensitive;

@@ -18,7 +18,7 @@ namespace AWhewell.Owin.Interface.WebApi
     /// <summary>
     /// The interface for objects that can find classes that implement <see cref="IApiController"/>.
     /// </summary>
-    public interface IControllerManager
+    public interface IControllerFinder
     {
         /// <summary>
         /// Gets or sets the default type parser resolver. Will be null if default parsers are to be used.

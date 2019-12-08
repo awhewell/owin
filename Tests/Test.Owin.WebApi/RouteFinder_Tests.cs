@@ -19,7 +19,7 @@ using AWhewell.Owin.Interface.WebApi;
 namespace Test.AWhewell.Owin.WebApi
 {
     [TestClass]
-    public class RouteManager_Tests
+    public class RouteFinder_Tests
     {
         class ValidRoutes : IApiController
         {
@@ -56,14 +56,14 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         private IClassFactory   _Snapshot;
-        private IRouteManager   _RouteManager;
+        private IRouteFinder    _RouteFinder;
 
         [TestInitialize]
         public void TestInitialise()
         {
             _Snapshot = Factory.TakeSnapshot();
 
-            _RouteManager = Factory.Resolve<IRouteManager>();
+            _RouteFinder = Factory.Resolve<IRouteFinder>();
         }
 
         [TestCleanup]
@@ -76,13 +76,13 @@ namespace Test.AWhewell.Owin.WebApi
         [ExpectedException(typeof(ArgumentNullException))]
         public void DiscoverRoutes_Throws_If_Passed_Null()
         {
-            _RouteManager.DiscoverRoutes(null);
+            _RouteFinder.DiscoverRoutes(null);
         }
 
         [TestMethod]
         public void DiscoverRoutes_Returns_Methods_Tagged_With_Route_Attribute()
         {
-            var routes = _RouteManager.DiscoverRoutes(new ControllerType[] { new ControllerType(typeof(ValidRoutes), null) });
+            var routes = _RouteFinder.DiscoverRoutes(new ControllerType[] { new ControllerType(typeof(ValidRoutes), null) });
 
             var route = routes.Single();
             Assert.AreEqual("path-to-example1", route.RouteAttribute.Route);
@@ -93,7 +93,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void DiscoverRoutes_Ignores_Static_Methods()
         {
-            var routes = _RouteManager.DiscoverRoutes(new ControllerType[] { new ControllerType(typeof(StaticMethods), null) });
+            var routes = _RouteFinder.DiscoverRoutes(new ControllerType[] { new ControllerType(typeof(StaticMethods), null) });
 
             Assert.AreEqual(0, routes.Count());
         }
