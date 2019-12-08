@@ -16,7 +16,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Test.AWhewell.Owin.WebApi
 {
     [TestClass]
-    public class RouteParametersTests
+    public class RouteParameters_Tests
     {
         [TestMethod]
         [DataRow(new object[] { 1, "Hello" }, true)]

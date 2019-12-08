@@ -25,7 +25,7 @@ using AWhewell.Owin.Utility.Parsers;
 namespace Test.AWhewell.Owin.WebApi
 {
     [TestClass]
-    public class RouteMapperTests
+    public class RouteMapper_Tests
     {
         public class Controller : IApiController
         {
@@ -107,7 +107,7 @@ namespace Test.AWhewell.Owin.WebApi
         [DataRow("POST",    "/simple-path", false)]
         public void FindRouteForRequest_Returns_Correct_Candidates(string httpMethod, string pathPart, bool expectResult)
         {
-            var expected = RouteTests.CreateRoute<SimplePathController>(nameof(SimplePathController.Method));
+            var expected = Route_Tests.CreateRoute<SimplePathController>(nameof(SimplePathController.Method));
             _RouteMapper.Initialise(new Route[] { expected });
             _Environment.Environment[EnvironmentKey.RequestMethod] = httpMethod;
             _Environment.Environment[EnvironmentKey.RequestPath] = pathPart;
@@ -139,7 +139,7 @@ namespace Test.AWhewell.Owin.WebApi
         [DataRow("GET", typeof(ApiEntityOptionalThenNotController), new string[] { "api", "entity" },           false)]
         public void FindRouteForRequest_Matches_MultiPart_Paths(string httpMethod, Type controllerType, string[] pathParts, bool expectMatch)
         {
-            var route = RouteTests.CreateRoute(controllerType, "Method");
+            var route = Route_Tests.CreateRoute(controllerType, "Method");
             _RouteMapper.Initialise(new Route[] { route });
             _Environment.Environment[EnvironmentKey.RequestMethod] = httpMethod;
             _Environment.SetRequestPath(pathParts);
@@ -157,7 +157,7 @@ namespace Test.AWhewell.Owin.WebApi
         [ExpectedException(typeof(ArgumentNullException))]
         public void BuildRouteParameters_Throws_If_Route_Is_Null()
         {
-            var route = RouteTests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
+            var route = Route_Tests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
             _RouteMapper.Initialise(new Route[] { route });
 
             _Environment.SetRequestPath("/api/entity/1");
@@ -168,7 +168,7 @@ namespace Test.AWhewell.Owin.WebApi
         [ExpectedException(typeof(ArgumentNullException))]
         public void BuildRouteParameters_Throws_If_Environment_Is_Null()
         {
-            var route = RouteTests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
+            var route = Route_Tests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
             _RouteMapper.Initialise(new Route[] { route });
 
             _RouteMapper.BuildRouteParameters(route, null);
@@ -177,8 +177,8 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void BuildRouteParameters_Rejects_Call_If_Route_Was_Not_Initialised()
         {
-            var initialisedRoute = RouteTests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
-            var uninitialisedRoute = RouteTests.CreateRoute(typeof(ApiEntityWithOptionalIDController), nameof(ApiEntityWithOptionalIDController.Method));
+            var initialisedRoute = Route_Tests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
+            var uninitialisedRoute = Route_Tests.CreateRoute(typeof(ApiEntityWithOptionalIDController), nameof(ApiEntityWithOptionalIDController.Method));
             _RouteMapper.Initialise(new Route[] { initialisedRoute });
 
             _Environment.SetRequestPath("/api/entity/1");
@@ -190,7 +190,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void BuildRouteParameters_Extracts_Values_From_Path_Parts()
         {
-            var route = RouteTests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
+            var route = Route_Tests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
             _RouteMapper.Initialise(new Route[] { route });
 
             _Environment.SetRequestPath("/api/entity/12");
@@ -205,7 +205,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void BuildRouteParameters_Uses_Default_If_Optional_Path_Part_Is_Missing()
         {
-            var route = RouteTests.CreateRoute(typeof(ApiEntityWithOptionalIDController), nameof(ApiEntityWithOptionalIDController.Method));
+            var route = Route_Tests.CreateRoute(typeof(ApiEntityWithOptionalIDController), nameof(ApiEntityWithOptionalIDController.Method));
             _RouteMapper.Initialise(new Route[] { route });
 
             _Environment.SetRequestPath("/api/entity");
@@ -220,7 +220,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void BuildRouteParameters_Clears_IsValid_When_Parameter_Cannot_Be_Parsed()
         {
-            var route = RouteTests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
+            var route = Route_Tests.CreateRoute(typeof(ApiEntityWithIDController), nameof(ApiEntityWithIDController.Method));
             _RouteMapper.Initialise(new Route[] { route });
 
             _Environment.SetRequestPath("/api/entity/not-an-int");
@@ -261,7 +261,7 @@ namespace Test.AWhewell.Owin.WebApi
         public void BuildRouteParameters_Parses_Different_Types_From_Path_Parts(string methodName, string pathPart, string culture, object rawExpected)
         {
             using(new CultureSwap(culture)) {
-                var route = RouteTests.CreateRoute(typeof(PathPartTypeController), methodName);
+                var route = Route_Tests.CreateRoute(typeof(PathPartTypeController), methodName);
                 _RouteMapper.Initialise(new Route[] { route });
 
                 _Environment.SetRequestPath(new string[] { route.PathParts[0].Part, pathPart });
@@ -294,7 +294,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void BuildRouteParameters_Can_Fill_Multiple_Path_Part_Parameters()
         {
-            var route = RouteTests.CreateRoute(typeof(MultipleParameterController), nameof(MultipleParameterController.Method));
+            var route = Route_Tests.CreateRoute(typeof(MultipleParameterController), nameof(MultipleParameterController.Method));
             _RouteMapper.Initialise(new Route[] { route });
 
             _Environment.SetRequestPath(new string[] { route.PathParts[0].Part, "string-value", "55" });
@@ -318,7 +318,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void BuildRouteParameters_Can_Inject_Owin_Environment_To_Static_Route_Method()
         {
-            var route = RouteTests.CreateRoute(typeof(OwinEnvController), nameof(OwinEnvController.JustEnvironment));
+            var route = Route_Tests.CreateRoute(typeof(OwinEnvController), nameof(OwinEnvController.JustEnvironment));
             _RouteMapper.Initialise(new Route[] { route });
 
             _Environment.SetRequestPath(route.PathParts[0].Part);
@@ -332,7 +332,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void BuildRouteParameters_Does_Not_Inject_Owin_Environment_To_Instance_Route_Method()
         {
-            var route = RouteTests.CreateRoute(typeof(OwinEnvController), nameof(OwinEnvController.NotStatic));
+            var route = Route_Tests.CreateRoute(typeof(OwinEnvController), nameof(OwinEnvController.NotStatic));
             _RouteMapper.Initialise(new Route[] { route });
 
             _Environment.SetRequestPath(route.PathParts[0].Part);
@@ -379,7 +379,7 @@ namespace Test.AWhewell.Owin.WebApi
         public void BuildRouteParameters_Can_Parse_Parameter_From_Query_String(string methodName, string parameterName, string queryString, string culture, object rawExpected)
         {
             using(new CultureSwap(culture)) {
-                var route = RouteTests.CreateRoute(typeof(QueryStringController), methodName);
+                var route = Route_Tests.CreateRoute(typeof(QueryStringController), methodName);
                 _RouteMapper.Initialise(new Route[] { route });
                 _Environment.RequestQueryString = queryString;
 
@@ -411,7 +411,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void BuildRouteParameters_Can_Use_Case_Sensitive_Query_String_Matching()
         {
-            var route = RouteTests.CreateRoute(typeof(QueryStringController), nameof(QueryStringController.StringParam));
+            var route = Route_Tests.CreateRoute(typeof(QueryStringController), nameof(QueryStringController.StringParam));
             _RouteMapper.AreQueryStringNamesCaseSensitive = true;
             _RouteMapper.Initialise(new Route[] { route });
 
@@ -430,7 +430,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void BuildRouteParameters_Can_Use_Case_Insensitive_Query_String_Matching()
         {
-            var route = RouteTests.CreateRoute(typeof(QueryStringController), nameof(QueryStringController.StringParam));
+            var route = Route_Tests.CreateRoute(typeof(QueryStringController), nameof(QueryStringController.StringParam));
             _RouteMapper.AreQueryStringNamesCaseSensitive = false;
             _RouteMapper.Initialise(new Route[] { route });
 
@@ -464,7 +464,7 @@ namespace Test.AWhewell.Owin.WebApi
         public void BuildRouteParameters_Can_Parse_Parameter_From_Form_Body(string methodName, string parameterName, string body, string culture, object rawExpected)
         {
             using(new CultureSwap(culture)) {
-                var route = RouteTests.CreateRoute(typeof(PostFormController), methodName);
+                var route = Route_Tests.CreateRoute(typeof(PostFormController), methodName);
                 _RouteMapper.Initialise(new Route[] { route });
                 _Environment.SetRequestBody(body, contentType: "application/x-www-form-urlencoded");
                 _Environment.SetRequestPath(route.PathParts[0].Part);
@@ -492,7 +492,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void BuildRouteParameters_Can_Use_Case_Sensitive_Form_Body_Matching()
         {
-            var route = RouteTests.CreateRoute(typeof(PostFormController), nameof(PostFormController.StringParam));
+            var route = Route_Tests.CreateRoute(typeof(PostFormController), nameof(PostFormController.StringParam));
             _RouteMapper.AreFormNamesCaseSensitive = true;
             _RouteMapper.Initialise(new Route[] { route });
             _Environment.SetRequestPath(route.PathParts[0].Part);
@@ -510,7 +510,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void BuildRouteParameters_Can_Use_Case_Insensitive_Form_Body_Matching()
         {
-            var route = RouteTests.CreateRoute(typeof(PostFormController), nameof(PostFormController.StringParam));
+            var route = Route_Tests.CreateRoute(typeof(PostFormController), nameof(PostFormController.StringParam));
             _RouteMapper.AreFormNamesCaseSensitive = false;
             _RouteMapper.Initialise(new Route[] { route });
             _Environment.SetRequestPath(route.PathParts[0].Part);
@@ -534,7 +534,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void BuildRouteParameters_Can_Build_Model_Object_From_Query_String()
         {
-            var route = RouteTests.CreateRoute(typeof(QueryStringModelController), nameof(QueryStringModelController.StringModelFunc));
+            var route = Route_Tests.CreateRoute(typeof(QueryStringModelController), nameof(QueryStringModelController.StringModelFunc));
             _RouteMapper.Initialise(new Route[] { route });
             _Environment.SetRequestPath(route.PathParts[0].Part);
 

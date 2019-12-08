@@ -22,7 +22,7 @@ using AWhewell.Owin.Utility.Parsers;
 namespace Test.AWhewell.Owin.WebApi
 {
     [TestClass]
-    public class WebApiMiddlewareTests
+    public class WebApiMiddleware_Tests
     {
         private IClassFactory               _Snapshot;
         private IWebApiMiddleware           _WebApi;

@@ -17,7 +17,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Test.AWhewell.Owin.Utility
 {
     [TestClass]
-    public class KeyValueParserTests
+    public class KeyValueParser_Tests
     {
         [TestMethod]
         public void Default_Ctor_Initialises_To_Sensible_Values()

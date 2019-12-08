@@ -20,7 +20,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Test.AWhewell.Owin.WebApi
 {
     [TestClass]
-    public class ControllerTypeTests
+    public class ControllerType_Tests
     {
         public class SampleController1 : IApiController
         {

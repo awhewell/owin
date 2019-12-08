@@ -21,7 +21,7 @@ namespace Test.AWhewell.Owin
     using AppFunc = Func<IDictionary<string, object>, Task>;
 
     [TestClass]
-    public class PipelineBuilderEnvironmentTests
+    public class PipelineBuilderEnvironment_Tests
     {
         private IPipelineBuilderEnvironment _Environment;
 

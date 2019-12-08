@@ -25,7 +25,7 @@ using Moq;
 namespace Test.AWhewell.Owin.Host.HttpListener
 {
     [TestClass]
-    public class HostHttpListenerTests : CommonHostTests
+    public class HostHttpListener_Tests : CommonHostTests
     {
         private IClassFactory                       _Snapshot;
         private MockHttpListener                    _HttpListener;

@@ -22,7 +22,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Test.AWhewell.Owin.Utility
 {
     [TestClass]
-    public class TimingTests
+    public class Timing_Tests
     {
         private const int Parser_ParseInt32_Iterations = 10000000;
 

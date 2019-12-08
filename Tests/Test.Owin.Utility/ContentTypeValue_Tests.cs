@@ -17,7 +17,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Test.AWhewell.Owin.Utility
 {
     [TestClass]
-    public class ContentTypeValueTests
+    public class ContentTypeValue_Tests
     {
         [TestMethod]
         public void Ctor_Fills_Properties_Correctly()

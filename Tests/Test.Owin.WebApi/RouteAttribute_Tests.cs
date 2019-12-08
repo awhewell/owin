@@ -16,7 +16,7 @@ using AWhewell.Owin.Interface.WebApi;
 namespace Test.AWhewell.Owin.WebApi
 {
     [TestClass]
-    public class RouteAttributeTests
+    public class RouteAttribute_Tests
     {
         [TestMethod]
         public void Has_Correct_Usage()

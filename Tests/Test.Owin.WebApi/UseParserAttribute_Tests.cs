@@ -18,7 +18,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Test.AWhewell.Owin.WebApi
 {
     [TestClass]
-    public class UseParserAttributeTests
+    public class UseParserAttribute_Tests
     {
         [TestMethod]
         public void Usage_Is_Set_Correctly()

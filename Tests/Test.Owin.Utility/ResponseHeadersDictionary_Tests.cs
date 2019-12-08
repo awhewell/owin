@@ -18,7 +18,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Test.AWhewell.Owin.Utility
 {
     [TestClass]
-    public class ResponseHeadersDictionaryTests
+    public class ResponseHeadersDictionary_Tests
     {
         IDictionary<string, string[]>   _UnderlyingDictionary;
         ResponseHeadersDictionary       _ResponseHeaders;

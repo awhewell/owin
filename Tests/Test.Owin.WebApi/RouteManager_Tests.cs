@@ -19,7 +19,7 @@ using AWhewell.Owin.Interface.WebApi;
 namespace Test.AWhewell.Owin.WebApi
 {
     [TestClass]
-    public class RouteManagerTests
+    public class RouteManager_Tests
     {
         class ValidRoutes : IApiController
         {

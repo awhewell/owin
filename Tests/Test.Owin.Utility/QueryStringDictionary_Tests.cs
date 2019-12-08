@@ -19,7 +19,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Test.AWhewell.Owin.Utility
 {
     [TestClass]
-    public class QueryStringDictionaryTests
+    public class QueryStringDictionary_Tests
     {
         [TestMethod]
         public void Ctor_Defaults_To_Case_Sensitive_Keys()

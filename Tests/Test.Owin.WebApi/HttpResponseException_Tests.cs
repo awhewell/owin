@@ -18,7 +18,7 @@ using AWhewell.Owin.Interface.WebApi;
 namespace Test.AWhewell.Owin.WebApi
 {
     [TestClass]
-    public class HttpResponseExceptionTests
+    public class HttpResponseException_Tests
     {
         [TestMethod]
         public void Default_Ctor_Sets_Properties_Correctly()

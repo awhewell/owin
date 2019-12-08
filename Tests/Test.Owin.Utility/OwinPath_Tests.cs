@@ -18,7 +18,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Test.AWhewell.Owin.Utility
 {
     [TestClass]
-    public class OwinPathTests
+    public class OwinPath_Tests
     {
         [TestMethod]
         [DataRow("http",    "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "name=value",               "http://1.2.3.4/VirtualRadar/poobah.html?name=value")]

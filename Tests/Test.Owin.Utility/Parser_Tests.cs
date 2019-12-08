@@ -21,7 +21,7 @@ using Moq;
 namespace Test.AWhewell.Owin.Utility
 {
     [TestClass]
-    public class ParserTests
+    public class Parser_Tests
     {
         [TestMethod]
         [DataRow(null,      "en-GB",    null)]

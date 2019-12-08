@@ -19,7 +19,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Test.AWhewell.Owin.WebApi
 {
     [TestClass]
-    public class ModelBuilderTests
+    public class ModelBuilder_Tests
     {
         class StringA
         {

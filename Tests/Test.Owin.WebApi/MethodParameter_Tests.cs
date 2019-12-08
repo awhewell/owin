@@ -19,7 +19,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Test.AWhewell.Owin.WebApi
 {
     [TestClass]
-    public class MethodParameterTests
+    public class MethodParameter_Tests
     {
         private void ExampleMethod(
             string stringParameter,

@@ -18,7 +18,7 @@ using System.Linq;
 namespace Test.AWhewell.Owin.WebApi
 {
     [TestClass]
-    public class PathPartTests
+    public class PathPart_Tests
     {
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
@@ -52,7 +52,7 @@ namespace Test.AWhewell.Owin.WebApi
         public void Create_Fills_Properties(string inputText, Type expectedType, string part, string normalisedPart)
         {
             var methodInfo = GetType().GetMethod(nameof(ValidExampleParameterNames));
-            var methodParameters = MethodParameterTests.CreateMethodParameters(methodInfo, null);
+            var methodParameters = MethodParameter_Tests.CreateMethodParameters(methodInfo, null);
 
             var actual = PathPart.Create(inputText, methodParameters);
 
@@ -102,7 +102,7 @@ namespace Test.AWhewell.Owin.WebApi
         public void MatchesRequestPathPart_Returns_Correct_Response(string ctorPathPart, string matchPathPart, bool expected)
         {
             var methodInfo = GetType().GetMethod(nameof(MatchesRequestPathPartExampleParameters));
-            var methodParameters = MethodParameterTests.CreateMethodParameters(methodInfo, null);
+            var methodParameters = MethodParameter_Tests.CreateMethodParameters(methodInfo, null);
             var pathPart = PathPart.Create(ctorPathPart, methodParameters);
 
             var actual = pathPart.MatchesRequestPathPart(matchPathPart);

@@ -17,7 +17,7 @@ using AWhewell.Owin.Interface;
 namespace Test.AWhewell.Owin
 {
     [TestClass]
-    public class PipelineBuilderTests
+    public class PipelineBuilder_Tests
     {
         private IClassFactory                       _Snapshot;
         private IPipelineBuilder                    _PipelineBuilder;

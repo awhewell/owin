@@ -17,7 +17,7 @@ using AWhewell.Owin.Utility;
 namespace Test.AWhewell.Owin.Utility
 {
     [TestClass]
-    public class StringBuilderExtensionsTests
+    public class StringBuilderExtensions_Tests
     {
         [TestMethod]
         [DataRow("",       'e', -1)]

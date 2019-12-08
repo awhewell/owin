@@ -23,7 +23,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Test.AWhewell.Owin.Utility
 {
     [TestClass]
-    public class OwinContextTests
+    public class OwinContext_Tests
     {
         private OwinDictionary<object>  _Environment;
         private OwinContext             _Context;

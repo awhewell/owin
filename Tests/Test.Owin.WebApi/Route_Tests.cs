@@ -20,7 +20,7 @@ using AWhewell.Owin.Utility.Parsers;
 namespace Test.AWhewell.Owin.WebApi
 {
     [TestClass]
-    public class RouteTests
+    public class Route_Tests
     {
         public class Controller : IApiController
         {

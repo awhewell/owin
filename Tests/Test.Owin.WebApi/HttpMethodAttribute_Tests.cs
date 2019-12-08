@@ -17,7 +17,7 @@ using AWhewell.Owin.Utility;
 namespace Test.AWhewell.Owin.WebApi
 {
     [TestClass]
-    public class HttpMethodAttributeTests
+    public class HttpMethodAttribute_Tests
     {
         private void CheckUsage<T>()
         {
