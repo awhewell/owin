@@ -44,8 +44,14 @@ namespace AWhewell.Owin.WebApi
                 result = route.Method.Invoke(null, routeParameters.Parameters);
             } else {
                 var controller = (IApiController)Activator.CreateInstance(route.ControllerType.Type);
-                controller.OwinEnvironment = owinEnvironment;
-                result = route.Method.Invoke(controller, routeParameters.Parameters);
+                try {
+                    controller.OwinEnvironment = owinEnvironment;
+                    result = route.Method.Invoke(controller, routeParameters.Parameters);
+                } finally {
+                    if(controller is IDisposable disposableController) {
+                        disposableController.Dispose();
+                    }
+                }
             }
 
             return result;

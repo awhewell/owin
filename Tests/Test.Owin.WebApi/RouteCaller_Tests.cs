@@ -57,8 +57,39 @@ namespace Test.AWhewell.Owin.WebApi
             }
         }
 
+        public class DisposableController : IApiController, IDisposable
+        {
+            public IDictionary<string, object> OwinEnvironment { get; set; }
+
+            public DisposableController()
+            {
+                Assert.IsNull(RouteCaller_Tests._DisposableControllerInstance);
+                RouteCaller_Tests._DisposableControllerInstance = this;
+            }
+
+            [HttpGet, Route("D1")]
+            public int Route_D1(int input)
+            {
+                Assert.AreSame(RouteCaller_Tests._ExpectedEnvironment, OwinEnvironment);
+                return input + 1;
+            }
+
+            [HttpGet, Route("F1")]
+            public int Route_ExceptionThrower(int input)
+            {
+                throw new InvalidOperationException();
+            }
+
+            public void Dispose()
+            {
+                RouteCaller_Tests._DisposableControllerDisposed = true;
+            }
+        }
+
         private static Controller                   _ControllerInstance;
+        private static DisposableController         _DisposableControllerInstance;
         private static IDictionary<string, object>  _ExpectedEnvironment;
+        private static bool                         _DisposableControllerDisposed;
 
         private IRouteCaller        _RouteCaller;
         private MockOwinEnvironment _Environment;
@@ -69,6 +100,8 @@ namespace Test.AWhewell.Owin.WebApi
         {
             // Initialise STATIC fields - these tests must not be run in parallel
             _ControllerInstance = null;
+            _DisposableControllerInstance = null;
+            _DisposableControllerDisposed = false;
             _ExpectedEnvironment = null;
             Controller.Route_2_CallCount = 0;
             Controller.Route_2_LastInput = 0;
@@ -133,6 +166,34 @@ namespace Test.AWhewell.Owin.WebApi
             Assert.AreEqual(1, Controller.Route_2_CallCount);
             Assert.AreEqual(32, Controller.Route_2_LastInput);
             Assert.AreEqual(64, outcome);
+        }
+
+        [TestMethod]
+        public void CallRoute_Disposes_Of_Disposable_Controllers()
+        {
+            var route = Route_Tests.CreateRoute<DisposableController>(nameof(DisposableController.Route_D1));
+            var routeParameters = Route_Tests.CreateRouteParameters(99);
+
+            _RouteCaller.CallRoute(_Environment.Environment, route, routeParameters);
+
+            Assert.IsTrue(_DisposableControllerDisposed);
+        }
+
+        [TestMethod]
+        public void CallRoute_Disposes_Of_Disposable_Controllers_Even_When_Exception_Is_Thrown()
+        {
+            var route = Route_Tests.CreateRoute<DisposableController>(nameof(DisposableController.Route_ExceptionThrower));
+            var routeParameters = Route_Tests.CreateRouteParameters(0);
+
+            bool exceptionThrown = false;
+            try {
+                _RouteCaller.CallRoute(_Environment.Environment, route, routeParameters);
+            } catch {
+                exceptionThrown = true;
+            }
+
+            Assert.IsTrue(_DisposableControllerDisposed);
+            Assert.IsTrue(exceptionThrown);
         }
     }
 }
