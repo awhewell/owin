@@ -19,6 +19,43 @@ namespace AWhewell.Owin.Utility
     /// </summary>
     public class RequestHeadersDictionary : HeadersDictionary
     {
+        static readonly string[] EmptyStringArray = new string[0];
+
+        /// <summary>
+        /// Gets the response MIME types that the client can accept.
+        /// </summary>
+        public IList<string> Accept => base.GetValues("Accept") ?? EmptyStringArray;
+
+        /// <summary>
+        /// Gets the authorization string sent by the browser.
+        /// </summary>
+        public string Authorization => base["Authorization"];
+
+        /// <summary>
+        /// Gets the content of the Cache-Control header.
+        /// </summary>
+        public string CacheControl => base["Cache-Control"];
+
+        /// <summary>
+        /// Gets the MIME type of the body.
+        /// </summary>
+        public string ContentType => base["Content-Type"];
+
+        /// <summary>
+        /// Gets the origin in a CORS pre-flight request.
+        /// </summary>
+        public string Origin => base["Origin"];
+
+        /// <summary>
+        /// Gets the referrer header.
+        /// </summary>
+        public string Referer => base["Referer"];
+
+        /// <summary>
+        /// Gets the user agent string.
+        /// </summary>
+        public string UserAgent => base["User-Agent"];
+
         /// <summary>
         /// Creates a new object.
         /// </summary>

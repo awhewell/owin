@@ -21,6 +21,15 @@ namespace AWhewell.Owin.Utility
     public class ResponseHeadersDictionary : HeadersDictionary
     {
         /// <summary>
+        /// Gets or sets the ACAO header in the response to a CORS pre-flight request.
+        /// </summary>
+        public string AccessControlAllowOrigin
+        {
+            get => base["Access-Control-Allow-Origin"];
+            set => base["Access-Control-Allow-Origin"] = value;
+        }
+
+        /// <summary>
         /// Gets or sets the content type of the response.
         /// </summary>
         public string ContentType

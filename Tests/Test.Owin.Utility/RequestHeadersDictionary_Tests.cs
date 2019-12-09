@@ -10,7 +10,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using AWhewell.Owin.Utility;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -27,6 +27,42 @@ namespace Test.AWhewell.Owin.Utility
         {
             _UnderlyingDictionary = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
             _RequestHeaders = new RequestHeadersDictionary(_UnderlyingDictionary);
+        }
+
+        [TestMethod]
+        [DataRow(nameof(RequestHeadersDictionary.Authorization),    "Authorization")]
+        [DataRow(nameof(RequestHeadersDictionary.CacheControl),     "Cache-Control")]
+        [DataRow(nameof(RequestHeadersDictionary.ContentType),      "Content-Type")]
+        [DataRow(nameof(RequestHeadersDictionary.Origin),           "Origin")]
+        [DataRow(nameof(RequestHeadersDictionary.Referer),          "Referer")]
+        [DataRow(nameof(RequestHeadersDictionary.UserAgent),        "User-Agent")]
+        public void ReadOnly_String_Values_Exposed_Correctly(string propertyName, string headerKey)
+        {
+            var propertyInfo = typeof(RequestHeadersDictionary).GetProperty(propertyName);
+            Assert.IsTrue(propertyInfo.CanRead);
+            Assert.IsFalse(propertyInfo.CanWrite);
+
+            Assert.IsNull(propertyInfo.GetValue(_RequestHeaders, null));
+
+            _UnderlyingDictionary.Add(headerKey, new string[] { "Ab" });
+            Assert.AreEqual("Ab", propertyInfo.GetValue(_RequestHeaders, null));
+        }
+
+        [TestMethod]
+        [DataRow(nameof(RequestHeadersDictionary.Accept), "Accept")]
+        public void ReadOnly_String_Array_Values_Exposed_Correctly(string propertyName, string headerKey)
+        {
+            var propertyInfo = typeof(RequestHeadersDictionary).GetProperty(propertyName);
+            Assert.IsTrue(propertyInfo.CanRead);
+            Assert.IsFalse(propertyInfo.CanWrite);
+
+            Assert.AreEqual(0, ((IList<string>)propertyInfo.GetValue(_RequestHeaders, null)).Count);
+
+            _UnderlyingDictionary.Add(headerKey, new string[] { "Ab", "Cd" });
+            var result = (IList<string>)propertyInfo.GetValue(_RequestHeaders, null);
+            Assert.AreEqual(2, result.Count);
+            Assert.AreEqual("Ab", result[0]);
+            Assert.AreEqual("Cd", result[1]);
         }
     }
 }
