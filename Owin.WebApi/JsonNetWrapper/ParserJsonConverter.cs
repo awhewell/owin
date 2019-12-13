@@ -9,36 +9,40 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using System;
+using System.Collections.Generic;
+using System.Text;
 using AWhewell.Owin.Utility;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
-namespace AWhewell.Owin.Interface.WebApi
+namespace AWhewell.Owin.WebApi.JsonNetWrapper
 {
-    /// <summary>
-    /// The interface for an object that can take query string dictionaries or text bodies and
-    /// build model objects from them.
-    /// </summary>
-    public interface IModelBuilder
+    class ParserJsonConverter : JsonConverter
     {
-        /// <summary>
-        /// Builds a model from a flat set of key value pairs.
-        /// </summary>
-        /// <param name="modelType">The type of model to build.</param>
-        /// <param name="typeParserResolver">The resolver to use to convert strings to values.</param>
-        /// <param name="values">The query string or URL encoded form body values to populate the model with.</param>
-        /// <returns>The populated model.</returns>
-        object BuildModel(Type modelType, TypeParserResolver typeParserResolver, QueryStringDictionary values);
+        public override bool CanRead => true;
 
-        /// <summary>
-        /// Builds a model from the body of a request.
-        /// </summary>
-        /// <param name="modelType"></param>
-        /// <param name="typeParserResolver"></param>
-        /// <param name="contentType">
-        /// The type of content. This will not be a URL encoded form - forma are expressed as a <see
-        /// cref="QueryStringDictionary"/> and there is a separate method to build models from those.
-        /// </param>
-        /// <param name="content"></param>
-        /// <returns></returns>
-        object BuildModel(Type modelType, TypeParserResolver typeParserResolver, string contentType, string content);
+        public override bool CanWrite => false;
+
+        public TypeParserResolver TypeParserResolver { get; }
+
+        public ParserJsonConverter(TypeParserResolver typeParserResolver)
+        {
+            TypeParserResolver = typeParserResolver;
+        }
+
+        public override bool CanConvert(Type objectType)
+        {
+            return objectType == typeof(DateTime) || objectType == typeof(DateTime?);
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            return Parser.ParseType(objectType, (string)reader.Value, TypeParserResolver);
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

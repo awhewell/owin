@@ -14,31 +14,17 @@ using AWhewell.Owin.Utility;
 namespace AWhewell.Owin.Interface.WebApi
 {
     /// <summary>
-    /// The interface for an object that can take query string dictionaries or text bodies and
-    /// build model objects from them.
+    /// Converts between JSON and objects.
     /// </summary>
-    public interface IModelBuilder
+    public interface IJsonSerialiser
     {
         /// <summary>
-        /// Builds a model from a flat set of key value pairs.
-        /// </summary>
-        /// <param name="modelType">The type of model to build.</param>
-        /// <param name="typeParserResolver">The resolver to use to convert strings to values.</param>
-        /// <param name="values">The query string or URL encoded form body values to populate the model with.</param>
-        /// <returns>The populated model.</returns>
-        object BuildModel(Type modelType, TypeParserResolver typeParserResolver, QueryStringDictionary values);
-
-        /// <summary>
-        /// Builds a model from the body of a request.
+        /// Deserialises JSON text into an object hierarchy using the resolver passed across.
         /// </summary>
         /// <param name="modelType"></param>
-        /// <param name="typeParserResolver"></param>
-        /// <param name="contentType">
-        /// The type of content. This will not be a URL encoded form - forma are expressed as a <see
-        /// cref="QueryStringDictionary"/> and there is a separate method to build models from those.
-        /// </param>
-        /// <param name="content"></param>
+        /// <param name="resolver"></param>
+        /// <param name="jsonText"></param>
         /// <returns></returns>
-        object BuildModel(Type modelType, TypeParserResolver typeParserResolver, string contentType, string content);
+        object Deserialise(Type modelType, TypeParserResolver resolver, string jsonText);
     }
 }

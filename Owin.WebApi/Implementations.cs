@@ -30,6 +30,8 @@ namespace AWhewell.Owin.WebApi
             factory.Register<AWhewell.Owin.Interface.WebApi.IRouteFinder, RouteFinder>();
             factory.Register<AWhewell.Owin.Interface.WebApi.IRouteMapper, RouteMapper>();
             factory.Register<AWhewell.Owin.Interface.WebApi.IWebApiMiddleware, WebApiMiddleware>();
+
+            factory.Register<AWhewell.Owin.Interface.WebApi.IJsonSerialiser, JsonNetWrapper.JsonSerialiser>();
         }
     }
 }
