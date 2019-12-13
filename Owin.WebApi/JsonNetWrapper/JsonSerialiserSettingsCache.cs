@@ -16,25 +16,49 @@ using Newtonsoft.Json;
 
 namespace AWhewell.Owin.WebApi.JsonNetWrapper
 {
+    /// <summary>
+    /// Caches instances of JsonSerializerSettings for different instances of
+    /// <see cref="TypeParserResolver"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Resolvers are immutable and, if they've been created through the <see cref="TypeParserResolverCache"/>,
+    /// there should be a relatively small number of them. We always want to use the same settings with a given
+    /// resolver, the settings are just a vehicle for a <see cref="JsonConverter"/> that uses that resolver, so
+    /// we can associate instances of JsonSerializerSettings against resolvers and keep reusing them.
+    /// </para><para>
+    /// This assumes that JsonSerializerSettings are thread-safe. I don't know if that's actually the case?
+    /// </para>
+    /// </remarks>
     static class JsonSerialiserSettingsCache
     {
+        // The object that protects writes to fields.
         private static object _SyncLock = new object();
 
-        private static JsonSerializerSettings _DefaultParser;
+        // The settings to return when no resolver is being used.
+        private static JsonSerializerSettings _DefaultSettings;
 
+        // A map of settings indexed by resolver.
         private static Dictionary<TypeParserResolver, JsonSerializerSettings> _Cache = new Dictionary<TypeParserResolver, JsonSerializerSettings>();
 
+        // Initialises the static.
         static JsonSerialiserSettingsCache()
         {
-            _DefaultParser = CreateSettings(null);
+            _DefaultSettings = CreateSettings(null);
         }
 
+        /// <summary>
+        /// Either returns the existing settings for the resolver passed across or creates a
+        /// new settings object, caches it for future use and then returns it.
+        /// </summary>
+        /// <param name="resolver"></param>
+        /// <returns></returns>
         public static JsonSerializerSettings Fetch(TypeParserResolver resolver)
         {
             JsonSerializerSettings result;
 
             if(resolver == null) {
-                result = _DefaultParser;
+                result = _DefaultSettings;
             } else {
                 var cache = _Cache;
                 if(!cache.TryGetValue(resolver, out result)) {
@@ -56,7 +80,13 @@ namespace AWhewell.Owin.WebApi.JsonNetWrapper
         private static JsonSerializerSettings CreateSettings(TypeParserResolver resolver)
         {
             return new JsonSerializerSettings() {
-                Converters =        new JsonConverter[] { new ParserJsonConverter(resolver) },
+                Converters = new JsonConverter[] { new ParserJsonConverter(resolver) },
+
+                // Json.NET really wants to parse date fields, even if you have supplied a JsonConverter that
+                // says that it will parse DateTimes for it. It will provide that JsonConverter with a reader
+                // whose value is a DateTime if the value even *looks* like a date. This is not what we want!
+                // We want to see the original string. Setting DateParseHandling to None calms Json.NET down
+                // and we get the string.
                 DateParseHandling = DateParseHandling.None,
             };
         }

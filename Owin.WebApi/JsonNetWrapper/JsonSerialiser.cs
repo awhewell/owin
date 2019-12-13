@@ -16,7 +16,7 @@ using Newtonsoft.Json;
 namespace AWhewell.Owin.WebApi.JsonNetWrapper
 {
     /// <summary>
-    /// Default implementation of <see cref="IJsonSerialiser"/>.
+    /// Default implementation of <see cref="IJsonSerialiser"/> using Newtonsoft's Json.NET.
     /// </summary>
     class JsonSerialiser : IJsonSerialiser
     {
