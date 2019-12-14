@@ -9,23 +9,40 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using System;
-using AWhewell.Owin.Utility;
+using System.Collections;
+using System.Collections.Generic;
+using System.Text;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace AWhewell.Owin.Interface.WebApi
+namespace Test.AWhewell.Owin
 {
     /// <summary>
-    /// Converts between JSON and objects.
+    /// Extra assertions.
     /// </summary>
-    public interface IJsonSerialiser
+    public static class Assertions
     {
         /// <summary>
-        /// Deserialises JSON text into an object hierarchy using the resolver passed across. The resolver
-        /// is only used for types not specified in the JSON spec (dates, byte arrays and GUIDs).
+        /// As per Assert.AreEqual except this can also compare lists for equality.
         /// </summary>
-        /// <param name="modelType"></param>
-        /// <param name="resolver"></param>
-        /// <param name="jsonText"></param>
-        /// <returns></returns>
-        object Deserialise(Type modelType, TypeParserResolver resolver, string jsonText);
+        /// <param name="expected"></param>
+        /// <param name="actual"></param>
+        public static void AreEqual(object expected, object actual)
+        {
+            var expectedCollection = expected as IList;
+            var actualCollection = actual as IList;
+
+            if(expectedCollection == null && actualCollection == null) {
+                Assert.AreEqual(expected, actual);
+            } else {
+                if(expectedCollection == null) {
+                    Assert.IsNull(actual);   // <-- this will always fail if it gets this far
+                } else {
+                    Assert.AreEqual(expectedCollection.Count, actualCollection.Count);
+                    for(var i = 0;i < expectedCollection.Count;++i) {
+                        Assert.AreEqual(expectedCollection[i], actualCollection[i]);
+                    }
+                }
+            }
+        }
     }
 }

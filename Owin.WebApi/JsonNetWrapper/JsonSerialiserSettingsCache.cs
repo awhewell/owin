@@ -77,16 +77,10 @@ namespace AWhewell.Owin.WebApi.JsonNetWrapper
             return result;
         }
 
-        private static JsonSerializerSettings CreateSettings(TypeParserResolver resolver)
+        private static JsonSerializerSettings CreateSettings(TypeParserResolver typeParserResolver)
         {
             return new JsonSerializerSettings() {
-                Converters = new JsonConverter[] { new ParserJsonConverter(resolver) },
-
-                // Json.NET really wants to parse date fields, even if you have supplied a JsonConverter that
-                // says that it will parse DateTimes for it. It will provide that JsonConverter with a reader
-                // whose value is a DateTime if the value even *looks* like a date. This is not what we want!
-                // We want to see the original string. Setting DateParseHandling to None calms Json.NET down
-                // and we get the string.
+                Converters =        new JsonConverter[] { new ParserJsonConverter(typeParserResolver) },
                 DateParseHandling = DateParseHandling.None,
             };
         }

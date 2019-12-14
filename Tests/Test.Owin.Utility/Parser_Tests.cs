@@ -893,41 +893,22 @@ namespace Test.AWhewell.Owin.Utility
             else if(valueType == typeof(string))            createMock<string>((string)expectedCustom);
             else                                            throw new NotImplementedException();
 
-            void areEqual(object expected, object actual)
-            {
-                var expectedCollection = expected as IList;
-                var actualCollection = actual as IList;
-
-                if(expectedCollection == null && actualCollection == null) {
-                    Assert.AreEqual(expected, actual);
-                } else {
-                    if(expectedCollection == null) {
-                        Assert.IsNull(actual);
-                    } else {
-                        Assert.AreEqual(expectedCollection.Count, actualCollection.Count);
-                        for(var i = 0;i < expectedCollection.Count;++i) {
-                            Assert.AreEqual(expectedCollection[i], actualCollection[i]);
-                        }
-                    }
-                }
-            }
-
             // Null type resolver should call normal parser
-            areEqual(expectedNormal, callParser(text, null));
+            Assertions.AreEqual(expectedNormal, callParser(text, null));
 
             // Type resolver with no parser for type should call normal parser
             var emptyTypeResolver = new TypeParserResolver();
-            areEqual(expectedNormal, callParser(text, emptyTypeResolver));
+            Assertions.AreEqual(expectedNormal, callParser(text, emptyTypeResolver));
 
             var typeResolver = new TypeParserResolver((ITypeParser)mockParser.Object);
 
             // If custom parser returns true then use the parsed value
             tryParseResult = true;
-            areEqual(expectedCustom, callParser(text, typeResolver));
+            Assertions.AreEqual(expectedCustom, callParser(text, typeResolver));
 
             // If custom parser returns false then it cannot be parsed
             tryParseResult = false;
-            areEqual(null, callParser(text, typeResolver));
+            Assertions.AreEqual(null, callParser(text, typeResolver));
         }
 
         [TestMethod]

@@ -50,7 +50,10 @@ namespace AWhewell.Owin.WebApi.JsonNetWrapper
         /// <returns></returns>
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(DateTime) || objectType == typeof(DateTime?);
+            return objectType == typeof(DateTime) || objectType == typeof(DateTime?)
+                || objectType == typeof(DateTimeOffset) || objectType == typeof(DateTimeOffset?)
+                || objectType == typeof(byte[])
+                || objectType == typeof(Guid) || objectType == typeof(Guid?);
         }
 
         /// <summary>
