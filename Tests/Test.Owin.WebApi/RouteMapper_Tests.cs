@@ -613,5 +613,41 @@ namespace Test.AWhewell.Owin.WebApi
             var model = parameters.Parameters[0] as StringModel;
             Assert.AreEqual("bA", model.StringValue);
         }
+
+        public class FormBodyModelController : Controller
+        {
+            [HttpPost, Route("x1")] public int StringModelFunc(StringModel model) { return 0; }
+        }
+
+        [TestMethod]
+        public void BuildRouteParameters_Can_Build_Model_From_Form_Body()
+        {
+            var route = Route_Tests.CreateRoute(typeof(FormBodyModelController), nameof(FormBodyModelController.StringModelFunc));
+            _RouteMapper.Initialise(new Route[] { route });
+            _Environment.RequestMethod = "POST";
+            _Environment.SetRequestPath(route.PathParts[0].Part);
+            _Environment.SetRequestBody("StringValue=Ab", contentType: "application/x-www-form-urlencoded");
+
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
+
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual(1, parameters.Parameters.Length);
+            var model = parameters.Parameters[0] as StringModel;
+            Assert.AreEqual("Ab", model.StringValue);
+        }
+
+        [TestMethod]
+        public void BuildRouteParameters_Rejects_Attempt_To_Build_From_Body_With_Bad_Encoding()
+        {
+            var route = Route_Tests.CreateRoute(typeof(FormBodyModelController), nameof(FormBodyModelController.StringModelFunc));
+            _RouteMapper.Initialise(new Route[] { route });
+            _Environment.RequestMethod = "POST";
+            _Environment.SetRequestPath(route.PathParts[0].Part);
+            _Environment.SetRequestBody("StringValue=Ab", contentType: "application/x-www-form-urlencoded; charset=who-knows");
+
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
+
+            Assert.IsFalse(parameters.IsValid);
+        }
     }
 }

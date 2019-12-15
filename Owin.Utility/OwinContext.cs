@@ -47,7 +47,7 @@ namespace AWhewell.Owin.Utility
         /// <summary>
         /// Gets the environment that this context is wrapping.
         /// </summary>
-        public IDictionary<string, object> Environment { get; }
+        public OwinDictionary<object> Environment { get; }
 
         /// <summary>
         /// Gets or sets the request body stream. Setter will throw if overwriting an existing non-null stream.
@@ -372,7 +372,9 @@ namespace AWhewell.Owin.Utility
         /// <param name="environment"></param>
         public OwinContext(IDictionary<string, object> environment)
         {
-            Environment = environment ?? new OwinDictionary<object>();
+            Environment = environment != null
+                ? new OwinDictionary<object>(environment)
+                : new OwinDictionary<object>(caseSensitive: true);
         }
 
         /// <summary>
@@ -407,6 +409,58 @@ namespace AWhewell.Owin.Utility
                 _RequestQueryStringDictionary = new QueryStringDictionary(queryString, caseSensitiveKeys);
             }
             return _RequestQueryStringDictionary;
+        }
+
+        /// <summary>
+        /// Reads the content body as a sequence of bytes. The bytes are cached so that they can be re-read in subsequent
+        /// calls without having to rewind the stream. If there is no body then an empty array is returned. Note that this
+        /// can allocate a LOT of memory.
+        /// </summary>
+        /// <returns></returns>
+        public byte[] RequestBodyBytes()
+        {
+            byte[] result = null;
+
+            var bodyStream = RequestBody;
+            if(bodyStream != null && bodyStream != Stream.Null) {
+                if(Object.ReferenceEquals(bodyStream, Environment[CustomEnvironmentKey.RequestBodyBytesBasis])) {
+                    result = (byte[])Environment[CustomEnvironmentKey.RequestBodyBytes];
+                } else {
+                    using(var memoryStream = new MemoryStream()) {
+                        bodyStream.CopyTo(memoryStream);
+                        result = memoryStream.ToArray();
+                    }
+                    Environment[CustomEnvironmentKey.RequestBodyBytes] =      result;
+                    Environment[CustomEnvironmentKey.RequestBodyBytesBasis] = bodyStream;
+                }
+            }
+
+            return result ?? new byte[0];
+        }
+
+        /// <summary>
+        /// Reads the content body as a string, optionally caching and reusing the string in future calls.
+        /// </summary>
+        public string RequestBodyText()
+        {
+            var encoding = Parser.ParseCharset(
+                RequestHeadersDictionary?.ContentTypeValue.Charset
+            );
+            if(encoding == null) {
+                throw new UnknownCharsetException($"Charset {RequestHeadersDictionary.ContentTypeValue.Charset} is unknown");
+            }
+
+            return encoding.GetString(RequestBodyBytes());
+        }
+
+        /// <summary>
+        /// Reads the content body as a URL-encoded form and parses it into a dictionary of names and values.
+        /// </summary>
+        /// <param name="caseSensitiveKeys"></param>
+        /// <returns></returns>
+        public QueryStringDictionary RequestBodyForm(bool caseSensitiveKeys)
+        {
+            return new QueryStringDictionary(RequestBodyText(), caseSensitiveKeys);
         }
 
         /// <summary>

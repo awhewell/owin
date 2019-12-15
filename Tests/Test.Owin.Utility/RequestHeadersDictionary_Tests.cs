@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using AWhewell.Owin.Utility;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -63,6 +64,25 @@ namespace Test.AWhewell.Owin.Utility
             Assert.AreEqual(2, result.Count);
             Assert.AreEqual("Ab", result[0]);
             Assert.AreEqual("Cd", result[1]);
+        }
+
+        [TestMethod]
+        [DataRow(null,                          "",             null,       null)]
+        [DataRow("",                            "",             null,       null)]
+        [DataRow("text/plain",                  "text/plain",   null,       null)]
+        [DataRow("text/plain; charset=utf-8",   "text/plain",   "utf-8",    null)]
+        [DataRow("text/plain; boundary=cut",    "text/plain",   null,       "cut")]
+        public void ContentTypeValue_Returns_ContentType_Parsed_Into_ContentTypeValue(string contentType, string expectedMediaType, string expectedCharset, string expectedBoundary)
+        {
+            if(contentType != null) {
+                _RequestHeaders["Content-Type"] = contentType;
+            }
+
+            var contentTypeValue = _RequestHeaders.ContentTypeValue;
+
+            Assert.AreEqual(expectedMediaType,  contentTypeValue.MediaType);
+            Assert.AreEqual(expectedCharset,    contentTypeValue.Charset);
+            Assert.AreEqual(expectedBoundary,   contentTypeValue.Boundary);
         }
     }
 }

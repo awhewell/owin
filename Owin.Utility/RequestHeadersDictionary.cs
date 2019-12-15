@@ -42,6 +42,11 @@ namespace AWhewell.Owin.Utility
         public string ContentType => base["Content-Type"];
 
         /// <summary>
+        /// Gets <see cref="ContentType"/> parsed into a <see cref="ContentTypeValue"/>.
+        /// </summary>
+        public ContentTypeValue ContentTypeValue => ContentTypeValue.Parse(ContentType ?? "");
+
+        /// <summary>
         /// Gets the origin in a CORS pre-flight request.
         /// </summary>
         public string Origin => base["Origin"];

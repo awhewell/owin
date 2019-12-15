@@ -15,33 +15,16 @@ using System.Text;
 namespace AWhewell.Owin.Utility
 {
     /// <summary>
-    /// A collection of custom environment keys.
+    /// An enumeration of common media types as sent in Content-Type headers.
     /// </summary>
-    public static class CustomEnvironmentKey
+    public enum MediaType
     {
-        /// <summary>
-        /// Value is an <see cref="OwinContext"/> object that was created by a prior call to <see cref="OwinContext.Create"/>.
-        /// </summary>
-        public const string Context =  "awowin.Context";
-
-        /// <summary>
-        /// Value is the content body bytes. See <see cref="OwinContext.RequestBodyBytes"/>.
-        /// </summary>
-        public const string RequestBodyBytes = "awowin.RequestBodyBytes";
-
-        /// <summary>
-        /// Value is the stream reference used to build the <see cref="RequestBodyBytes"/> cache.
-        /// </summary>
-        public const string RequestBodyBytesBasis = "awowin.RequestBodyBytesBasis";
-
-        /// <summary>
-        /// Value is a string array resulting from splitting the RequestPath at slashes after ignoring the initial slash.
-        /// </summary>
-        public const string RequestPathParts = "awowin.RequestPathParts";
-
-        /// <summary>
-        /// Value is the path that <see cref="RequestPathParts"/> was built from.
-        /// </summary>
-        public const string RequestPathPartsBasis = "awowin.RequestPathPartsBasis";
+        Unknown,
+        JavaScript,     // application/javascript
+        Json,           // application/json
+        MultipartForm,  // multipart/form-data
+        PlainText,      // text/plain
+        UrlEncodedForm, // application/x-www-form-urlencoded
+        Xml,            // application/xml (preferred) or text/xml
     }
 }

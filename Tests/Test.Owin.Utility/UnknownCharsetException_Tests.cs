@@ -1,4 +1,4 @@
-﻿// Copyright © 2019 onwards, Andrew Whewell
+// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -9,39 +9,41 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Net;
+using AWhewell.Owin.Utility;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace AWhewell.Owin.Utility
+namespace Test.AWhewell.Owin.Utility
 {
-    /// <summary>
-    /// A collection of custom environment keys.
-    /// </summary>
-    public static class CustomEnvironmentKey
+    [TestClass]
+    public class UnknownCharsetException_Tests
     {
-        /// <summary>
-        /// Value is an <see cref="OwinContext"/> object that was created by a prior call to <see cref="OwinContext.Create"/>.
-        /// </summary>
-        public const string Context =  "awowin.Context";
+        [TestMethod]
+        public void Default_Ctor_Sets_Properties_Correctly()
+        {
+            var exception = new UnknownCharsetException();
 
-        /// <summary>
-        /// Value is the content body bytes. See <see cref="OwinContext.RequestBodyBytes"/>.
-        /// </summary>
-        public const string RequestBodyBytes = "awowin.RequestBodyBytes";
+            Assert.AreNotEqual("", exception.Message);
+            Assert.IsNull(exception.InnerException);
+        }
 
-        /// <summary>
-        /// Value is the stream reference used to build the <see cref="RequestBodyBytes"/> cache.
-        /// </summary>
-        public const string RequestBodyBytesBasis = "awowin.RequestBodyBytesBasis";
+        [TestMethod]
+        public void Message_Ctor_Sets_Properties_Correctly()
+        {
+            var exception = new UnknownCharsetException("message");
 
-        /// <summary>
-        /// Value is a string array resulting from splitting the RequestPath at slashes after ignoring the initial slash.
-        /// </summary>
-        public const string RequestPathParts = "awowin.RequestPathParts";
+            Assert.AreEqual("message", exception.Message);
+            Assert.IsNull(exception.InnerException);
+        }
 
-        /// <summary>
-        /// Value is the path that <see cref="RequestPathParts"/> was built from.
-        /// </summary>
-        public const string RequestPathPartsBasis = "awowin.RequestPathPartsBasis";
+        [TestMethod]
+        public void InnerException_Ctor_Sets_Properties_Correctly()
+        {
+            var inner = new NotImplementedException();
+            var exception = new UnknownCharsetException("message", inner);
+
+            Assert.AreEqual("message", exception.Message);
+            Assert.AreSame(inner, exception.InnerException);
+        }
     }
 }

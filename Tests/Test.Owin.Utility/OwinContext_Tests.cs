@@ -64,7 +64,7 @@ namespace Test.AWhewell.Owin.Utility
         [TestMethod]
         public void Ctor_Tracks_Environment()
         {
-            Assert.AreSame(_Environment, _Context.Environment);
+            Assert.AreSame(_Environment, _Context.Environment.WrappedDictionary);
         }
 
         [TestMethod]
@@ -555,6 +555,111 @@ namespace Test.AWhewell.Owin.Utility
             _Context.ReturnText("1", Encoding.UTF7, "");
 
             Assert.AreEqual("text/plain", _Context.ResponseHeadersDictionary.ContentTypeValue.MediaType);
+        }
+
+        [TestMethod]
+        [DataRow(null,                   -1, new byte[0],            -1)]
+        [DataRow(new byte[] { 1, 2, 3 }, 0,  new byte[] { 1, 2, 3 }, 3)]
+        [DataRow(new byte[] { 1, 2, 3 }, 1,  new byte[] { 2, 3 },    3)]
+        public void RequestBodyBytes_Returns_Content_Of_Stream(byte[] streamContent, int startPosition, byte[] expectedContent, int expectedPosition)
+        {
+            var env = UseEnvironmentWithRequiredFields();
+            using(var stream = new MemoryStream()) {
+                if(streamContent != null) {
+                    stream.Write(streamContent, 0, streamContent.Length);
+                    stream.Position = startPosition;
+                    env.Environment[EnvironmentKey.RequestBody] = stream;
+                }
+
+                var actualContent = _Context.RequestBodyBytes();
+                var actualPosition = stream.Position;
+
+                Assertions.AreEqual(expectedContent, actualContent);
+                if(expectedPosition != -1) {
+                    Assert.AreEqual(expectedPosition, actualPosition);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void RequestBodyBytes_Caches_Result_And_Reuses_Cached_Result()
+        {
+            var env = UseEnvironmentWithRequiredFields();
+            env.AddRequestBody(new byte[] { 1, 2, 3 }, new ContentTypeValue("text/plain"));
+
+            var result1 = _Context.RequestBodyBytes();
+            var result2 = _Context.RequestBodyBytes();
+
+            Assert.AreSame(result1, result2);
+        }
+
+        [TestMethod]
+        public void RequestBodyBytes_Refreshes_Cache_If_Stream_Changes()
+        {
+            var env = UseEnvironmentWithRequiredFields();
+
+            env.AddRequestBody(new byte[] { 1, 2, 3 }, new ContentTypeValue("text/plain"));
+            var result1 = _Context.RequestBodyBytes();
+
+            env.AddRequestBody(new byte[] { 1, 2, 3 }, new ContentTypeValue("text/plain"));
+            var result2 = _Context.RequestBodyBytes();
+
+            Assertions.AreEqual(result1, result2);
+            Assert.AreNotSame(result1, result2);
+        }
+
+        [TestMethod]
+        [DataRow(null,                                  null,       "")]
+        [DataRow(new byte[] { 0xC2, 0xA3, 0x31 },       null,       "£1")]
+        [DataRow(new byte[] { 0xA3, 0x00, 0x31, 0x00 }, "Unicode",  "£1")]
+        public void RequestBodyText_Uses_Correct_Encoding(byte[] contentBytes, string charset, string expected)
+        {
+            if(contentBytes != null) {
+                var env = UseEnvironmentWithRequiredFields();
+                env.AddRequestBody(contentBytes, new ContentTypeValue("does-not-matter", charset));
+            }
+
+            var actual = _Context.RequestBodyText();
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(UnknownCharsetException))]
+        public void RequestBodyText_Throws_Exception_If_Encoding_Is_Unusable()
+        {
+            var env = UseEnvironmentWithRequiredFields();
+            env.AddRequestBody(
+                new byte[] { 0xA3, 0x00, 0x31, 0x00 },
+                new ContentTypeValue("does-not-matter", charset: "who-knows")
+            );
+
+            _Context.RequestBodyText();
+        }
+
+        [TestMethod]
+        public void RequestBodyForm_Returns_Form_With_Case_Sensitive_Keys()
+        {
+            var env = UseEnvironmentWithRequiredFields();
+            env.SetRequestBody("value=1&Value=2");
+
+            var form = _Context.RequestBodyForm(caseSensitiveKeys: true);
+
+            Assert.AreEqual(2, form.Count);
+            Assert.AreEqual("1", form.GetValue("value"));
+            Assert.AreEqual("2", form.GetValue("Value"));
+        }
+
+        [TestMethod]
+        public void RequestBodyForm_Returns_Form_With_Case_Insensitive_Keys()
+        {
+            var env = UseEnvironmentWithRequiredFields();
+            env.SetRequestBody("value=1&Value=2");
+
+            var form = _Context.RequestBodyForm(caseSensitiveKeys: false);
+
+            Assert.AreEqual(1, form.Count);
+            Assert.AreEqual("1,2", form.GetValue("VALUE"));
         }
     }
 }

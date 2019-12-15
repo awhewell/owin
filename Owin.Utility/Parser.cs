@@ -619,5 +619,56 @@ namespace AWhewell.Owin.Utility
                 default:        return HttpScheme.Unknown;
             }
         }
+
+        /// <summary>
+        /// Returns the enum associated with the media type passed across.
+        /// </summary>
+        /// <param name="mediaType"></param>
+        /// <returns></returns>
+        public static MediaType ParseMediaType(string mediaType)
+        {
+            switch((mediaType ?? "").Trim().ToLower()) {
+                case "application/javascript":              return MediaType.JavaScript;
+                case "application/json":                    return MediaType.Json;
+                case "multipart/form-data":                 return MediaType.MultipartForm;
+                case "text/plain":                          return MediaType.PlainText;
+                case "application/x-www-form-urlencoded":   return MediaType.UrlEncodedForm;
+                case "application/xml":
+                case "text/xml":                            return MediaType.Xml;
+                default:                                    return MediaType.Unknown;
+            }
+        }
+
+        /// <summary>
+        /// Returns the .NET encoding for a charset's name or null if the charset is not recognised. If the
+        /// charset is null or empty then UTF-8 is returned.
+        /// </summary>
+        /// <param name="charset"></param>
+        /// <returns></returns>
+        public static Encoding ParseCharset(string charset)
+        {
+            Encoding result = Encoding.UTF8;
+
+            if(!String.IsNullOrEmpty(charset)) {
+                try {
+                    switch(charset.ToLower()) {
+                        case "csutf7":      charset = "utf-7"; break;
+                        case "csutf8":      charset = "utf-8"; break;
+                        case "csutf16":     charset = "utf-16"; break;
+                        case "csutf16be":   charset = "utf-16be"; break;
+                        case "csutf16le":   charset = "utf-16le"; break;
+                        case "csutf32":     charset = "utf-32"; break;
+                        case "csutf32be":   charset = "utf-32be"; break;
+                        case "csutf32le":   charset = "utf-32le"; break;
+                    }
+
+                    result = Encoding.GetEncoding(charset);
+                } catch(ArgumentException) {
+                    result = null;
+                }
+            }
+
+            return result;
+        }
     }
 }

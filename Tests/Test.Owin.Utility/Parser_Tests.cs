@@ -998,5 +998,61 @@ namespace Test.AWhewell.Owin.Utility
 
             Assert.AreEqual(expected, actual);
         }
+
+        [TestMethod]
+        [DataRow(null,                                  MediaType.Unknown)]
+        [DataRow("",                                    MediaType.Unknown)]
+        [DataRow("application/javascript",              MediaType.JavaScript)]
+        [DataRow("APPLICATION/JAVASCRIPT",              MediaType.JavaScript)]
+        [DataRow("application/json",                    MediaType.Json)]
+        [DataRow("multipart/form-data",                 MediaType.MultipartForm)]
+        [DataRow("text/plain",                          MediaType.PlainText)]
+        [DataRow("application/x-www-form-urlencoded",   MediaType.UrlEncodedForm)]
+        [DataRow("application/xml",                     MediaType.Xml)]
+        [DataRow("text/xml",                            MediaType.Xml)]
+        public void ParseMediaType_Returns_Correct_Enum_Value(string text, MediaType expected)
+        {
+            var actual = Parser.ParseMediaType(text);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        [DataRow(null,              "utf-8")]
+        [DataRow("",                "utf-8")]
+        [DataRow("garbage",         null)]
+        [DataRow("UTF-8",           "utf-8")]
+        [DataRow("utf-8",           "utf-8")]
+        [DataRow("csUTF8",          "utf-8")]
+        [DataRow("UTF-7",           "utf-7")]
+        [DataRow("utf-7",           "utf-7")]
+        [DataRow("csUTF7",          "utf-7")]
+        [DataRow("ASCII",           "us-ascii")]
+        [DataRow("us",              "us-ascii")]
+        [DataRow("Unicode",         "utf-16")]
+        [DataRow("UTF-16",          "utf-16")]
+        [DataRow("csUTF16",         "utf-16")]
+        [DataRow("UTF-16LE",        "utf-16")]
+        [DataRow("csUTF16LE",       "utf-16")]
+        [DataRow("UTF-16BE",        "utf-16BE")]
+        [DataRow("csUTF16BE",       "utf-16BE")]
+        [DataRow("UTF-32",          "utf-32")]
+        [DataRow("csUTF32",         "utf-32")]
+        [DataRow("UTF-32LE",        "utf-32")]
+        [DataRow("csUTF32LE",       "utf-32")]
+        [DataRow("UTF-32BE",        "utf-32BE")]
+        [DataRow("csUTF32BE",       "utf-32BE")]
+        [DataRow("iso-8859-1",      "iso-8859-1")]
+        [DataRow("latin1",          "iso-8859-1")]
+        public void ParseCharset_Returns_Correct_Encoding(string charset, string expectedWebName)
+        {
+            var actual = Parser.ParseCharset(charset);
+
+            if(expectedWebName == null) {
+                Assert.IsNull(actual);
+            } else {
+                Assert.AreEqual(expectedWebName, actual.WebName);
+            }
+        }
     }
 }

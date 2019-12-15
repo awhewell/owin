@@ -10,9 +10,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
 using AWhewell.Owin.Interface.WebApi;
 using AWhewell.Owin.Utility;
 using InterfaceFactory;
@@ -178,12 +175,30 @@ namespace AWhewell.Owin.WebApi
                     var filledParameter = false;
 
                     if(methodParameter.IsObject) {
-                        parameterValue = _ModelBuilder.BuildModel(
-                            methodParameter.ParameterType,
-                            methodParameter.TypeParserResolver,
-                            context.RequestQueryStringDictionary(AreQueryStringNamesCaseSensitive)
-                        );
-                        filledParameter = true;
+                        var buildFromBody = false;
+                        switch(context.RequestHttpMethod) {
+                            case HttpMethod.Post:   buildFromBody = true; break;
+                        }
+                        if(buildFromBody) {
+                            try {
+                                parameterValue = _ModelBuilder.BuildModel(
+                                    methodParameter.ParameterType,
+                                    null,                               // TODO: Needs to accept TypeParserResolver
+                                    context.RequestBodyForm(false)      // TODO: Needs to use "form keys are case sensitive" flag
+                                );
+                                filledParameter = true;
+                            } catch(UnknownCharsetException ex) {
+                                failedValidationMessage = ex.Message;
+                                filledParameter = false;
+                            }
+                        } else {
+                            parameterValue = _ModelBuilder.BuildModel(
+                                methodParameter.ParameterType,
+                                methodParameter.TypeParserResolver,
+                                context.RequestQueryStringDictionary(AreQueryStringNamesCaseSensitive)
+                            );
+                            filledParameter = true;
+                        }
                     } else {
                         filledParameter = UseInjectedValueForParameter(ref parameterValue, ref failedValidationMessage, methodParameter, route, context);
 
@@ -222,7 +237,7 @@ namespace AWhewell.Owin.WebApi
                     failedValidationMessage = $"Cannot inject OWIN environment into parameters to {methodParameter.Name}, it is not static. Use the OWIN environment property instead.";
                 } else {
                     filled = true;
-                    parameterValue = context.Environment;
+                    parameterValue = context.Environment.WrappedDictionary;
                 }
             }
 
@@ -278,13 +293,8 @@ namespace AWhewell.Owin.WebApi
 
         private bool ExtractParameterFromRequestBody(ref object parameterValue, MethodParameter methodParameter, OwinContext context)
         {
-            using(var streamReader = new StreamReader(context.RequestBody)) {
-                var queryStringDictionary = new QueryStringDictionary(
-                    streamReader.ReadToEnd(),
-                    AreFormNamesCaseSensitive
-                );
-                return ExtractParameterFromQueryStringDictionary(ref parameterValue, methodParameter, queryStringDictionary);
-            }
+            var form = context.RequestBodyForm(AreFormNamesCaseSensitive);
+            return ExtractParameterFromQueryStringDictionary(ref parameterValue, methodParameter, form);
         }
 
         private bool ExtractParameterFromQueryStringDictionary(ref object parameterValue, MethodParameter methodParameter, QueryStringDictionary queryStringDictionary)

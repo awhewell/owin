@@ -36,6 +36,15 @@ namespace Test.AWhewell.Owin
         }
 
         /// <summary>
+        /// Gets or sets the request's method.
+        /// </summary>
+        public string RequestMethod
+        {
+            get => Environment["owin.RequestMethod"] as string;
+            set => Environment["owin.RequestMethod"] = value;
+        }
+
+        /// <summary>
         /// Gets or sets the request's path base.
         /// </summary>
         public string RequestPathBase
@@ -188,6 +197,21 @@ namespace Test.AWhewell.Owin
             Environment["owin.RequestBody"] = new MemoryStream(bytes);
             if(contentType != null) {
                 RequestHeaders.Set("Content-Type", contentType);
+            }
+            RequestHeaders.Set("Content-Length", (contentLength ?? bytes.Length).ToString(CultureInfo.InvariantCulture));
+        }
+
+        /// <summary>
+        /// Sets the request body stream up.
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="contentType"></param>
+        /// <param name="contentLength"></param>
+        public void AddRequestBody(byte[] bytes, ContentTypeValue contentType, int? contentLength = null)
+        {
+            Environment["owin.RequestBody"] = new MemoryStream(bytes);
+            if(contentType != null) {
+                RequestHeaders.Set("Content-Type", contentType.ToString());
             }
             RequestHeaders.Set("Content-Length", (contentLength ?? bytes.Length).ToString(CultureInfo.InvariantCulture));
         }
