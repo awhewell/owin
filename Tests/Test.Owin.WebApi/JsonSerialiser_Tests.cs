@@ -78,7 +78,7 @@ namespace Test.AWhewell.Owin.WebApi
             }
         }
 
-        class DateTime_JustDigits_Parser : ITypeParser<DateTime>
+        public class DateTime_JustDigits_Parser : ITypeParser<DateTime>
         {
             public bool TryParse(string text, out DateTime value) => DateTime.TryParseExact(text, "yyyyMMddHHmmssfff", CultureInfo.InvariantCulture, DateTimeStyles.None, out value);
         }

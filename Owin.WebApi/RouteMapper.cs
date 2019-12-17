@@ -181,12 +181,30 @@ namespace AWhewell.Owin.WebApi
                         }
                         if(buildFromBody) {
                             try {
-                                parameterValue = _ModelBuilder.BuildModel(
-                                    methodParameter.ParameterType,
-                                    null,                               // TODO: Needs to accept TypeParserResolver
-                                    context.RequestBodyForm(false)      // TODO: Needs to use "form keys are case sensitive" flag
-                                );
-                                filledParameter = true;
+                                var mediaType = context.RequestHeadersDictionary?.ContentTypeValue.MediaType ?? "";
+                                switch(Parser.ParseMediaType(mediaType)) {
+                                    case MediaType.UrlEncodedForm:
+                                        parameterValue = _ModelBuilder.BuildModel(
+                                            methodParameter.ParameterType,
+                                            methodParameter.TypeParserResolver,
+                                            context.RequestBodyForm(AreFormNamesCaseSensitive)
+                                        );
+                                        filledParameter = true;
+                                        break;
+                                    case MediaType.Json:
+                                        parameterValue = _ModelBuilder.BuildModelFromJson(
+                                            methodParameter.ParameterType,
+                                            methodParameter.TypeParserResolver,
+                                            context.RequestBodyText()
+                                        );
+                                        filledParameter = true;
+                                        break;
+                                    default:
+                                        if(mediaType == "") {
+                                            goto case MediaType.Json;
+                                        }
+                                        break;
+                                }
                             } catch(UnknownCharsetException ex) {
                                 failedValidationMessage = ex.Message;
                                 filledParameter = false;

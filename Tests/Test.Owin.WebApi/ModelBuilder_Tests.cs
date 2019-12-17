@@ -16,6 +16,7 @@ using AWhewell.Owin.Interface.WebApi;
 using AWhewell.Owin.Utility;
 using InterfaceFactory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 
 namespace Test.AWhewell.Owin.WebApi
 {
@@ -57,12 +58,24 @@ namespace Test.AWhewell.Owin.WebApi
             public decimal? NDecimal  { get; set; }
         }
 
-        private IModelBuilder _ModelBuilder;
+        private IClassFactory           _Snapshot;
+        private Mock<IJsonSerialiser>   _JsonSerialiser;
+        private IModelBuilder           _ModelBuilder;
 
         [TestInitialize]
         public void TestInitialise()
         {
+            _Snapshot = Factory.TakeSnapshot();
+
+            _JsonSerialiser = MockHelper.FactoryImplementation<IJsonSerialiser>();
+
             _ModelBuilder = Factory.Resolve<IModelBuilder>();
+        }
+
+        [TestCleanup]
+        public void TestCleanup()
+        {
+            Factory.RestoreSnapshot(_Snapshot);
         }
 
         [TestMethod]
@@ -173,6 +186,22 @@ namespace Test.AWhewell.Owin.WebApi
 
                 Assert.AreEqual(expected, actual);
             }
+        }
+
+        [TestMethod]
+        public void BuildModelFromJson_Uses_JsonSerialiser_To_Build_Model()
+        {
+            var jsonText = "{ \"Int\": 12345 }";
+            var resolver = new TypeParserResolver();
+            var deserialised = new object();
+            _JsonSerialiser
+                .Setup(r => r.Deserialise(typeof(AllNativeTypes), resolver, jsonText))
+                .Returns(deserialised);
+
+            var model = _ModelBuilder.BuildModelFromJson(typeof(AllNativeTypes), resolver, jsonText);
+
+            _JsonSerialiser.Verify(r => r.Deserialise(typeof(AllNativeTypes), resolver, jsonText), Times.Once());
+            Assert.AreSame(deserialised, model);
         }
     }
 }

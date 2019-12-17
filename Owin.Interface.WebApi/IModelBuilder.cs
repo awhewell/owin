@@ -29,16 +29,13 @@ namespace AWhewell.Owin.Interface.WebApi
         object BuildModel(Type modelType, TypeParserResolver typeParserResolver, QueryStringDictionary values);
 
         /// <summary>
-        /// Builds a model from the body of a request.
+        /// Builds a model from JSON.
         /// </summary>
         /// <param name="modelType"></param>
-        /// <param name="typeParserResolver"></param>
-        /// <param name="contentType">
-        /// The type of content. This will not be a URL encoded form - forma are expressed as a <see
-        /// cref="QueryStringDictionary"/> and there is a separate method to build models from those.
-        /// </param>
-        /// <param name="content"></param>
+        /// <param name="typeParserResolver">The resolver to use to convert dates, byte arrays and GUIDs. All other
+        /// primatives must comply with the JSON spec.</param>
+        /// <param name="jsonText"></param>
         /// <returns></returns>
-        object BuildModel(Type modelType, TypeParserResolver typeParserResolver, string contentType, string content);
+        object BuildModelFromJson(Type modelType, TypeParserResolver typeParserResolver, string jsonText);
     }
 }

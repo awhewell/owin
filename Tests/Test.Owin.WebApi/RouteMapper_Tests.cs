@@ -37,6 +37,11 @@ namespace Test.AWhewell.Owin.WebApi
             public string StringValue { get; set; }
         }
 
+        public class DateModel
+        {
+            public DateTime DateValue { get; set; }
+        }
+
         private IRouteMapper        _RouteMapper;
         private MockOwinEnvironment _Environment;
 
@@ -637,7 +642,7 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        public void BuildRouteParameters_Rejects_Attempt_To_Build_From_Body_With_Bad_Encoding()
+        public void BuildRouteParameters_Rejects_Attempt_To_Build_From_Form_Body_With_Bad_Encoding()
         {
             var route = Route_Tests.CreateRoute(typeof(FormBodyModelController), nameof(FormBodyModelController.StringModelFunc));
             _RouteMapper.Initialise(new Route[] { route });
@@ -648,6 +653,111 @@ namespace Test.AWhewell.Owin.WebApi
             var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
 
             Assert.IsFalse(parameters.IsValid);
+        }
+
+        [TestMethod]
+        public void BuildRouteParameters_Uses_Full_TypeParserResolver_When_Building_Model_From_Form_Body()
+        {
+            var resolver = new TypeParserResolver(new ModelBuilder_Tests.String_Reverse_Parser());
+            var route = Route_Tests.CreateRoute(typeof(FormBodyModelController), nameof(FormBodyModelController.StringModelFunc), resolver: resolver);
+            _RouteMapper.Initialise(new Route[] { route });
+            _Environment.RequestMethod = "POST";
+            _Environment.SetRequestPath(route.PathParts[0].Part);
+            _Environment.SetRequestBody("StringValue=Ab", contentType: "application/x-www-form-urlencoded");
+
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
+
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual(1, parameters.Parameters.Length);
+            var model = parameters.Parameters[0] as StringModel;
+            Assert.AreEqual("bA", model.StringValue);
+        }
+
+        [TestMethod]
+        [DataRow(true)]
+        [DataRow(false)]
+        public void BuildRouteParameters_Uses_Case_Sensitivity_Flag_When_Building_Model_From_Form_Body(bool caseSensitiveKeys)
+        {
+            _RouteMapper.AreFormNamesCaseSensitive = caseSensitiveKeys;
+            var route = Route_Tests.CreateRoute(typeof(FormBodyModelController), nameof(FormBodyModelController.StringModelFunc));
+            _RouteMapper.Initialise(new Route[] { route });
+            _Environment.RequestMethod = "POST";
+            _Environment.SetRequestPath(route.PathParts[0].Part);
+            _Environment.SetRequestBody("STRINGVALUE=Ab", contentType: "application/x-www-form-urlencoded");
+
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
+
+            Assert.AreEqual(1, parameters.Parameters.Length);
+            var model = parameters.Parameters[0] as StringModel;
+            if(caseSensitiveKeys) {
+                Assert.IsTrue(parameters.IsValid);
+                Assert.IsNull(model.StringValue);
+            } else {
+                Assert.IsTrue(parameters.IsValid);
+                Assert.AreEqual("Ab", model.StringValue);
+            }
+        }
+
+        public class JsonBodyModelController : Controller
+        {
+            [HttpPost, Route("x1")] public int StringModelFunc(StringModel model) { return 0; }
+
+            [HttpPost, Route("x2")] public long DateModelFunc(DateModel model) { return model?.DateValue.Ticks ?? 0L; }
+        }
+
+        [TestMethod]
+        public void BuildRouteParameters_Can_Build_Model_From_Json_Body()
+        {
+            var route = Route_Tests.CreateRoute(typeof(JsonBodyModelController), nameof(JsonBodyModelController.StringModelFunc));
+            _RouteMapper.Initialise(new Route[] { route });
+            _Environment.RequestMethod = "POST";
+            _Environment.SetRequestPath(route.PathParts[0].Part);
+            _Environment.SetRequestBody("{ \"StringValue\": \"Ab\" }", contentType: "application/json");
+
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
+
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual(1, parameters.Parameters.Length);
+            var model = parameters.Parameters[0] as StringModel;
+            Assert.AreEqual("Ab", model.StringValue);
+        }
+
+        [TestMethod]
+        public void BuildRouteParameters_Defaults_To_Json_Bodies_When_ContentType_Missing()
+        {
+            var route = Route_Tests.CreateRoute(typeof(JsonBodyModelController), nameof(JsonBodyModelController.StringModelFunc));
+            _RouteMapper.Initialise(new Route[] { route });
+            _Environment.RequestMethod = "POST";
+            _Environment.SetRequestPath(route.PathParts[0].Part);
+            _Environment.SetRequestBody("{ \"StringValue\": \"Ab\" }");
+
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
+
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual(1, parameters.Parameters.Length);
+            var model = parameters.Parameters[0] as StringModel;
+            Assert.AreEqual("Ab", model.StringValue);
+        }
+
+        [TestMethod]
+        public void BuildRouteParameters_Uses_Limited_TypeParserResolver_When_Building_Bodies_From_Json()
+        {
+            // Only dates, byte arrays and guids go through the parser, everything else must be as per JSON spec
+
+            var resolver = new TypeParserResolver(new JsonSerialiser_Tests.DateTime_JustDigits_Parser());
+            var route = Route_Tests.CreateRoute(typeof(JsonBodyModelController), nameof(JsonBodyModelController.DateModelFunc), resolver: resolver);
+            _RouteMapper.Initialise(new Route[] { route });
+            _Environment.RequestMethod = "POST";
+            _Environment.SetRequestPath(route.PathParts[0].Part);
+            var expected = new DateTime(2019, 12, 17, 21, 52, 19, 123);
+            _Environment.SetRequestBody($"{{ \"DateValue\": \"{expected.ToString("yyyyMMddHHmmssfff")}\" }}", contentType: "application/json");
+
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
+
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual(1, parameters.Parameters.Length);
+            var model = parameters.Parameters[0] as DateModel;
+            Assert.AreEqual(expected, model.DateValue);
         }
     }
 }

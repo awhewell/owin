@@ -11,6 +11,7 @@
 using System;
 using AWhewell.Owin.Interface.WebApi;
 using AWhewell.Owin.Utility;
+using InterfaceFactory;
 
 namespace AWhewell.Owin.WebApi
 {
@@ -19,6 +20,19 @@ namespace AWhewell.Owin.WebApi
     /// </summary>
     class ModelBuilder : IModelBuilder
     {
+        /// <summary>
+        /// The object that maps JSON text to objects for us.
+        /// </summary>
+        private IJsonSerialiser _JsonSerialiser;
+
+        /// <summary>
+        /// Creates a new object.
+        /// </summary>
+        public ModelBuilder()
+        {
+            _JsonSerialiser = Factory.Resolve<IJsonSerialiser>();
+        }
+
         /// <summary>
         /// See interface docs.
         /// </summary>
@@ -57,12 +71,11 @@ namespace AWhewell.Owin.WebApi
         /// </summary>
         /// <param name="modelType"></param>
         /// <param name="typeParserResolver"></param>
-        /// <param name="contentType"></param>
-        /// <param name="content"></param>
+        /// <param name="jsonText"></param>
         /// <returns></returns>
-        public object BuildModel(Type modelType, TypeParserResolver typeParserResolver, string contentType, string content)
+        public object BuildModelFromJson(Type modelType, TypeParserResolver typeParserResolver, string jsonText)
         {
-            throw new NotImplementedException();
+            return _JsonSerialiser.Deserialise(modelType, typeParserResolver, jsonText);
         }
     }
 }
