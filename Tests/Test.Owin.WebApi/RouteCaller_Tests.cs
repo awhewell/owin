@@ -55,6 +55,17 @@ namespace Test.AWhewell.Owin.WebApi
                 Route_2_LastInput = input;
                 return input * 2;
             }
+
+            public int Route_3_CallCount { get; set; }
+            public int Route_3_LastInput { get; set; }
+
+            [HttpGet, Route("3")]
+            public void Route_3(int input)
+            {
+                Assert.AreSame(RouteCaller_Tests._ExpectedEnvironment, OwinEnvironment);
+                ++Route_3_CallCount;
+                Route_3_LastInput = input;
+            }
         }
 
         public class DisposableController : IApiController, IDisposable
@@ -166,6 +177,20 @@ namespace Test.AWhewell.Owin.WebApi
             Assert.AreEqual(1, Controller.Route_2_CallCount);
             Assert.AreEqual(32, Controller.Route_2_LastInput);
             Assert.AreEqual(64, outcome);
+        }
+
+        [TestMethod]
+        public void CallRoute_Can_Call_Void_Routes()
+        {
+            var route = Route_Tests.CreateRoute<Controller>(nameof(Controller.Route_3));
+            var routeParameters = Route_Tests.CreateRouteParameters(41);
+
+            var outcome = _RouteCaller.CallRoute(_Environment.Environment, route, routeParameters);
+
+            Assert.IsNull(outcome);
+            Assert.IsNotNull(_ControllerInstance);
+            Assert.AreEqual(1, _ControllerInstance.Route_3_CallCount);
+            Assert.AreEqual(41, _ControllerInstance.Route_3_LastInput);
         }
 
         [TestMethod]
