@@ -10,33 +10,25 @@
 
 using System;
 using System.Globalization;
+using AWhewell.Owin.Utility.Parsers;
 
-namespace AWhewell.Owin.Utility.Parsers
+namespace AWhewell.Owin.Utility.Formatters
 {
     /// <summary>
-    /// Parses JavaScript ticks (milliseconds since 1st Jan 1970) into a DateTime.
+    /// Formats a DateTimeOffset as the number of milliseconds since 1st Jan 1970.
     /// </summary>
-    public class DateTime_JavaScriptTicks_Parser : ITypeParser<DateTime>
+    public class DateTimeOffset_JavaScriptTicks_Formatter : ITypeFormatter<DateTimeOffset>
     {
-        internal static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1);
-
         /// <summary>
         /// See interface docs.
         /// </summary>
-        /// <param name="text"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool TryParse(string text, out DateTime value)
+        public string Format(DateTimeOffset value)
         {
-            var result = false;
-            value = default(DateTime);
-
-            if(!String.IsNullOrEmpty(text) && long.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var ticks)) {
-                value = UnixEpoch.AddMilliseconds(ticks);
-                result = true;
-            }
-
-            return result;
+            return (value - DateTimeOffset_JavaScriptTicks_Parser.UnixEpoch)
+                .TotalMilliseconds
+                .ToString(CultureInfo.InvariantCulture);
         }
     }
 }

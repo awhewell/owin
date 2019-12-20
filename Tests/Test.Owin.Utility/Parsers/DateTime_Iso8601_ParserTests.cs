@@ -20,14 +20,16 @@ namespace Test.AWhewell.Owin.Utility.Parsers
         [DataRow("en-GB", null,                             false,  "0001-01-01 00:00:00.000 Unspecified")]  // Cannot parse null
         [DataRow("en-GB", "rubbish",                        false,  "0001-01-01 00:00:00.000 Unspecified")]  // Cannot parse non-date
         [DataRow("en-GB", "2019-07-01T17:42",               true,   "2019-07-01 17:42:00.000 Unspecified")]  // Missing Z means the time zone is unknown
-        [DataRow("en-US", "2019-07-01T17:42+0100",          true,   "2019-07-01 16:42:00.000 Utc")]          // Timezone offset with missing Z assumed to be offset from UTC
+        [DataRow("en-US", "2019-07-01T17:42+01:00",         true,   "2019-07-01 16:42:00.000 Utc")]          // Local time with timezone offset specified
+        [DataRow("en-US", "2019-07-01T17:42+0100",          true,   "2019-07-01 16:42:00.000 Utc")]          // Local time with timezone offset specified
         [DataRow("en-US", "2019-07-01T17:42Z",              true,   "2019-07-01 17:42:00.000 Utc")]          // Zulu indicator means it is in UTC
         [DataRow("en-US", "2019-07-01T17:42+0100Z",         false,  "0001-01-01 00:00:00.000 Unspecified")]  // Can't specify both offset from UTC *and* the UTC indicator
         [DataRow("en-GB", "20190701T1742",                  true,   "2019-07-01 17:42:00.000 Unspecified")]  // Variant without separators
         [DataRow("en-US", "20190701T1742+0100",             true,   "2019-07-01 16:42:00.000 Utc")]          // Variant without separators
         [DataRow("en-US", "20190701T1742Z",                 true,   "2019-07-01 17:42:00.000 Utc")]          // Variant without separators
         [DataRow("en-GB", "2019-07-01T17:42:32",            true,   "2019-07-01 17:42:32.000 Unspecified")]  // Variant with seconds
-        [DataRow("en-US", "2019-07-01T17:42:32+0100",       true,   "2019-07-01 16:42:32.000 Utc")]          // Variant with seconds
+        [DataRow("en-US", "2019-07-01T17:42:32+01:00",      true,   "2019-07-01 16:42:32.000 Utc")]          // Variant with seconds
+        [DataRow("en-US", "2019-07-01T17:42:32+0100",       true,   "2019-07-01 16:42:32.000 Utc")]          // Variant with seconds and without colon
         [DataRow("en-GB", "2019-07-01T17:42:32Z",           true,   "2019-07-01 17:42:32.000 Utc")]          // Variant with seconds
         [DataRow("en-GB", "20190701T174232",                true,   "2019-07-01 17:42:32.000 Unspecified")]  // Variant with seconds and without separators
         [DataRow("en-US", "20190701T174232+0100",           true,   "2019-07-01 16:42:32.000 Utc")]          // Variant with seconds and without separators

@@ -19,6 +19,15 @@ namespace AWhewell.Owin.Interface.WebApi
     public interface IJsonSerialiser
     {
         /// <summary>
+        /// Serialises an object hierarchy into JSON. The resolver, if supplied, is only used for
+        /// types not specified in the JSON spec (dates, byte arrays and GUIDs).
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="resolver"></param>
+        /// <returns></returns>
+        string Serialise(object obj, TypeParserResolver resolver);
+
+        /// <summary>
         /// Deserialises JSON text into an object hierarchy using the resolver passed across. The resolver
         /// is only used for types not specified in the JSON spec (dates, byte arrays and GUIDs).
         /// </summary>

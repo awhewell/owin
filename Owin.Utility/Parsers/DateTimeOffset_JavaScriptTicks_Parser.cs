@@ -20,7 +20,7 @@ namespace AWhewell.Owin.Utility.Parsers
     /// </summary>
     public class DateTimeOffset_JavaScriptTicks_Parser : ITypeParser<DateTimeOffset>
     {
-        private static readonly DateTimeOffset UnixEpoch = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        internal static readonly DateTimeOffset UnixEpoch = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
         /// <summary>
         /// See interface docs.

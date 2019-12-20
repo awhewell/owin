@@ -34,13 +34,18 @@ namespace AWhewell.Owin.Utility.Parsers
 
             var parsed = ExtractMicrosoftJsonDateElements(text, out var milliseconds, out var offset);
             if(parsed) {
-                value = UnixEpoch.AddMilliseconds(milliseconds);
+                value = DateTime.SpecifyKind(UnixEpoch, DateTimeKind.Utc)
+                    .AddMilliseconds(milliseconds);
 
                 if(offset != null) {
-                    offset = -offset;
-                    value = DateTime.SpecifyKind(value, DateTimeKind.Utc)
-                        .AddHours((int)(offset / 100))
-                        .AddMinutes(offset.Value % 100);
+                    // Note that the offset does not appear to actually be used when deserialising dates
+                    // using DataContractJsonSerializer. It just appears to indicate that it is to be
+                    // parsed as a local time. Timezones of +0100, +0200 and -0100 all produce the same
+                    // local time. See unit tests if you want to check my original DCJS test for bugs, I
+                    // copied the LINQPad script there.
+                    value = DateTime.SpecifyKind(UnixEpoch, DateTimeKind.Utc)
+                        .AddMilliseconds(milliseconds)
+                        .ToLocalTime();
                 }
             }
 

@@ -10,33 +10,42 @@
 
 using System;
 using System.Globalization;
+using System.Text;
+using AWhewell.Owin.Utility.Parsers;
 
-namespace AWhewell.Owin.Utility.Parsers
+namespace AWhewell.Owin.Utility.Formatters
 {
     /// <summary>
-    /// Parses JavaScript ticks (milliseconds since 1st Jan 1970) into a DateTime.
+    /// Emits a Microsoft JSON format date time offset.
     /// </summary>
-    public class DateTime_JavaScriptTicks_Parser : ITypeParser<DateTime>
+    public class DateTimeOffset_MicrosoftJson_Formatter : ITypeFormatter<DateTimeOffset>
     {
-        internal static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1);
+        //internal static readonly DateTimeOffset UnixEpoch = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
         /// <summary>
         /// See interface docs.
         /// </summary>
-        /// <param name="text"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool TryParse(string text, out DateTime value)
+        public string Format(DateTimeOffset value)
         {
-            var result = false;
-            value = default(DateTime);
+            var result = new StringBuilder("/Date(");
 
-            if(!String.IsNullOrEmpty(text) && long.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var ticks)) {
-                value = UnixEpoch.AddMilliseconds(ticks);
-                result = true;
+            result.Append(
+                (value.UtcDateTime - DateTime_JavaScriptTicks_Parser.UnixEpoch)
+                .TotalMilliseconds
+                .ToString(CultureInfo.InvariantCulture)
+            );
+
+            if(value.Offset != TimeSpan.Zero) {
+                result.Append(value.Offset.TotalMilliseconds > 0 ? '+' : '-');
+                result.Append(Math.Abs(value.Offset.Hours).ToString("00"));
+                result.Append(Math.Abs(value.Offset.Minutes).ToString("00"));
             }
 
-            return result;
+            result.Append(")/");
+
+            return result.ToString();
         }
     }
 }

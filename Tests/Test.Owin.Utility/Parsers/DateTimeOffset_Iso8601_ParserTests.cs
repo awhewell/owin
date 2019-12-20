@@ -20,7 +20,8 @@ namespace Test.AWhewell.Owin.Utility.Parsers
         [DataRow("en-GB", null,                             false,  "0001-01-01 00:00:00.000")]         // Cannot parse null
         [DataRow("en-GB", "rubbish",                        false,  "0001-01-01 00:00:00.000")]         // Cannot parse non-date
         [DataRow("en-GB", "2019-07-01T17:42",               true,   "2019-07-01 17:42:00.000")]         // Missing Z means the time zone is unknown, assume universal
-        [DataRow("en-US", "2019-07-01T17:42+0100",          true,   "2019-07-01 17:42:00.000 +0100")]   // Timezone offset with missing Z assumed to be offset from UTC
+        [DataRow("en-US", "2019-07-01T17:42+01:00",         true,   "2019-07-01 17:42:00.000 +0100")]   // Timezone offset is local
+        [DataRow("en-US", "2019-07-01T17:42+0100",          true,   "2019-07-01 17:42:00.000 +0100")]   // Timezone offset is local, no colon variant
         [DataRow("en-US", "2019-07-01T17:42Z",              true,   "2019-07-01 17:42:00.000")]         // Zulu indicator means it is in UTC
         [DataRow("en-US", "2019-07-01T17:42+0100Z",         false,  "0001-01-01 00:00:00.000")]         // Can't specify both offset from UTC *and* the UTC indicator
         [DataRow("en-GB", "20190701T1742",                  true,   "2019-07-01 17:42:00.000")]         // Variant without separators

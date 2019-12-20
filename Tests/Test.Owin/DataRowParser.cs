@@ -9,6 +9,7 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
@@ -227,6 +228,25 @@ namespace Test.AWhewell.Owin
                 result = DateTimeOffset((string)expected);
             } else if(type == typeof(Guid) || type == typeof(Guid?)) {
                 result = Guid((string)expected);
+            } else if(type != typeof(string) && expected?.GetType() == typeof(string)) {
+                var text = (string)expected;
+                if(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>)) {
+                    type = type.GetGenericArguments()[0];
+                }
+                if(type != typeof(byte[])) {
+                    result = Convert.ChangeType(text, type, CultureInfo.InvariantCulture);
+                } else {
+                    var bytes = new List<byte>();
+                    for(var i = 0;i < text.Length;i += 2) {
+                        bytes.Add(
+                            Convert.ToByte(
+                                text.Substring(i, 2),
+                                16
+                            )
+                        );
+                    }
+                    result = bytes.ToArray();
+                }
             }
 
             return result;
