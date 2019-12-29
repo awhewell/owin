@@ -12,6 +12,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using AWhewell.Owin.Interface.WebApi;
 using AWhewell.Owin.Utility;
@@ -19,6 +20,7 @@ using InterfaceFactory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Test.AWhewell.Owin.WebApi
 {
@@ -121,170 +123,69 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        [DataRow(typeof(DateTime),          true,  nameof(ValueTypes.DateTime),        "2019-01-02",                           "1816-04-21")]
-        [DataRow(typeof(DateTimeOffset),    true,  nameof(ValueTypes.DateTimeOffset),  "2019-01-02",                           "1816-04-21")]
-        [DataRow(typeof(string),            false, nameof(ValueTypes.String),          "Diskopunk",                            "Soaked")]
-        [DataRow(typeof(bool),              false, nameof(ValueTypes.Bool),            false,                                  true)]
-        [DataRow(typeof(byte),              false, nameof(ValueTypes.Byte),            (byte)255,                              (byte)127)]
-        [DataRow(typeof(char),              false, nameof(ValueTypes.Char),            '1',                                    '2')]
-        [DataRow(typeof(Int16),             false, nameof(ValueTypes.Short),           (short)-32768,                          (short)32767)]
-        [DataRow(typeof(UInt16),            false, nameof(ValueTypes.UShort),          (ushort)32767,                          (ushort)7892)]
-        [DataRow(typeof(Int32),             false, nameof(ValueTypes.Int),             -2147483648,                            2147483647)]
-        [DataRow(typeof(UInt32),            false, nameof(ValueTypes.UInt),            4294967295U,                            88U)]
-        [DataRow(typeof(Int64),             false, nameof(ValueTypes.Long),            -9223372036854775808L,                  9223372036854775807L)]
-        [DataRow(typeof(UInt64),            false, nameof(ValueTypes.ULong),           9223372036854775807UL,                  2382UL)]
-        [DataRow(typeof(float),             false, nameof(ValueTypes.Float),           12.342F,                                98.12F)]
-        [DataRow(typeof(double),            false, nameof(ValueTypes.Double),          12.342,                                 98.12)]
-        [DataRow(typeof(decimal),           false, nameof(ValueTypes.Decimal),         "12.342",                               "98.12")]
-        [DataRow(typeof(Guid),              true,  nameof(ValueTypes.Guid),            "48cd065e-f78d-465b-af07-49e3b1b7cc92", "c08f84fd-c572-4bba-94c5-f22804442e62")]
-        [DataRow(typeof(byte[]),            true,  nameof(ValueTypes.ByteArray),       new byte[] { 0x0f, 0x0a, 0x0b },        new byte[] { 99, 100 })]
-        public void Serialise_Uses_Parser_For_Dates_And_Byte_Arrays_But_Not_Json_Spec_Types(Type valueType, bool mustUseParser, string propertyName, object expectedNormalRaw, object expectedCustomRaw)
+        [DataRow(typeof(DateTime),          true,  nameof(ValueTypes.DateTime),        "2019-01-02")]
+        [DataRow(typeof(DateTimeOffset),    true,  nameof(ValueTypes.DateTimeOffset),  "2019-01-02")]
+        [DataRow(typeof(string),            false, nameof(ValueTypes.String),          "Diskopunk")]
+        [DataRow(typeof(bool),              false, nameof(ValueTypes.Bool),            false)]
+        [DataRow(typeof(byte),              false, nameof(ValueTypes.Byte),            (byte)255)]
+        [DataRow(typeof(char),              false, nameof(ValueTypes.Char),            '1')]
+        [DataRow(typeof(Int16),             false, nameof(ValueTypes.Short),           (short)-32768)]
+        [DataRow(typeof(UInt16),            false, nameof(ValueTypes.UShort),          (ushort)32767)]
+        [DataRow(typeof(Int32),             false, nameof(ValueTypes.Int),             -2147483648)]
+        [DataRow(typeof(UInt32),            false, nameof(ValueTypes.UInt),            4294967295U)]
+        [DataRow(typeof(Int64),             false, nameof(ValueTypes.Long),            -9223372036854775808L)]
+        [DataRow(typeof(UInt64),            false, nameof(ValueTypes.ULong),           9223372036854775807UL)]
+        [DataRow(typeof(float),             false, nameof(ValueTypes.Float),           12.342F)]
+        [DataRow(typeof(double),            false, nameof(ValueTypes.Double),          12.342)]
+        [DataRow(typeof(decimal),           false, nameof(ValueTypes.Decimal),         "12.342")]
+        [DataRow(typeof(Guid),              true,  nameof(ValueTypes.Guid),            "48cd065e-f78d-465b-af07-49e3b1b7cc92")]
+        [DataRow(typeof(byte[]),            true,  nameof(ValueTypes.ByteArray),       new byte[] { 0x0f, 0x0a, 0x0b })]
+        public void Serialise_Uses_Formatter_For_Dates_And_Byte_Arrays_But_Not_Json_Spec_Types(Type valueType, bool mustUseFormatter, string propertyName, object originalValueRaw)
         {
-            Mock mockParser = null;
-            var tryParseResult = true;
+            Mock mockFormatter = null;
 
             void createMock<T>(T expectedValue)
             {
-                var mock = MockHelper.CreateMock<ITypeParser<T>>();
-                mock.Setup(r => r.TryParse(It.IsAny<string>(), out expectedValue)).Returns(() => tryParseResult);
-                mockParser = mock;
+                var mock = MockHelper.CreateMock<ITypeFormatter<T>>();
+                mock.Setup(r => r.Format(expectedValue)).Returns("!!!");
+                mockFormatter = mock;
             }
 
-            var expectedNormal = DataRowParser.ConvertExpected(valueType, expectedNormalRaw);
-            var expectedCustom = DataRowParser.ConvertExpected(valueType, expectedCustomRaw);
+            var expectedNormal = DataRowParser.ConvertExpected(valueType, originalValueRaw);
             var valueProperty = typeof(ValueTypes).GetProperty(propertyName);
 
-            if(valueType == typeof(bool))                   createMock<bool>((bool)expectedCustom);
-            else if(valueType == typeof(byte))              createMock<byte>((byte)expectedCustom);
-            else if(valueType == typeof(char))              createMock<char>((char)expectedCustom);
-            else if(valueType == typeof(Int16))             createMock<short>((short)expectedCustom);
-            else if(valueType == typeof(UInt16))            createMock<ushort>((ushort)expectedCustom);
-            else if(valueType == typeof(Int32))             createMock<int>((int)expectedCustom);
-            else if(valueType == typeof(UInt32))            createMock<uint>((uint)expectedCustom);
-            else if(valueType == typeof(Int64))             createMock<long>((long)expectedCustom);
-            else if(valueType == typeof(UInt64))            createMock<ulong>((ulong)expectedCustom);
-            else if(valueType == typeof(float))             createMock<float>((float)expectedCustom);
-            else if(valueType == typeof(double))            createMock<double>((double)expectedCustom);
-            else if(valueType == typeof(decimal))           createMock<decimal>((decimal)expectedCustom);
-            else if(valueType == typeof(DateTime))          createMock<DateTime>((DateTime)expectedCustom);
-            else if(valueType == typeof(DateTimeOffset))    createMock<DateTimeOffset>((DateTimeOffset)expectedCustom);
-            else if(valueType == typeof(Guid))              createMock<Guid>((Guid)expectedCustom);
-            else if(valueType == typeof(string))            createMock<string>((string)expectedCustom);
-            else if(valueType == typeof(byte[]))            createMock<byte[]>((byte[])expectedCustom);
+            if(valueType == typeof(bool))                   createMock<bool>((bool)expectedNormal);
+            else if(valueType == typeof(byte))              createMock<byte>((byte)expectedNormal);
+            else if(valueType == typeof(char))              createMock<char>((char)expectedNormal);
+            else if(valueType == typeof(Int16))             createMock<short>((short)expectedNormal);
+            else if(valueType == typeof(UInt16))            createMock<ushort>((ushort)expectedNormal);
+            else if(valueType == typeof(Int32))             createMock<int>((int)expectedNormal);
+            else if(valueType == typeof(UInt32))            createMock<uint>((uint)expectedNormal);
+            else if(valueType == typeof(Int64))             createMock<long>((long)expectedNormal);
+            else if(valueType == typeof(UInt64))            createMock<ulong>((ulong)expectedNormal);
+            else if(valueType == typeof(float))             createMock<float>((float)expectedNormal);
+            else if(valueType == typeof(double))            createMock<double>((double)expectedNormal);
+            else if(valueType == typeof(decimal))           createMock<decimal>((decimal)expectedNormal);
+            else if(valueType == typeof(DateTime))          createMock<DateTime>((DateTime)expectedNormal);
+            else if(valueType == typeof(DateTimeOffset))    createMock<DateTimeOffset>((DateTimeOffset)expectedNormal);
+            else if(valueType == typeof(Guid))              createMock<Guid>((Guid)expectedNormal);
+            else if(valueType == typeof(string))            createMock<string>((string)expectedNormal);
+            else if(valueType == typeof(byte[]))            createMock<byte[]>((byte[])expectedNormal);
             else                                            throw new NotImplementedException();
 
-            var typeResolver = new TypeParserResolver((ITypeParser)mockParser.Object);
+            var typeResolver = new TypeFormatterResolver((ITypeFormatter)mockFormatter.Object);
 
             var originalInstance = new ValueTypes();
             valueProperty.SetValue(originalInstance, expectedNormal);
 
             var jsonText = _Serialiser.Serialise(originalInstance, typeResolver);
+            var jObject = JObject.Parse(jsonText);
+            var jProperty = jObject.Property(propertyName);
 
-            var deserialisedInstance = JsonConvert.DeserializeObject<ValueTypes>(jsonText);
-            var actual = valueProperty.GetValue(deserialisedInstance, null);
-
-            if(mustUseParser) {
-                Assertions.AreEqual(expectedCustom, actual);
+            if(mustUseFormatter) {
+                Assert.AreEqual("!!!", jProperty.Value.ToString());
             } else {
-                Assertions.AreEqual(expectedNormal, actual);
-            }
-        }
-
-        [TestMethod]
-        public void Deserialise_Can_Deserialise_Vanilla_ValueTypes_Json()
-        {
-            var originalObj = new ValueTypes() {
-                Bool = true,
-                Byte = 1,
-                ByteArray = new byte[] { 1, 2, 3, 4, 5 },
-                Char = '2',
-                DateTime = new DateTime(2019, 9, 8, 7, 6, 5, 432),
-                DateTimeOffset = new DateTimeOffset(2011, 2, 3, 4, 5, 6, 789, new TimeSpan(7, 30, 0)),
-                Decimal = 3.456M,
-                Double = 4.567,
-                Float = 5.678F,
-                Guid = Guid.Parse("77FDC6F0-B033-4069-A78A-E02C2E6EAE92"),
-                Int = 6,
-                Long = 7L,
-                Short = 8,
-                String = "Hello World!",
-                UInt = 9,
-                ULong = 10,
-                UShort = 11,
-            };
-            var json = JsonConvert.SerializeObject(originalObj, Formatting.Indented);
-
-            var deserialised = _Serialiser.Deserialise(typeof(ValueTypes), null, json);
-
-            Assert.AreEqual(originalObj, deserialised);
-        }
-
-        [TestMethod]
-        [DataRow(typeof(DateTime),          true,  nameof(ValueTypes.DateTime),        "2019-01-02",                           "1816-04-21")]
-        [DataRow(typeof(DateTimeOffset),    true,  nameof(ValueTypes.DateTimeOffset),  "2019-01-02",                           "1816-04-21")]
-        [DataRow(typeof(string),            false, nameof(ValueTypes.String),          "Diskopunk",                            "Soaked")]
-        [DataRow(typeof(bool),              false, nameof(ValueTypes.Bool),            false,                                  true)]
-        [DataRow(typeof(byte),              false, nameof(ValueTypes.Byte),            (byte)255,                              (byte)127)]
-        [DataRow(typeof(char),              false, nameof(ValueTypes.Char),            '1',                                    '2')]
-        [DataRow(typeof(Int16),             false, nameof(ValueTypes.Short),           (short)-32768,                          (short)32767)]
-        [DataRow(typeof(UInt16),            false, nameof(ValueTypes.UShort),          (ushort)32767,                          (ushort)7892)]
-        [DataRow(typeof(Int32),             false, nameof(ValueTypes.Int),             -2147483648,                            2147483647)]
-        [DataRow(typeof(UInt32),            false, nameof(ValueTypes.UInt),            4294967295U,                            88U)]
-        [DataRow(typeof(Int64),             false, nameof(ValueTypes.Long),            -9223372036854775808L,                  9223372036854775807L)]
-        [DataRow(typeof(UInt64),            false, nameof(ValueTypes.ULong),           9223372036854775807UL,                  2382UL)]
-        [DataRow(typeof(float),             false, nameof(ValueTypes.Float),           12.342F,                                98.12F)]
-        [DataRow(typeof(double),            false, nameof(ValueTypes.Double),          12.342,                                 98.12)]
-        [DataRow(typeof(decimal),           false, nameof(ValueTypes.Decimal),         "12.342",                               "98.12")]
-        [DataRow(typeof(Guid),              true,  nameof(ValueTypes.Guid),            "48cd065e-f78d-465b-af07-49e3b1b7cc92", "c08f84fd-c572-4bba-94c5-f22804442e62")]
-        [DataRow(typeof(byte[]),            true,  nameof(ValueTypes.ByteArray),       new byte[] { 0x0f, 0x0a, 0x0b },        new byte[] { 99, 100 })]
-        public void Deserialise_Uses_Parser_For_Dates_And_Byte_Arrays_But_Not_Json_Spec_Types(Type valueType, bool mustUseParser, string propertyName, object expectedNormalRaw, object expectedCustomRaw)
-        {
-            Mock mockParser = null;
-            var tryParseResult = true;
-
-            void createMock<T>(T expectedValue)
-            {
-                var mock = MockHelper.CreateMock<ITypeParser<T>>();
-                mock.Setup(r => r.TryParse(It.IsAny<string>(), out expectedValue)).Returns(() => tryParseResult);
-                mockParser = mock;
-            }
-
-            var expectedNormal = DataRowParser.ConvertExpected(valueType, expectedNormalRaw);
-            var expectedCustom = DataRowParser.ConvertExpected(valueType, expectedCustomRaw);
-            var valueProperty = typeof(ValueTypes).GetProperty(propertyName);
-
-            if(valueType == typeof(bool))                   createMock<bool>((bool)expectedCustom);
-            else if(valueType == typeof(byte))              createMock<byte>((byte)expectedCustom);
-            else if(valueType == typeof(char))              createMock<char>((char)expectedCustom);
-            else if(valueType == typeof(Int16))             createMock<short>((short)expectedCustom);
-            else if(valueType == typeof(UInt16))            createMock<ushort>((ushort)expectedCustom);
-            else if(valueType == typeof(Int32))             createMock<int>((int)expectedCustom);
-            else if(valueType == typeof(UInt32))            createMock<uint>((uint)expectedCustom);
-            else if(valueType == typeof(Int64))             createMock<long>((long)expectedCustom);
-            else if(valueType == typeof(UInt64))            createMock<ulong>((ulong)expectedCustom);
-            else if(valueType == typeof(float))             createMock<float>((float)expectedCustom);
-            else if(valueType == typeof(double))            createMock<double>((double)expectedCustom);
-            else if(valueType == typeof(decimal))           createMock<decimal>((decimal)expectedCustom);
-            else if(valueType == typeof(DateTime))          createMock<DateTime>((DateTime)expectedCustom);
-            else if(valueType == typeof(DateTimeOffset))    createMock<DateTimeOffset>((DateTimeOffset)expectedCustom);
-            else if(valueType == typeof(Guid))              createMock<Guid>((Guid)expectedCustom);
-            else if(valueType == typeof(string))            createMock<string>((string)expectedCustom);
-            else if(valueType == typeof(byte[]))            createMock<byte[]>((byte[])expectedCustom);
-            else                                            throw new NotImplementedException();
-
-            var typeResolver = new TypeParserResolver((ITypeParser)mockParser.Object);
-
-            var originalInstance = new ValueTypes();
-            valueProperty.SetValue(originalInstance, expectedNormal);
-            var jsonText = JsonConvert.SerializeObject(originalInstance, Formatting.Indented);
-
-            var deserialisedInstance = _Serialiser.Deserialise(typeof(ValueTypes), typeResolver, jsonText);
-            var actual = valueProperty.GetValue(deserialisedInstance, null);
-
-            if(mustUseParser) {
-                Assertions.AreEqual(expectedCustom, actual);
-            } else {
-                Assertions.AreEqual(expectedNormal, actual);
+                Assert.AreEqual(expectedNormal, jProperty.Value.ToObject(valueProperty.PropertyType));
             }
         }
     }

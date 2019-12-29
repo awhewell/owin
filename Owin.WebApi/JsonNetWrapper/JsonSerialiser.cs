@@ -26,9 +26,12 @@ namespace AWhewell.Owin.WebApi.JsonNetWrapper
         /// <param name="obj"></param>
         /// <param name="resolver"></param>
         /// <returns></returns>
-        public string Serialise(object obj, TypeParserResolver resolver)
+        public string Serialise(object obj, TypeFormatterResolver resolver)
         {
-            return JsonConvert.SerializeObject(obj);
+            return JsonConvert.SerializeObject(
+                obj,
+                JsonSerialiserSettingsCache.Fetch(resolver)
+            );
         }
 
         /// <summary>

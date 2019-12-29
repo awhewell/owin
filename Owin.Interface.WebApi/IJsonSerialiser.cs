@@ -25,7 +25,7 @@ namespace AWhewell.Owin.Interface.WebApi
         /// <param name="obj"></param>
         /// <param name="resolver"></param>
         /// <returns></returns>
-        string Serialise(object obj, TypeParserResolver resolver);
+        string Serialise(object obj, TypeFormatterResolver resolver);
 
         /// <summary>
         /// Deserialises JSON text into an object hierarchy using the resolver passed across. The resolver
