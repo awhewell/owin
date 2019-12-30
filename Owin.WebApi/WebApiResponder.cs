@@ -1,4 +1,4 @@
-// Copyright © 2019 onwards, Andrew Whewell
+﻿// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -8,31 +8,46 @@
 //
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+using System;
+using System.Collections.Generic;
+using System.Text;
+using AWhewell.Owin.Interface.WebApi;
+using AWhewell.Owin.Utility;
 using InterfaceFactory;
 
 namespace AWhewell.Owin.WebApi
 {
     /// <summary>
-    /// Registers implementations of interfaces with the interface factory.
+    /// The default implementation of <see cref="IWebApiResponder"/>.
     /// </summary>
-    public static class Implementations
+    class WebApiResponder : IWebApiResponder
     {
         /// <summary>
-        /// Registers implementations.
+        /// The object that does all the serialisation to JSON for us.
         /// </summary>
-        /// <param name="factory"></param>
-        public static void Register(IClassFactory factory)
-        {
-            factory.Register<AWhewell.Owin.Interface.WebApi.IAppDomainWrapper, AppDomainWrapper>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IControllerFinder, ControllerFinder>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IModelBuilder, ModelBuilder>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IRouteCaller, RouteCaller>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IRouteFinder, RouteFinder>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IRouteMapper, RouteMapper>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IWebApiMiddleware, WebApiMiddleware>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IWebApiResponder, WebApiResponder>();
+        private IJsonSerialiser _JsonSerialiser;
 
-            factory.Register<AWhewell.Owin.Interface.WebApi.IJsonSerialiser, JsonNetWrapper.JsonSerialiser>();
+        /// <summary>
+        /// Creates a new object.
+        /// </summary>
+        public WebApiResponder()
+        {
+            _JsonSerialiser = Factory.Resolve<IJsonSerialiser>();
+        }
+
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        /// <param name="owinEnvironment"></param>
+        /// <param name="obj"></param>
+        /// <param name="resolver"></param>
+        public void ReturnJsonObject(IDictionary<string, object> owinEnvironment, object obj, TypeFormatterResolver resolver)
+        {
+            var context = OwinContext.Create(owinEnvironment);
+            var jsonText = _JsonSerialiser.Serialise(obj, resolver);
+
+            // TODO: port the MIME stuff from VRS
+            context.ReturnText(jsonText, Encoding.UTF8, "application/json");
         }
     }
 }

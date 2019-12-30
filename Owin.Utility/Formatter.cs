@@ -517,6 +517,7 @@ namespace AWhewell.Owin.Utility
         /// <returns></returns>
         public static HttpMethod FormatHttpMethod(string httpMethod)
         {
+            // TODO: needs writing...
             switch((httpMethod ?? "").Trim().ToUpper()) {
                 case "CONNECT":     return HttpMethod.Connect;
                 case "DELETE":      return HttpMethod.Delete;
@@ -538,6 +539,7 @@ namespace AWhewell.Owin.Utility
         /// <returns></returns>
         public static HttpProtocol FormatHttpProtocol(string httpProtocol)
         {
+            // TODO: needs writing...
             switch((httpProtocol ?? "").Trim().ToUpper()) {
                 case "HTTP/0.9":    return HttpProtocol.Http0_9;
                 case "HTTP/1.0":    return HttpProtocol.Http1_0;
@@ -555,6 +557,7 @@ namespace AWhewell.Owin.Utility
         /// <returns></returns>
         public static HttpScheme FormatHttpScheme(string httpScheme)
         {
+            // TODO: needs writing...
             switch((httpScheme ?? "").Trim().ToLower()) {
                 case "http":    return HttpScheme.Http;
                 case "https":   return HttpScheme.Https;
@@ -569,6 +572,7 @@ namespace AWhewell.Owin.Utility
         /// <returns></returns>
         public static MediaType FormatMediaType(string mediaType)
         {
+            // TODO: needs writing...
             switch((mediaType ?? "").Trim().ToLower()) {
                 case "application/javascript":              return MediaType.JavaScript;
                 case "application/json":                    return MediaType.Json;
@@ -589,6 +593,7 @@ namespace AWhewell.Owin.Utility
         /// <returns></returns>
         public static Encoding FormatCharset(string charset)
         {
+            // TODO: needs writing...
             Encoding result = Encoding.UTF8;
 
             if(!String.IsNullOrEmpty(charset)) {

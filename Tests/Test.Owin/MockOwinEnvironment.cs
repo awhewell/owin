@@ -95,6 +95,21 @@ namespace Test.AWhewell.Owin
         public byte[] ResponseBodyBytes => _ResponseBodyStream.ToArray();
 
         /// <summary>
+        /// Gets the response body as a string whose encoding is either UTF-8 or extracted
+        /// from the content type and whose length is as per the content length header.
+        /// </summary>
+        public string ResponseBodyText
+        {
+            get {
+                var contentType = ResponseHeadersDictionary.ContentTypeValue;
+                var encoding = Parser.ParseCharset(contentType?.Charset);
+                var length = (int)(ResponseHeadersDictionary.ContentLength ?? 0L);
+
+                return encoding.GetString(ResponseBodyBytes, 0, length);
+            }
+        }
+
+        /// <summary>
         /// Gets the response status code or null if none has been set.
         /// </summary>
         public int? ResponseStatusCode => Environment[EnvironmentKey.ResponseStatusCode] as int?;

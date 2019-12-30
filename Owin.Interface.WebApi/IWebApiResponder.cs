@@ -1,4 +1,4 @@
-// Copyright © 2019 onwards, Andrew Whewell
+﻿// Copyright © 2019 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -8,31 +8,22 @@
 //
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using InterfaceFactory;
+using System.Collections.Generic;
+using AWhewell.Owin.Utility;
 
-namespace AWhewell.Owin.WebApi
+namespace AWhewell.Owin.Interface.WebApi
 {
     /// <summary>
-    /// Registers implementations of interfaces with the interface factory.
+    /// The interface for type-safe objects that send web API responses back to the client.
     /// </summary>
-    public static class Implementations
+    public interface IWebApiResponder
     {
         /// <summary>
-        /// Registers implementations.
+        /// Returns the object passed across. The format of the response is always JSON.
         /// </summary>
-        /// <param name="factory"></param>
-        public static void Register(IClassFactory factory)
-        {
-            factory.Register<AWhewell.Owin.Interface.WebApi.IAppDomainWrapper, AppDomainWrapper>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IControllerFinder, ControllerFinder>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IModelBuilder, ModelBuilder>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IRouteCaller, RouteCaller>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IRouteFinder, RouteFinder>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IRouteMapper, RouteMapper>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IWebApiMiddleware, WebApiMiddleware>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IWebApiResponder, WebApiResponder>();
-
-            factory.Register<AWhewell.Owin.Interface.WebApi.IJsonSerialiser, JsonNetWrapper.JsonSerialiser>();
-        }
+        /// <param name="owinEnvironment">The OWIN environment to populate with the response.</param>
+        /// <param name="obj">The object to return. If this is null then the body is set to the word 'null'.</param>
+        /// <param name="resolver"></param>
+        void ReturnJsonObject(IDictionary<string, object> owinEnvironment, object obj, TypeFormatterResolver resolver);
     }
 }
