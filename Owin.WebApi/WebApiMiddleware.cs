@@ -73,9 +73,8 @@ namespace AWhewell.Owin.WebApi
                     environment[EnvironmentKey.ResponseStatusCode] = 400;
                     if(parameters.IsValid) {
                         var result = routeCaller.CallRoute(environment, route, parameters);
-                        // TODO: Handle void methods correctly, they should not write to the body
                         // TODO: Add support for formatters
-                        responder.ReturnJsonObject(environment, result, null);
+                        responder.ReturnJsonObject(environment, route, result, null);
                     }
                 }
 

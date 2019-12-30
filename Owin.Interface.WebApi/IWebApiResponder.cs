@@ -22,8 +22,9 @@ namespace AWhewell.Owin.Interface.WebApi
         /// Returns the object passed across. The format of the response is always JSON.
         /// </summary>
         /// <param name="owinEnvironment">The OWIN environment to populate with the response.</param>
-        /// <param name="obj">The object to return. If this is null then the body is set to the word 'null'.</param>
+        /// <param name="route">The route that was called to obtain the <paramref name="obj"/>.</param>
+        /// <param name="obj">The object to return. If this is null then the body is set to the word 'null' unless it is a void route.</param>
         /// <param name="resolver"></param>
-        void ReturnJsonObject(IDictionary<string, object> owinEnvironment, object obj, TypeFormatterResolver resolver);
+        void ReturnJsonObject(IDictionary<string, object> owinEnvironment, Route route, object obj, TypeFormatterResolver resolver);
     }
 }

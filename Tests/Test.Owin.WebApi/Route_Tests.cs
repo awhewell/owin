@@ -49,6 +49,9 @@ namespace Test.AWhewell.Owin.WebApi
 
             [Route("duplicate-methods-not-allowed"), HttpGet, HttpPost]
             public int Duplicate_Methods_Not_Allowed() { return 200; }
+
+            [Route("void-method"), HttpGet]
+            public void Void_Method() { ; }
         }
 
         public static Route CreateRoute(Type controllerNativeType, string methodName, string choosePath = null, TypeParserResolver resolver = null)
@@ -114,6 +117,22 @@ namespace Test.AWhewell.Owin.WebApi
             var route = CreateRoute<Controller>(nameof(Controller.Duplicate_Methods_Not_Allowed));
 
             Assert.AreEqual(HttpMethod.Unknown, route.HttpMethod);
+        }
+
+        [TestMethod]
+        public void Ctor_Sets_IsVoidMethod_For_Void_Methods()
+        {
+            var route = CreateRoute<Controller>(nameof(Controller.Void_Method));
+
+            Assert.IsTrue(route.IsVoidMethod);
+        }
+
+        [TestMethod]
+        public void Ctor_Clears_IsVoidMethod_For_Non_Void_Methods()
+        {
+            var route = CreateRoute<Controller>(nameof(Controller.Get));
+
+            Assert.IsFalse(route.IsVoidMethod);
         }
 
         public class NullRoute : Controller         { [HttpGet, Route(null)]                public int Method() { return 1; } }

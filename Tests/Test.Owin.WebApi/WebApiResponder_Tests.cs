@@ -27,6 +27,17 @@ namespace Test.AWhewell.Owin.WebApi
             public string Format(Guid value) => value.ToString().ToUpper().Replace("-", "");
         }
 
+        class Controller : IApiController
+        {
+            public IDictionary<string, object> OwinEnvironment { get; set; }
+
+            [Route("int")]
+            public int IntMethod() { return 0; }
+
+            [Route("void")]
+            public void VoidMethod() { ; }
+        }
+
         private IClassFactory       _Snapshot;
 
         private IWebApiResponder    _Responder;
@@ -62,10 +73,12 @@ namespace Test.AWhewell.Owin.WebApi
         [DataRow(typeof(Guid),              "c151f1a8-d235-4f28-8c0d-5521a768be9e", "\"c151f1a8-d235-4f28-8c0d-5521a768be9e\"")]
         public void ReturnJsonObject_Returns_Simple_Values_Correctly(Type type, object value, string expectedBody)
         {
+            var route = Route_Tests.CreateRoute<Controller>(nameof(Controller.IntMethod));
+
             using(new CultureSwap("en-GB")) {
                 var parsedValue = DataRowParser.ConvertExpected(type, value);
 
-                _Responder.ReturnJsonObject(_Environment.Environment, parsedValue, null);
+                _Responder.ReturnJsonObject(_Environment.Environment, route, parsedValue, null);
 
                 Assert.AreEqual("application/json; charset=utf-8",                          _Environment.ResponseHeadersDictionary["Content-Type"]);
                 Assert.AreEqual(expectedBody.Length.ToString(CultureInfo.InvariantCulture), _Environment.ResponseHeadersDictionary["Content-Length"]);
@@ -76,13 +89,27 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void ReturnJsonObject_Uses_Formatter_If_Supplied()
         {
+            var route = Route_Tests.CreateRoute<Controller>(nameof(Controller.IntMethod));
             var guid = Guid.Parse("c151f1a8-d235-4f28-8c0d-5521a768be9e");
             var resolver = TypeFormatterResolverCache.Find(new Guid_UpperNoHyphens_Formatter());
 
-            _Responder.ReturnJsonObject(_Environment.Environment, guid, resolver);
+            _Responder.ReturnJsonObject(_Environment.Environment, route, guid, resolver);
 
             var actual = _Environment.ResponseBodyText;
             Assert.AreEqual("\"C151F1A8D2354F288C0D5521A768BE9E\"", actual);
+        }
+
+        [TestMethod]
+        public void ReturnJsonObject_Does_Not_Write_To_Body_For_Void_Routes()
+        {
+            var route = Route_Tests.CreateRoute<Controller>(nameof(Controller.VoidMethod));
+            var value = 1;
+
+            _Responder.ReturnJsonObject(_Environment.Environment, route, value, null);
+
+            Assert.IsNull(_Environment.ResponseHeadersDictionary["Content-Type"]);
+            Assert.IsNull(_Environment.ResponseHeadersDictionary["Content-Length"]);
+            Assert.AreEqual(0, _Environment.ResponseBodyBytes.Length);
         }
     }
 }

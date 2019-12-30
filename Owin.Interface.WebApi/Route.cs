@@ -42,6 +42,11 @@ namespace AWhewell.Owin.Interface.WebApi
         public MethodInfo Method { get; }
 
         /// <summary>
+        /// Gets a value indicating that the <see cref="Method"/> has no result.
+        /// </summary>
+        public bool IsVoidMethod => Method?.ReturnType == typeof(void);
+
+        /// <summary>
         /// Gets all of the parameters to the method in the order that they are passed.
         /// </summary>
         public MethodParameter[] MethodParameters { get; }
