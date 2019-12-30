@@ -41,11 +41,10 @@ namespace AWhewell.Owin.WebApi
         /// <param name="owinEnvironment"></param>
         /// <param name="route"></param>
         /// <param name="obj"></param>
-        /// <param name="resolver"></param>
-        public void ReturnJsonObject(IDictionary<string, object> owinEnvironment, Route route, object obj, TypeFormatterResolver resolver)
+        public void ReturnJsonObject(IDictionary<string, object> owinEnvironment, Route route, object obj)
         {
             if(!route.IsVoidMethod) {
-                var jsonText = _JsonSerialiser.Serialise(obj, resolver);
+                var jsonText = _JsonSerialiser.Serialise(obj, route.TypeFormatterResolver);
 
                 // TODO: port the MIME stuff from VRS
                 var context = OwinContext.Create(owinEnvironment);

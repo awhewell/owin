@@ -58,6 +58,12 @@ namespace AWhewell.Owin.Interface.WebApi
         public TypeParserResolver TypeParserResolver { get; }
 
         /// <summary>
+        /// Gets the type formatter resolver to use when formatting responses from the method. This will be
+        /// null if the default formatters are to be used.
+        /// </summary>
+        public TypeFormatterResolver TypeFormatterResolver { get; }
+
+        /// <summary>
         /// Gets the attribute that denotes the controller and method as an API endpoint.
         /// </summary>
         public RouteAttribute RouteAttribute { get; }
@@ -91,13 +97,14 @@ namespace AWhewell.Owin.Interface.WebApi
         public Route(ControllerType controllerType, MethodInfo method, RouteAttribute routeAttribute) : this()
         {
             ControllerType = controllerType;
-            Method = method;
+            Method =         method;
             RouteAttribute = routeAttribute;
 
-            TypeParserResolver = BuildTypeParserResolver(controllerType, method);
-            MethodParameters = ExtractMethodParameters(method, TypeParserResolver);
-            HttpMethod = ExtractHttpMethod(method);
-            PathParts = ExtractPathParts(MethodParameters, routeAttribute);
+            TypeParserResolver =    BuildTypeParserResolver(controllerType, method);
+            TypeFormatterResolver = BuildTypeFormatterResolver(controllerType, method);
+            MethodParameters =      ExtractMethodParameters(method, TypeParserResolver);
+            HttpMethod =            ExtractHttpMethod(method);
+            PathParts =             ExtractPathParts(MethodParameters, routeAttribute);
 
             ID = Interlocked.Increment(ref _NextID);
         }
@@ -110,6 +117,16 @@ namespace AWhewell.Owin.Interface.WebApi
                 .LastOrDefault();
 
             return UseParserAttribute.ToTypeParserResolver(useParserAttribute, controllerType.TypeParserResolver);
+        }
+
+        private TypeFormatterResolver BuildTypeFormatterResolver(ControllerType controllerType, MethodInfo method)
+        {
+            var useFormatterAttribute = method
+                .GetCustomAttributes(inherit: true)
+                .OfType<UseFormatterAttribute>()
+                .LastOrDefault();
+
+            return UseFormatterAttribute.ToTypeFormatterResolver(useFormatterAttribute, controllerType.TypeFormatterResolver);
         }
 
         private MethodParameter[] ExtractMethodParameters(MethodInfo method, TypeParserResolver methodTypeParserResolver)

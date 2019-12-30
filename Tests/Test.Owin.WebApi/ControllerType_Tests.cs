@@ -14,6 +14,7 @@ using System.Linq;
 using System.Text;
 using AWhewell.Owin.Interface.WebApi;
 using AWhewell.Owin.Utility;
+using AWhewell.Owin.Utility.Formatters;
 using AWhewell.Owin.Utility.Parsers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -33,10 +34,16 @@ namespace Test.AWhewell.Owin.WebApi
             public IDictionary<string, object> OwinEnvironment { get; set; }
         }
 
+        [UseFormatter(typeof(DateTime_Iso8601_Formatter), typeof(DateTimeOffset_Iso8601_Formatter))]
+        public class SampleController3 : IApiController
+        {
+            public IDictionary<string, object> OwinEnvironment { get; set; }
+        }
+
         [TestMethod]
         public void Ctor_Fills_Type_Correctly()
         {
-            var ctype = new ControllerType(typeof(SampleController1), null);
+            var ctype = new ControllerType(typeof(SampleController1), null, null);
 
             Assert.AreEqual(typeof(SampleController1), ctype.Type);
         }
@@ -44,12 +51,23 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void Ctor_Fills_TypeParserResolver_Correctly()
         {
-            var ctype1 = new ControllerType(typeof(SampleController1), null);
-            var ctype2 = new ControllerType(typeof(SampleController2), null);
+            var ctype1 = new ControllerType(typeof(SampleController1), null, null);
+            var ctype2 = new ControllerType(typeof(SampleController2), null, null);
 
             Assert.IsNull(ctype1.TypeParserResolver);
             Assert.IsNotNull(ctype2.TypeParserResolver);
             Assert.IsInstanceOfType(ctype2.TypeParserResolver.Find<DateTime>(), typeof(DateTime_Iso8601_Parser));
+        }
+
+        [TestMethod]
+        public void Ctor_Fills_TypeFormatterResolver_Correctly()
+        {
+            var ctype1 = new ControllerType(typeof(SampleController1), null, null);
+            var ctype2 = new ControllerType(typeof(SampleController3), null, null);
+
+            Assert.IsNull(ctype1.TypeFormatterResolver);
+            Assert.IsNotNull(ctype2.TypeFormatterResolver);
+            Assert.IsInstanceOfType(ctype2.TypeFormatterResolver.Find<DateTime>(), typeof(DateTime_Iso8601_Formatter));
         }
 
         [TestMethod]
@@ -60,7 +78,7 @@ namespace Test.AWhewell.Owin.WebApi
                 new DateTime_Local_Parser()
             );
 
-            var controllerType = new ControllerType(typeof(SampleController1), defaultResolver);
+            var controllerType = new ControllerType(typeof(SampleController1), defaultResolver, null);
 
             var parsers = controllerType.TypeParserResolver.GetParsers();
             Assert.AreEqual(2, parsers.Length);
@@ -69,20 +87,53 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
+        public void Ctor_Uses_Default_TypeFormatterResolver_When_No_Overrides_Supplied()
+        {
+            var defaultResolver = new TypeFormatterResolver(
+                new ByteArray_HexString_Formatter(),
+                new DateTime_MicrosoftJson_Formatter()
+            );
+
+            var controllerType = new ControllerType(typeof(SampleController1), null, defaultResolver);
+
+            var formatters = controllerType.TypeFormatterResolver.GetFormatters();
+            Assert.AreEqual(2, formatters.Length);
+            Assert.IsTrue(formatters.Any(r => r.GetType() == typeof(ByteArray_HexString_Formatter)));
+            Assert.IsTrue(formatters.Any(r => r.GetType() == typeof(DateTime_MicrosoftJson_Formatter)));
+        }
+
+        [TestMethod]
         public void Ctor_Applies_Overrides_Default_TypeParserResolver()
         {
             var defaultResolver = new TypeParserResolver(
-                new ByteArray_Mime64_Parser(),
+                new ByteArray_HexString_Parser(),
                 new DateTime_Local_Parser()
             );
 
-            var controllerType = new ControllerType(typeof(SampleController2), defaultResolver);
+            var controllerType = new ControllerType(typeof(SampleController2), defaultResolver, null);
 
             var parsers = controllerType.TypeParserResolver.GetParsers();
             Assert.AreEqual(3, parsers.Length);
-            Assert.IsTrue(parsers.Any(r => r.GetType() == typeof(ByteArray_Mime64_Parser)));
+            Assert.IsTrue(parsers.Any(r => r.GetType() == typeof(ByteArray_HexString_Parser)));
             Assert.IsTrue(parsers.Any(r => r.GetType() == typeof(DateTime_Iso8601_Parser)));
             Assert.IsTrue(parsers.Any(r => r.GetType() == typeof(DateTimeOffset_Iso8601_Parser)));
+        }
+
+        [TestMethod]
+        public void Ctor_Applies_Overrides_Default_TypeFormatterResolver()
+        {
+            var defaultResolver = new TypeFormatterResolver(
+                new ByteArray_HexString_Formatter(),
+                new DateTime_MicrosoftJson_Formatter()
+            );
+
+            var controllerType = new ControllerType(typeof(SampleController3), null, defaultResolver);
+
+            var formatters = controllerType.TypeFormatterResolver.GetFormatters();
+            Assert.AreEqual(3, formatters.Length);
+            Assert.IsTrue(formatters.Any(r => r.GetType() == typeof(ByteArray_HexString_Formatter)));
+            Assert.IsTrue(formatters.Any(r => r.GetType() == typeof(DateTime_Iso8601_Formatter)));
+            Assert.IsTrue(formatters.Any(r => r.GetType() == typeof(DateTimeOffset_Iso8601_Formatter)));
         }
     }
 }

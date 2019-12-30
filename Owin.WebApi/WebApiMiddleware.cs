@@ -43,12 +43,18 @@ namespace AWhewell.Owin.WebApi
         /// <summary>
         /// See interface docs.
         /// </summary>
+        public IList<ITypeFormatter> DefaultFormatters { get; } = new List<ITypeFormatter>();
+
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
         /// <param name="next"></param>
         /// <returns></returns>
         public AppFunc CreateMiddleware(AppFunc next)
         {
             var controllerFinder = Factory.Resolve<IControllerFinder>();
-            controllerFinder.DefaultTypeParserResolver = TypeParserResolverCache.Find(DefaultParsers.ToArray());
+            controllerFinder.DefaultTypeParserResolver =    TypeParserResolverCache.Find(DefaultParsers.ToArray());
+            controllerFinder.DefaultTypeFormatterResolver = TypeFormatterResolverCache.Find(DefaultFormatters.ToArray());
             var controllerTypes = controllerFinder.DiscoverControllers();
 
             var routeFinder = Factory.Resolve<IRouteFinder>();
@@ -64,6 +70,7 @@ namespace AWhewell.Owin.WebApi
 
             // TODO: Think about / implement exception handling
             // TODO: Permissions
+            // TODO: Route object should be available to route method via environment so that route methods can use IWebApiResponder
 
             return async(IDictionary<string, object> environment) =>
             {
@@ -73,8 +80,7 @@ namespace AWhewell.Owin.WebApi
                     environment[EnvironmentKey.ResponseStatusCode] = 400;
                     if(parameters.IsValid) {
                         var result = routeCaller.CallRoute(environment, route, parameters);
-                        // TODO: Add support for formatters
-                        responder.ReturnJsonObject(environment, route, result, null);
+                        responder.ReturnJsonObject(environment, route, result);
                     }
                 }
 

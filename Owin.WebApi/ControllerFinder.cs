@@ -32,6 +32,11 @@ namespace AWhewell.Owin.WebApi
         /// <summary>
         /// See interface docs.
         /// </summary>
+        public TypeFormatterResolver DefaultTypeFormatterResolver { get; set; }
+
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
         public IEnumerable<ControllerType> DiscoverControllers()
         {
             var appDomainWrapper = Factory.Resolve<IAppDomainWrapper>();
@@ -42,7 +47,7 @@ namespace AWhewell.Owin.WebApi
                         iface == typeof(IApiController)
                     )
                 )
-                .Select(r => new ControllerType(r, DefaultTypeParserResolver))
+                .Select(r => new ControllerType(r, DefaultTypeParserResolver, DefaultTypeFormatterResolver))
                 .ToArray();
         }
     }

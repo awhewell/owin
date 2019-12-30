@@ -16,6 +16,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AWhewell.Owin.Interface.WebApi;
 using AWhewell.Owin.Utility;
 using AWhewell.Owin.Utility.Parsers;
+using AWhewell.Owin.Utility.Formatters;
 
 namespace Test.AWhewell.Owin.WebApi
 {
@@ -54,9 +55,9 @@ namespace Test.AWhewell.Owin.WebApi
             public void Void_Method() { ; }
         }
 
-        public static Route CreateRoute(Type controllerNativeType, string methodName, string choosePath = null, TypeParserResolver resolver = null)
+        public static Route CreateRoute(Type controllerNativeType, string methodName, string choosePath = null, TypeParserResolver parserResolver = null, TypeFormatterResolver formatterResolver = null)
         {
-            var controllerType = new ControllerType(controllerNativeType, resolver);
+            var controllerType = new ControllerType(controllerNativeType, parserResolver, formatterResolver);
             var method = controllerNativeType.GetMethod(methodName);
             var routeAttributes = method.GetCustomAttributes(inherit: false).OfType<RouteAttribute>().ToArray();
             var routeAttribute = routeAttributes.Length == 1
@@ -66,9 +67,9 @@ namespace Test.AWhewell.Owin.WebApi
             return new Route(controllerType, method, routeAttribute);
         }
 
-        public static Route CreateRoute<T>(string methodName, string choosePath = null, TypeParserResolver resolver = null)
+        public static Route CreateRoute<T>(string methodName, string choosePath = null, TypeParserResolver parserResolver = null, TypeFormatterResolver formatterResolver = null)
         {
-            return CreateRoute(typeof(T), methodName, choosePath, resolver);
+            return CreateRoute(typeof(T), methodName, choosePath, parserResolver, formatterResolver);
         }
 
         public static RouteParameters CreateRouteParameters(params object[] parameters)
@@ -79,7 +80,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void Ctor_Copies_Arguments_Properties()
         {
-            var controller = new ControllerType(typeof(Controller), null);
+            var controller = new ControllerType(typeof(Controller), null, null);
             var methodInfo = controller.Type.GetMethod(nameof(Controller.Example));
             var routeAttribute = methodInfo.GetCustomAttributes(inherit: false).OfType<RouteAttribute>().Single();
 
@@ -236,12 +237,17 @@ namespace Test.AWhewell.Owin.WebApi
         public class NoDefaultResolverController : Controller
         {
             [HttpGet, Route("a1"), UseParser(typeof(DateTime_Local_Parser))] public int A1(int x) { return x + 1; }
+
+            [HttpGet, Route("b1"), UseFormatter(typeof(DateTime_MicrosoftJson_Formatter))] public DateTime B1(int x) { return DateTime.UtcNow.AddSeconds(x); }
         }
 
-        [UseParser(typeof(DateTime_Iso8601_Parser), typeof(ByteArray_Mime64_Parser))]
+        [UseParser(   typeof(DateTime_Iso8601_Parser),    typeof(ByteArray_Mime64_Parser))]
+        [UseFormatter(typeof(DateTime_Iso8601_Formatter), typeof(ByteArray_Mime64_Formatter))]
         public class DefaultResolverController : Controller
         {
             [HttpGet, Route("a1"), UseParser(typeof(DateTime_Local_Parser), typeof(DateTimeOffset_Local_Parser))] public int A1() { return 1; }
+
+            [HttpGet, Route("b1"), UseFormatter(typeof(DateTime_MicrosoftJson_Formatter), typeof(DateTimeOffset_MicrosoftJson_Formatter))] public DateTime B1() { return DateTime.UtcNow; }
         }
 
         [TestMethod]
@@ -256,6 +262,17 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
+        public void Ctor_Builds_TypeFormatterResolver_From_UseFormatterAttribute_On_Method()
+        {
+            var route = CreateRoute(typeof(NoDefaultResolverController), nameof(NoDefaultResolverController.B1));
+
+            Assert.IsNotNull(route.TypeFormatterResolver);
+            var formatters = route.TypeFormatterResolver.GetFormatters();
+            Assert.AreEqual(1, formatters.Length);
+            Assert.IsInstanceOfType(formatters[0], typeof(DateTime_MicrosoftJson_Formatter));
+        }
+
+        [TestMethod]
         public void Ctor_Uses_Default_TypeParserResolver_From_Controller()
         {
             var route = CreateRoute(typeof(DefaultResolverController), nameof(DefaultResolverController.A1));
@@ -266,6 +283,19 @@ namespace Test.AWhewell.Owin.WebApi
             Assert.IsInstanceOfType(route.TypeParserResolver.DateTimeParser,        typeof(DateTime_Local_Parser));
             Assert.IsInstanceOfType(route.TypeParserResolver.DateTimeOffsetParser,  typeof(DateTimeOffset_Local_Parser));
             Assert.IsInstanceOfType(route.TypeParserResolver.ByteArrayParser,       typeof(ByteArray_Mime64_Parser));
+        }
+
+        [TestMethod]
+        public void Ctor_Uses_Default_TypeFormatterResolver_From_Controller()
+        {
+            var route = CreateRoute(typeof(DefaultResolverController), nameof(DefaultResolverController.B1));
+
+            Assert.IsNotNull(route.TypeFormatterResolver);
+            var formatters = route.TypeFormatterResolver.GetFormatters();
+            Assert.AreEqual(3, formatters.Length);
+            Assert.IsInstanceOfType(route.TypeFormatterResolver.DateTimeFormatter,        typeof(DateTime_MicrosoftJson_Formatter));
+            Assert.IsInstanceOfType(route.TypeFormatterResolver.DateTimeOffsetFormatter,  typeof(DateTimeOffset_MicrosoftJson_Formatter));
+            Assert.IsInstanceOfType(route.TypeFormatterResolver.ByteArrayFormatter,       typeof(ByteArray_Mime64_Formatter));
         }
 
         [TestMethod]

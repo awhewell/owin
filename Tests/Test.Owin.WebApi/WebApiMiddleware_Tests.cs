@@ -18,6 +18,7 @@ using Moq;
 using AWhewell.Owin.Interface;
 using AWhewell.Owin.Interface.WebApi;
 using AWhewell.Owin.Utility.Parsers;
+using AWhewell.Owin.Utility.Formatters;
 
 namespace Test.AWhewell.Owin.WebApi
 {
@@ -92,7 +93,7 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        public void CreateMiddleware_Populates_ControllerManager()
+        public void CreateMiddleware_Populates_ControllerManager_With_Default_Parsers()
         {
             _WebApi.DefaultParsers.Add(new DateTime_Local_Parser());
             _WebApi.CreateMiddleware(null);
@@ -103,6 +104,20 @@ namespace Test.AWhewell.Owin.WebApi
             var defaultParsers = defaultTypeParserResolver.GetParsers();
             Assert.AreEqual(1, defaultParsers.Length);
             Assert.AreEqual(typeof(DateTime_Local_Parser), defaultParsers[0].GetType());
+        }
+
+        [TestMethod]
+        public void CreateMiddleware_Populates_ControllerManager_With_Default_Formatters()
+        {
+            _WebApi.DefaultFormatters.Add(new DateTime_Iso8601_Formatter());
+            _WebApi.CreateMiddleware(null);
+
+            var defaultTypeFormatterResolver = _ControllerFinder.Object.DefaultTypeFormatterResolver;
+            Assert.IsNotNull(defaultTypeFormatterResolver);
+
+            var defaultFormatters = defaultTypeFormatterResolver.GetFormatters();
+            Assert.AreEqual(1, defaultFormatters.Length);
+            Assert.AreEqual(typeof(DateTime_Iso8601_Formatter), defaultFormatters[0].GetType());
         }
 
         [TestMethod]
@@ -213,7 +228,7 @@ namespace Test.AWhewell.Owin.WebApi
 
             MockMiddleware.Call(middleware, _Environment.Environment);
 
-            _Responder.Verify(r => r.ReturnJsonObject(_Environment.Environment, _FoundRoute, _RouteOutcome, null), Times.Once());
+            _Responder.Verify(r => r.ReturnJsonObject(_Environment.Environment, _FoundRoute, _RouteOutcome), Times.Once());
         }
     }
 }

@@ -9,27 +9,29 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using AWhewell.Owin.Utility;
 
 namespace AWhewell.Owin.Interface.WebApi
 {
     /// <summary>
-    /// Indicates which parser(s) to use for a web API parameter, method or class.
+    /// Indicates which formatters(s) to use for a web API method or class.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Parameter)]
-    public class UseParserAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
+    public class UseFormatterAttribute : Attribute
     {
         /// <summary>
-        /// Gets a flag indicating that the parsers in <see cref="Parsers"/> all exist, there are no
+        /// Gets a flag indicating that the formatters in <see cref="Formatters"/> all exist, there are no
         /// duplicates and so on.
         /// </summary>
         public bool IsValid { get; }
 
         /// <summary>
-        /// Gets the parsers to use for the tagged parameter, method or class.
+        /// Gets the formatters to use for the tagged method or class.
         /// </summary>
-        public ITypeParser[] Parsers { get; }
+        public ITypeFormatter[] Formatters { get; }
 
         /// <summary>
         /// Set if <see cref="IsValid"/> is false, indicates the issue found at runtime when constructing the attribute.
@@ -39,55 +41,55 @@ namespace AWhewell.Owin.Interface.WebApi
         /// <summary>
         /// Creates a new object.
         /// </summary>
-        /// <param name="parserTypes"></param>
-        public UseParserAttribute(params Type[] parserTypes)
+        /// <param name="formatterTypes"></param>
+        public UseFormatterAttribute(params Type[] formatterTypes)
         {
-            var parsersList = parserTypes
+            var formattersList = formatterTypes
                 .Select(r => {
-                    ITypeParser parserInstance = null;
+                    ITypeFormatter formatterInstance = null;
                     try {
-                        parserInstance = Activator.CreateInstance(r) as ITypeParser;
+                        formatterInstance = Activator.CreateInstance(r) as ITypeFormatter;
                     } catch {
                     }
-                    return parserInstance;
+                    return formatterInstance;
                 })
                 .ToArray();
 
-            if(parsersList.Any(r => r == null)) {
-                CtorErrorMessage = $"At least one of the parser types does not implement {nameof(ITypeParser)}";
+            if(formattersList.Any(r => r == null)) {
+                CtorErrorMessage = $"At least one of the formatter types does not implement {nameof(ITypeFormatter)}";
             }
-
-            var countDistinctTypes = parsersList
+            
+            var countDistinctTypes = formattersList
                 .Where(r => r != null)
                 .Select(r => r
                     .GetType()
-                    .GetInterface(TypeParserResolver.ITypeParserGenericName)
+                    .GetInterface(TypeFormatterResolver.ITypeFormatterGenericName)
                     .GetGenericArguments()[0]
                 )
                 .Distinct();
-            if(CtorErrorMessage == null && countDistinctTypes.Count() != parsersList.Length) {
-                CtorErrorMessage = $"At least two of the parsers are for the same type";
+            if(CtorErrorMessage == null && countDistinctTypes.Count() != formattersList.Length) {
+                CtorErrorMessage = $"At least two of the formatters are for the same type";
             }
 
             CtorErrorMessage = CtorErrorMessage ?? "";
             IsValid = CtorErrorMessage == "";
-            Parsers = IsValid ? parsersList : new ITypeParser[0];
+            Formatters = IsValid ? formattersList : new ITypeFormatter[0];
         }
 
         /// <summary>
         /// Returns a <see cref="TypeParserResolver"/> filled with the parsers from the <see cref="UseParserAttribute"/> attribute.
         /// </summary>
-        /// <param name="useParser"></param>
+        /// <param name="useFormatter"></param>
         /// <param name="defaultResolver"></param>
         /// <returns></returns>
-        public static TypeParserResolver ToTypeParserResolver(UseParserAttribute useParser, TypeParserResolver defaultResolver)
+        public static TypeFormatterResolver ToTypeFormatterResolver(UseFormatterAttribute useFormatter, TypeFormatterResolver defaultResolver)
         {
             var result = defaultResolver;
 
-            if(useParser?.IsValid ?? false) {
+            if(useFormatter?.IsValid ?? false) {
                 result = result == null
-                    ? TypeParserResolverCache.Find(useParser.Parsers)
-                    : TypeParserResolverCache.Find(result.GetAugmentedParsers(useParser.Parsers));
+                    ? TypeFormatterResolverCache.Find(useFormatter.Formatters)
+                    : TypeFormatterResolverCache.Find(result.GetAugmentedFormatters(useFormatter.Formatters));
             }
 
             return result;

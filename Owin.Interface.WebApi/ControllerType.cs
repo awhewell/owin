@@ -31,19 +31,32 @@ namespace AWhewell.Owin.Interface.WebApi
         public TypeParserResolver TypeParserResolver { get; }
 
         /// <summary>
+        /// Gets the type formatter resolver to use for this controller. This is null if the controller does not
+        /// have a <see cref="UseFormatterAttribute"/> attribute and there are no defaults in force.
+        /// </summary>
+        public TypeFormatterResolver TypeFormatterResolver { get; }
+
+        /// <summary>
         /// Creates a new object.
         /// </summary>
         /// <param name="type"></param>
         /// <param name="defaultParserResolver"></param>
-        public ControllerType(Type type, TypeParserResolver defaultParserResolver)
+        /// <param name="defaultFormatterResolver"></param>
+        public ControllerType(Type type, TypeParserResolver defaultParserResolver, TypeFormatterResolver defaultFormatterResolver)
         {
             Type = type;
 
-            var useParserAttr = Type.GetCustomAttributes(typeof(UseParserAttribute), inherit: true)
+            const bool useInheritedAttributes = true;
+
+            var useParserAttr = Type.GetCustomAttributes(typeof(UseParserAttribute), useInheritedAttributes)
                 .OfType<UseParserAttribute>()
                 .FirstOrDefault();
-
             TypeParserResolver = UseParserAttribute.ToTypeParserResolver(useParserAttr, defaultParserResolver);
+
+            var useFormatterAttr = Type.GetCustomAttributes(typeof(UseFormatterAttribute), useInheritedAttributes)
+                .OfType<UseFormatterAttribute>()
+                .FirstOrDefault();
+            TypeFormatterResolver = UseFormatterAttribute.ToTypeFormatterResolver(useFormatterAttr, defaultFormatterResolver);
         }
     }
 }

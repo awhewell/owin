@@ -78,7 +78,7 @@ namespace Test.AWhewell.Owin.WebApi
             using(new CultureSwap("en-GB")) {
                 var parsedValue = DataRowParser.ConvertExpected(type, value);
 
-                _Responder.ReturnJsonObject(_Environment.Environment, route, parsedValue, null);
+                _Responder.ReturnJsonObject(_Environment.Environment, route, parsedValue);
 
                 Assert.AreEqual("application/json; charset=utf-8",                          _Environment.ResponseHeadersDictionary["Content-Type"]);
                 Assert.AreEqual(expectedBody.Length.ToString(CultureInfo.InvariantCulture), _Environment.ResponseHeadersDictionary["Content-Length"]);
@@ -87,13 +87,13 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        public void ReturnJsonObject_Uses_Formatter_If_Supplied()
+        public void ReturnJsonObject_Uses_Formatter_From_Route()
         {
-            var route = Route_Tests.CreateRoute<Controller>(nameof(Controller.IntMethod));
-            var guid = Guid.Parse("c151f1a8-d235-4f28-8c0d-5521a768be9e");
             var resolver = TypeFormatterResolverCache.Find(new Guid_UpperNoHyphens_Formatter());
+            var route = Route_Tests.CreateRoute<Controller>(nameof(Controller.IntMethod), formatterResolver: resolver);
+            var guid = Guid.Parse("c151f1a8-d235-4f28-8c0d-5521a768be9e");
 
-            _Responder.ReturnJsonObject(_Environment.Environment, route, guid, resolver);
+            _Responder.ReturnJsonObject(_Environment.Environment, route, guid);
 
             var actual = _Environment.ResponseBodyText;
             Assert.AreEqual("\"C151F1A8D2354F288C0D5521A768BE9E\"", actual);
@@ -105,7 +105,7 @@ namespace Test.AWhewell.Owin.WebApi
             var route = Route_Tests.CreateRoute<Controller>(nameof(Controller.VoidMethod));
             var value = 1;
 
-            _Responder.ReturnJsonObject(_Environment.Environment, route, value, null);
+            _Responder.ReturnJsonObject(_Environment.Environment, route, value);
 
             Assert.IsNull(_Environment.ResponseHeadersDictionary["Content-Type"]);
             Assert.IsNull(_Environment.ResponseHeadersDictionary["Content-Length"]);

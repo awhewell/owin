@@ -417,7 +417,7 @@ namespace Test.AWhewell.Owin.WebApi
         public void BuildRouteParameters_Uses_TypeParserResolver_When_Parsing_Array_Elements()
         {
             var resolver = new TypeParserResolver(new ModelBuilder_Tests.String_Reverse_Parser());
-            var route = Route_Tests.CreateRoute(typeof(QueryStringController), nameof(QueryStringController.StringArrayParam), resolver: resolver);
+            var route = Route_Tests.CreateRoute(typeof(QueryStringController), nameof(QueryStringController.StringArrayParam), parserResolver: resolver);
             _RouteMapper.Initialise(new Route[] { route });
             _Environment.RequestQueryString = "param=Abc";
 
@@ -606,7 +606,7 @@ namespace Test.AWhewell.Owin.WebApi
         public void BuildRouteParameters_Passes_TypeParserResolver_To_Model_Builder_For_Query_String_Models()
         {
             var resolver = new TypeParserResolver(new ModelBuilder_Tests.String_Reverse_Parser());
-            var route = Route_Tests.CreateRoute(typeof(QueryStringModelController), nameof(QueryStringModelController.StringModelFunc), resolver: resolver);
+            var route = Route_Tests.CreateRoute(typeof(QueryStringModelController), nameof(QueryStringModelController.StringModelFunc), parserResolver: resolver);
             _RouteMapper.Initialise(new Route[] { route });
             _Environment.SetRequestPath(route.PathParts[0].Part);
 
@@ -659,7 +659,7 @@ namespace Test.AWhewell.Owin.WebApi
         public void BuildRouteParameters_Uses_Full_TypeParserResolver_When_Building_Model_From_Form_Body()
         {
             var resolver = new TypeParserResolver(new ModelBuilder_Tests.String_Reverse_Parser());
-            var route = Route_Tests.CreateRoute(typeof(FormBodyModelController), nameof(FormBodyModelController.StringModelFunc), resolver: resolver);
+            var route = Route_Tests.CreateRoute(typeof(FormBodyModelController), nameof(FormBodyModelController.StringModelFunc), parserResolver: resolver);
             _RouteMapper.Initialise(new Route[] { route });
             _Environment.RequestMethod = "POST";
             _Environment.SetRequestPath(route.PathParts[0].Part);
@@ -745,7 +745,7 @@ namespace Test.AWhewell.Owin.WebApi
             // Only dates, byte arrays and guids go through the parser, everything else must be as per JSON spec
 
             var resolver = new TypeParserResolver(new JsonSerialiser_Tests.DateTime_JustDigits_Parser());
-            var route = Route_Tests.CreateRoute(typeof(JsonBodyModelController), nameof(JsonBodyModelController.DateModelFunc), resolver: resolver);
+            var route = Route_Tests.CreateRoute(typeof(JsonBodyModelController), nameof(JsonBodyModelController.DateModelFunc), parserResolver: resolver);
             _RouteMapper.Initialise(new Route[] { route });
             _Environment.RequestMethod = "POST";
             _Environment.SetRequestPath(route.PathParts[0].Part);

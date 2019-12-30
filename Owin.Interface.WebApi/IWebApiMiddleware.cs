@@ -56,6 +56,16 @@ namespace AWhewell.Owin.Interface.WebApi
         IList<ITypeParser> DefaultParsers { get; }
 
         /// <summary>
+        /// Gets the default list of formatters to use. If no formatters are specified then by default dates
+        /// are ISO 8601 and byte arrays are MIME64 strings.
+        /// </summary>
+        /// <remarks>
+        /// Any defaults established here can be overridden at the class and method levels with <see
+        /// cref="UseFormatterAttribute"/> attributes.
+        /// </remarks>
+        IList<ITypeFormatter> DefaultFormatters { get; }
+
+        /// <summary>
         /// Creates the web API middleware.
         /// </summary>
         /// <param name="next"></param>

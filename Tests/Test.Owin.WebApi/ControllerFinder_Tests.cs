@@ -11,13 +11,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using AWhewell.Owin.Interface.WebApi;
+using AWhewell.Owin.Utility;
+using AWhewell.Owin.Utility.Formatters;
+using AWhewell.Owin.Utility.Parsers;
 using InterfaceFactory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using AWhewell.Owin.Interface.WebApi;
-using AWhewell.Owin.Utility;
-using AWhewell.Owin.Utility.Parsers;
 
 namespace Test.AWhewell.Owin.WebApi
 {
@@ -79,6 +79,19 @@ namespace Test.AWhewell.Owin.WebApi
 
             _AppDomainWrapper.Verify(r => r.GetAllTypes(), Times.Once());
             Assert.AreEqual(resolver, controllerTypes[0].TypeParserResolver);
+        }
+
+        [TestMethod]
+        public void DiscoverControllers_Uses_Default_TypeFormatterResolver()
+        {
+            _AllTypes.Add(typeof(MockController1));
+            var resolver = new TypeFormatterResolver(new DateTime_MicrosoftJson_Formatter());
+            _ControllerFinder.DefaultTypeFormatterResolver = resolver;
+
+            var controllerTypes = _ControllerFinder.DiscoverControllers().ToArray();
+
+            _AppDomainWrapper.Verify(r => r.GetAllTypes(), Times.Once());
+            Assert.AreEqual(resolver, controllerTypes[0].TypeFormatterResolver);
         }
     }
 }

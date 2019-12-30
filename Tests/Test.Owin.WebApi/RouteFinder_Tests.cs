@@ -82,7 +82,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void DiscoverRoutes_Returns_Methods_Tagged_With_Route_Attribute()
         {
-            var routes = _RouteFinder.DiscoverRoutes(new ControllerType[] { new ControllerType(typeof(ValidRoutes), null) });
+            var routes = _RouteFinder.DiscoverRoutes(new ControllerType[] { new ControllerType(typeof(ValidRoutes), null, null) });
 
             var route = routes.Single();
             Assert.AreEqual("path-to-example1", route.RouteAttribute.Route);
@@ -93,7 +93,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void DiscoverRoutes_Ignores_Static_Methods()
         {
-            var routes = _RouteFinder.DiscoverRoutes(new ControllerType[] { new ControllerType(typeof(StaticMethods), null) });
+            var routes = _RouteFinder.DiscoverRoutes(new ControllerType[] { new ControllerType(typeof(StaticMethods), null, null) });
 
             Assert.AreEqual(0, routes.Count());
         }

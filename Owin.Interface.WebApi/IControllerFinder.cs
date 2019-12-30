@@ -29,6 +29,14 @@ namespace AWhewell.Owin.Interface.WebApi
         TypeParserResolver DefaultTypeParserResolver { get; set; }
 
         /// <summary>
+        /// Gets or sets the default type formatter resolver. Will be null if default formatters are to be used.
+        /// </summary>
+        /// <remarks>
+        /// This is built from <see cref="IWebApiMiddleware.DefaultFormatters"/>.
+        /// </remarks>
+        TypeFormatterResolver DefaultTypeFormatterResolver { get; set; }
+
+        /// <summary>
         /// Returns all public types that implement <see cref="IApiController"/> in all loaded assemblies.
         /// </summary>
         IEnumerable<ControllerType> DiscoverControllers();
