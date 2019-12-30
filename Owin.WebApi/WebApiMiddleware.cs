@@ -60,6 +60,10 @@ namespace AWhewell.Owin.WebApi
             routeMapper.Initialise(routes);
 
             var routeCaller = Factory.Resolve<IRouteCaller>();
+            var responder = Factory.Resolve<IWebApiResponder>();
+
+            // TODO: Think about / implement exception handling
+            // TODO: Permissions
 
             return async(IDictionary<string, object> environment) =>
             {
@@ -68,7 +72,10 @@ namespace AWhewell.Owin.WebApi
                     var parameters = routeMapper.BuildRouteParameters(route, environment);
                     environment[EnvironmentKey.ResponseStatusCode] = 400;
                     if(parameters.IsValid) {
-                        routeCaller.CallRoute(environment, route, parameters);
+                        var result = routeCaller.CallRoute(environment, route, parameters);
+                        // TODO: Handle void methods correctly, they should not write to the body
+                        // TODO: Add support for formatters
+                        responder.ReturnJsonObject(environment, result, null);
                     }
                 }
 
