@@ -319,224 +319,156 @@ namespace Test.AWhewell.Owin.Utility
         }
 
         [TestMethod]
-        [DataRow(typeof(string),            nameof(Formatter.FormatString),         "Diskopunk",                            "Diskopunk",                            "Soaked")]
-        [DataRow(typeof(bool),              nameof(Formatter.FormatBool),           "false",                                false,                                  true)]
-        [DataRow(typeof(byte),              nameof(Formatter.FormatByte),           "255",                                  (byte)255,                              (byte)127)]
-        [DataRow(typeof(char),              nameof(Formatter.FormatChar),           "1",                                    '1',                                    '2')]
-        [DataRow(typeof(Int16),             nameof(Formatter.FormatInt16),          "-32768",                               (short)-32768,                          (short)32767)]
-        [DataRow(typeof(UInt16),            nameof(Formatter.FormatUInt16),         "32767",                                (ushort)32767,                          (ushort)7892)]
-        [DataRow(typeof(Int32),             nameof(Formatter.FormatInt32),          "-2147483648",                          -2147483648,                            2147483647)]
-        [DataRow(typeof(UInt32),            nameof(Formatter.FormatUInt32),         "4294967295",                           4294967295U,                            88U)]
-        [DataRow(typeof(Int64),             nameof(Formatter.FormatInt64),          "-9223372036854775808",                 -9223372036854775808L,                  9223372036854775807L)]
-        [DataRow(typeof(UInt64),            nameof(Formatter.FormatUInt64),         "9223372036854775807",                  9223372036854775807UL,                  2382UL)]
-        [DataRow(typeof(float),             nameof(Formatter.FormatFloat),          "12.342",                               12.342F,                                98.12F)]
-        [DataRow(typeof(double),            nameof(Formatter.FormatDouble),         "12.342",                               12.342,                                 98.12)]
-        [DataRow(typeof(decimal),           nameof(Formatter.FormatDecimal),        "12.342",                               "12.342",                               "98.12")]
-        [DataRow(typeof(DateTime),          nameof(Formatter.FormatDateTime),       "2019-01-02",                           "2019-01-02",                           "1816-04-21")]
-        [DataRow(typeof(DateTimeOffset),    nameof(Formatter.FormatDateTimeOffset), "2019-01-02",                           "2019-01-02",                           "1816-04-21")]
-        [DataRow(typeof(Guid),              nameof(Formatter.FormatGuid),           "48cd065e-f78d-465b-af07-49e3b1b7cc92", "48cd065e-f78d-465b-af07-49e3b1b7cc92", "c08f84fd-c572-4bba-94c5-f22804442e62")]
-        [DataRow(typeof(byte[]),            nameof(Formatter.FormatByteArray),      "DwoL",                                 new byte[] { 0x0f, 0x0a, 0x0b },        new byte[] { 99, 100 })]
-        public void FormatType_With_Resolver_Uses_Resolver_When_Supplied(Type valueType, string formatterMethodName, string text, object expectedNormalRaw, object expectedCustomRaw)
+        [DataRow(typeof(string),            nameof(Formatter.FormatString),          "Diskopunk")]
+        [DataRow(typeof(bool),              nameof(Formatter.FormatBool),            false)]
+        [DataRow(typeof(byte),              nameof(Formatter.FormatByte),            (byte)255)]
+        [DataRow(typeof(char),              nameof(Formatter.FormatChar),            '1')]
+        [DataRow(typeof(Int16),             nameof(Formatter.FormatInt16),           (short)-32768)]
+        [DataRow(typeof(UInt16),            nameof(Formatter.FormatUInt16),          (ushort)32767)]
+        [DataRow(typeof(Int32),             nameof(Formatter.FormatInt32),           -2147483648)]
+        [DataRow(typeof(UInt32),            nameof(Formatter.FormatUInt32),          4294967295U)]
+        [DataRow(typeof(Int64),             nameof(Formatter.FormatInt64),           -9223372036854775808L)]
+        [DataRow(typeof(UInt64),            nameof(Formatter.FormatUInt64),          9223372036854775807UL)]
+        [DataRow(typeof(float),             nameof(Formatter.FormatFloat),           12.342F)]
+        [DataRow(typeof(double),            nameof(Formatter.FormatDouble),          12.342)]
+        [DataRow(typeof(decimal),           nameof(Formatter.FormatDecimal),         "12.342")]
+        [DataRow(typeof(DateTime),          nameof(Formatter.FormatDateTime),        "2019-01-02")]
+        [DataRow(typeof(DateTimeOffset),    nameof(Formatter.FormatDateTimeOffset),  "2019-01-02")]
+        [DataRow(typeof(Guid),              nameof(Formatter.FormatGuid),            "48cd065e-f78d-465b-af07-49e3b1b7cc92")]
+        [DataRow(typeof(byte[]),            nameof(Formatter.FormatByteArray),       new byte[] { 0x0f, 0x0a, 0x0b })]
+        public void FormatType_With_Resolver_Uses_Resolver_When_Supplied(Type valueType, string formatterMethodName, object rawValue)
         {
-            throw new NotImplementedException();
-            Mock mockParser = null;
-            var tryParseResult = true;
+            Mock mockFormatter = null;
 
             void createMock<T>(T expectedValue)
             {
-                var mock = MockHelper.CreateMock<ITypeParser<T>>();
-                mock.Setup(r => r.TryParse(text, out expectedValue)).Returns(() => tryParseResult);
-                mockParser = mock;
+                var mock = MockHelper.CreateMock<ITypeFormatter<T>>();
+                mock.Setup(r => r.Format(expectedValue)).Returns("!!!");
+                mockFormatter = mock;
             }
 
-            Func<string, TypeParserResolver, object> callParser;
-            var expectedNormal = DataRowParser.ConvertExpected(valueType, expectedNormalRaw);
-            var expectedCustom = DataRowParser.ConvertExpected(valueType, expectedCustomRaw);
-
-            var parserMethod = typeof(Parser)
+            var formatterMethod = typeof(Formatter)
                 .GetMethods(BindingFlags.Static | BindingFlags.Public)
                 .Single(r => r.Name == formatterMethodName && r.GetParameters().Length == 2);
+            Func<object, TypeFormatterResolver, string> callFormatter;
+            callFormatter = (t, r) => formatterMethod.Invoke(null, new object[] { t, r }) as string;
 
-            callParser = (t, r) => parserMethod.Invoke(null, new object[] { t, r });
-
-            if(valueType == typeof(bool))                   createMock<bool>((bool)expectedCustom);
-            else if(valueType == typeof(byte))              createMock<byte>((byte)expectedCustom);
-            else if(valueType == typeof(char))              createMock<char>((char)expectedCustom);
-            else if(valueType == typeof(Int16))             createMock<short>((short)expectedCustom);
-            else if(valueType == typeof(UInt16))            createMock<ushort>((ushort)expectedCustom);
-            else if(valueType == typeof(Int32))             createMock<int>((int)expectedCustom);
-            else if(valueType == typeof(UInt32))            createMock<uint>((uint)expectedCustom);
-            else if(valueType == typeof(Int64))             createMock<long>((long)expectedCustom);
-            else if(valueType == typeof(UInt64))            createMock<ulong>((ulong)expectedCustom);
-            else if(valueType == typeof(float))             createMock<float>((float)expectedCustom);
-            else if(valueType == typeof(double))            createMock<double>((double)expectedCustom);
-            else if(valueType == typeof(decimal))           createMock<decimal>((decimal)expectedCustom);
-            else if(valueType == typeof(DateTime))          createMock<DateTime>((DateTime)expectedCustom);
-            else if(valueType == typeof(DateTimeOffset))    createMock<DateTimeOffset>((DateTimeOffset)expectedCustom);
-            else if(valueType == typeof(Guid))              createMock<Guid>((Guid)expectedCustom);
-            else if(valueType == typeof(byte[]))            createMock<byte[]>((byte[])expectedCustom);
-            else if(valueType == typeof(string))            createMock<string>((string)expectedCustom);
+            var value = DataRowParser.ConvertExpected(valueType, rawValue);
+            if(valueType == typeof(bool))                   createMock<bool>((bool)value);
+            else if(valueType == typeof(byte))              createMock<byte>((byte)value);
+            else if(valueType == typeof(char))              createMock<char>((char)value);
+            else if(valueType == typeof(Int16))             createMock<short>((short)value);
+            else if(valueType == typeof(UInt16))            createMock<ushort>((ushort)value);
+            else if(valueType == typeof(Int32))             createMock<int>((int)value);
+            else if(valueType == typeof(UInt32))            createMock<uint>((uint)value);
+            else if(valueType == typeof(Int64))             createMock<long>((long)value);
+            else if(valueType == typeof(UInt64))            createMock<ulong>((ulong)value);
+            else if(valueType == typeof(float))             createMock<float>((float)value);
+            else if(valueType == typeof(double))            createMock<double>((double)value);
+            else if(valueType == typeof(decimal))           createMock<decimal>((decimal)value);
+            else if(valueType == typeof(DateTime))          createMock<DateTime>((DateTime)value);
+            else if(valueType == typeof(DateTimeOffset))    createMock<DateTimeOffset>((DateTimeOffset)value);
+            else if(valueType == typeof(Guid))              createMock<Guid>((Guid)value);
+            else if(valueType == typeof(byte[]))            createMock<byte[]>((byte[])value);
+            else if(valueType == typeof(string))            createMock<string>((string)value);
             else                                            throw new NotImplementedException();
 
-            // Null type resolver should call normal parser
-            Assertions.AreEqual(expectedNormal, callParser(text, null));
+            // Null type resolver should call normal formatter
+            Assert.AreNotEqual("!!!", callFormatter(value, null));
 
-            // Type resolver with no parser for type should call normal parser
-            var emptyTypeResolver = new TypeParserResolver();
-            Assertions.AreEqual(expectedNormal, callParser(text, emptyTypeResolver));
+            // Type resolver with no formatter for type should call normal formatter
+            var emptyTypeResolver = new TypeFormatterResolver();
+            Assert.AreNotEqual("!!!", callFormatter(value, emptyTypeResolver));
 
-            var typeResolver = new TypeParserResolver((ITypeParser)mockParser.Object);
+            // If resolver contains formatter for type then it should be used
+            var typeResolver = new TypeFormatterResolver((ITypeFormatter)mockFormatter.Object);
+            Assert.AreEqual("!!!", callFormatter(value, typeResolver));
+        }
 
-            // If custom parser returns true then use the parsed value
-            tryParseResult = true;
-            Assertions.AreEqual(expectedCustom, callParser(text, typeResolver));
-
-            // If custom parser returns false then it cannot be parsed
-            tryParseResult = false;
-            Assertions.AreEqual(null, callParser(text, typeResolver));
+        class UnknownType
+        {
+            public override string ToString() => "Hello!";
         }
 
         [TestMethod]
-        [DataRow(typeof(bool),              typeof(Mock<ITypeParser<bool>>))]
-        [DataRow(typeof(byte),              typeof(Mock<ITypeParser<byte>>))]
-        [DataRow(typeof(char),              typeof(Mock<ITypeParser<char>>))]
-        [DataRow(typeof(Int16),             typeof(Mock<ITypeParser<Int16>>))]
-        [DataRow(typeof(UInt16),            typeof(Mock<ITypeParser<UInt16>>))]
-        [DataRow(typeof(Int32),             typeof(Mock<ITypeParser<Int32>>))]
-        [DataRow(typeof(UInt32),            typeof(Mock<ITypeParser<UInt32>>))]
-        [DataRow(typeof(Int64),             typeof(Mock<ITypeParser<Int64>>))]
-        [DataRow(typeof(UInt64),            typeof(Mock<ITypeParser<UInt64>>))]
-        [DataRow(typeof(float),             typeof(Mock<ITypeParser<float>>))]
-        [DataRow(typeof(double),            typeof(Mock<ITypeParser<double>>))]
-        [DataRow(typeof(decimal),           typeof(Mock<ITypeParser<decimal>>))]
-        [DataRow(typeof(DateTime),          typeof(Mock<ITypeParser<DateTime>>))]
-        [DataRow(typeof(DateTimeOffset),    typeof(Mock<ITypeParser<DateTimeOffset>>))]
-        [DataRow(typeof(Guid),              typeof(Mock<ITypeParser<Guid>>))]
-        [DataRow(typeof(byte[]),            typeof(Mock<ITypeParser<byte[]>>))]
-        public void FormatType_Uses_TypeResolver_If_Supplied(Type valueType, Type mockType)
+        public void FormatType_Falls_Back_To_ToString()
         {
-            var mockParser = MockHelper.CreateMock(mockType);
-            var mockTypeParser = (ITypeParser)mockParser.Object;
+            var x = new UnknownType();
 
-            var resolver = new TypeParserResolver(mockTypeParser);
-
-            Parser.ParseType(valueType, "text", resolver);
-
-            var tryParseCalls = mockParser
-                .Invocations
-                .Where(r => r.Method.Name == nameof(ITypeParser<int>.TryParse))
-                .ToArray();
-
-            Assert.AreEqual(1, tryParseCalls.Length);
-            Assert.AreEqual(2, tryParseCalls[0].Arguments.Count);
-            Assert.AreEqual("text", tryParseCalls[0].Arguments[0]);
+            Assert.AreEqual("Hello!", Formatter.FormatType(x));
         }
 
         [TestMethod]
-        [DataRow(null,          HttpMethod.Unknown)]
-        [DataRow("",            HttpMethod.Unknown)]
-        [DataRow("connect",     HttpMethod.Connect)]
-        [DataRow("CONNECT",     HttpMethod.Connect)]
-        [DataRow(" Connect ",   HttpMethod.Connect)]
-        [DataRow("Delete",      HttpMethod.Delete)]
-        [DataRow("Get",         HttpMethod.Get)]
-        [DataRow("Head",        HttpMethod.Head)]
-        [DataRow("Options",     HttpMethod.Options)]
-        [DataRow("Patch",       HttpMethod.Patch)]
-        [DataRow("Post",        HttpMethod.Post)]
-        [DataRow("Put",         HttpMethod.Put)]
-        [DataRow("Trace",       HttpMethod.Trace)]
-        public void FormatHttpMethod_Returns_Correct_Enum_Value(string text, HttpMethod expected)
+        public void FormatHttpMethod_Returns_Correct_Value()
         {
-            var actual = Parser.ParseHttpMethod(text);
+            foreach(HttpMethod httpMethod in Enum.GetValues(typeof(HttpMethod))) {
+                var actual = Formatter.FormatHttpMethod(httpMethod);
 
-            Assert.AreEqual(expected, actual);
+                switch(httpMethod) {
+                    case HttpMethod.Connect:    Assert.AreEqual("CONNECT", actual); break;
+                    case HttpMethod.Delete:     Assert.AreEqual("DELETE", actual); break;
+                    case HttpMethod.Get:        Assert.AreEqual("GET", actual); break;
+                    case HttpMethod.Head:       Assert.AreEqual("HEAD", actual); break;
+                    case HttpMethod.Options:    Assert.AreEqual("OPTIONS", actual); break;
+                    case HttpMethod.Patch:      Assert.AreEqual("PATCH", actual); break;
+                    case HttpMethod.Post:       Assert.AreEqual("POST", actual); break;
+                    case HttpMethod.Put:        Assert.AreEqual("PUT", actual); break;
+                    case HttpMethod.Trace:      Assert.AreEqual("TRACE", actual); break;
+                    case HttpMethod.Unknown:    Assert.IsNull(actual); break;
+                    default:                    throw new NotImplementedException($"Need test code for {httpMethod}");
+                }
+            }
         }
 
         [TestMethod]
-        [DataRow(null,          HttpProtocol.Unknown)]
-        [DataRow("",            HttpProtocol.Unknown)]
-        [DataRow("http/0.9",    HttpProtocol.Http0_9)]
-        [DataRow(" HTTP/0.9 ",  HttpProtocol.Http0_9)]
-        [DataRow("HTTP/0.9",    HttpProtocol.Http0_9)]
-        [DataRow("HTTP/1.0",    HttpProtocol.Http1_0)]
-        [DataRow("HTTP/1.1",    HttpProtocol.Http1_1)]
-        [DataRow("HTTP/2.0",    HttpProtocol.Http2_0)]
-        [DataRow("HTTP/3.0",    HttpProtocol.Http3_0)]
-        public void FormatHttpProtocol_Returns_Correct_Enum_Value(string text, HttpProtocol expected)
+        public void FormatHttpProtocol_Returns_Correct_Value()
         {
-            var actual = Parser.ParseHttpProtocol(text);
+            foreach(HttpProtocol httpProtocol in Enum.GetValues(typeof(HttpProtocol))) {
+                var actual = Formatter.FormatHttpProtocol(httpProtocol);
 
-            Assert.AreEqual(expected, actual);
+                switch(httpProtocol) {
+                    case HttpProtocol.Http0_9:  Assert.AreEqual("HTTP/0.9", actual); break;
+                    case HttpProtocol.Http1_0:  Assert.AreEqual("HTTP/1.0", actual); break;
+                    case HttpProtocol.Http1_1:  Assert.AreEqual("HTTP/1.1", actual); break;
+                    case HttpProtocol.Http2_0:  Assert.AreEqual("HTTP/2.0", actual); break;
+                    case HttpProtocol.Http3_0:  Assert.AreEqual("HTTP/3.0", actual); break;
+                    case HttpProtocol.Unknown:  Assert.IsNull(actual); break;
+                    default:                    throw new NotImplementedException($"Need test code for {httpProtocol}");
+                }
+            }
         }
 
         [TestMethod]
-        [DataRow(null,      HttpScheme.Unknown)]
-        [DataRow("",        HttpScheme.Unknown)]
-        [DataRow("HTTP",    HttpScheme.Http)]
-        [DataRow(" http ",  HttpScheme.Http)]
-        [DataRow("http",    HttpScheme.Http)]
-        [DataRow("https",   HttpScheme.Https)]
-        public void FormatHttpScheme_Returns_Correct_Enum_Value(string text, HttpScheme expected)
+        public void FormatHttpScheme_Returns_Correct_Value()
         {
-            var actual = Parser.ParseHttpScheme(text);
+            foreach(HttpScheme httpScheme in Enum.GetValues(typeof(HttpScheme))) {
+                var actual = Formatter.FormatHttpScheme(httpScheme);
 
-            Assert.AreEqual(expected, actual);
+                switch(httpScheme) {
+                    case HttpScheme.Http:       Assert.AreEqual("http", actual); break;
+                    case HttpScheme.Https:      Assert.AreEqual("https", actual); break;
+                    case HttpScheme.Unknown:    Assert.IsNull(actual); break;
+                    default:                    throw new NotImplementedException($"Need test code for {httpScheme}");
+                }
+            }
         }
 
         [TestMethod]
-        [DataRow(null,                                  MediaType.Unknown)]
-        [DataRow("",                                    MediaType.Unknown)]
-        [DataRow("application/javascript",              MediaType.JavaScript)]
-        [DataRow("APPLICATION/JAVASCRIPT",              MediaType.JavaScript)]
-        [DataRow("application/json",                    MediaType.Json)]
-        [DataRow("multipart/form-data",                 MediaType.MultipartForm)]
-        [DataRow("text/plain",                          MediaType.PlainText)]
-        [DataRow("application/x-www-form-urlencoded",   MediaType.UrlEncodedForm)]
-        [DataRow("application/xml",                     MediaType.Xml)]
-        [DataRow("text/xml",                            MediaType.Xml)]
-        public void FormatMediaType_Returns_Correct_Enum_Value(string text, MediaType expected)
+        public void FormatMediaType_Returns_Correct_Enum_Value()
         {
-            var actual = Parser.ParseMediaType(text);
+            foreach(MediaType mediaType in Enum.GetValues(typeof(MediaType))) {
+                var actual = Formatter.FormatMediaType(mediaType);
 
-            Assert.AreEqual(expected, actual);
-        }
-
-        [TestMethod]
-        [DataRow(null,              "utf-8")]
-        [DataRow("",                "utf-8")]
-        [DataRow("garbage",         null)]
-        [DataRow("UTF-8",           "utf-8")]
-        [DataRow("utf-8",           "utf-8")]
-        [DataRow("csUTF8",          "utf-8")]
-        [DataRow("UTF-7",           "utf-7")]
-        [DataRow("utf-7",           "utf-7")]
-        [DataRow("csUTF7",          "utf-7")]
-        [DataRow("ASCII",           "us-ascii")]
-        [DataRow("us",              "us-ascii")]
-        [DataRow("Unicode",         "utf-16")]
-        [DataRow("UTF-16",          "utf-16")]
-        [DataRow("csUTF16",         "utf-16")]
-        [DataRow("UTF-16LE",        "utf-16")]
-        [DataRow("csUTF16LE",       "utf-16")]
-        [DataRow("UTF-16BE",        "utf-16BE")]
-        [DataRow("csUTF16BE",       "utf-16BE")]
-        [DataRow("UTF-32",          "utf-32")]
-        [DataRow("csUTF32",         "utf-32")]
-        [DataRow("UTF-32LE",        "utf-32")]
-        [DataRow("csUTF32LE",       "utf-32")]
-        [DataRow("UTF-32BE",        "utf-32BE")]
-        [DataRow("csUTF32BE",       "utf-32BE")]
-        [DataRow("iso-8859-1",      "iso-8859-1")]
-        [DataRow("latin1",          "iso-8859-1")]
-        public void FormatCharset_Returns_Correct_Encoding(string charset, string expectedWebName)
-        {
-            var actual = Parser.ParseCharset(charset);
-
-            if(expectedWebName == null) {
-                Assert.IsNull(actual);
-            } else {
-                Assert.AreEqual(expectedWebName, actual.WebName);
+                switch(mediaType) {
+                    case MediaType.JavaScript:      Assert.AreEqual("application/javascript", actual); break;
+                    case MediaType.Json:            Assert.AreEqual("application/json", actual); break;
+                    case MediaType.MultipartForm:   Assert.AreEqual("multipart/form-data", actual); break;
+                    case MediaType.PlainText:       Assert.AreEqual("text/plain", actual); break;
+                    case MediaType.UrlEncodedForm:  Assert.AreEqual("application/x-www-form-urlencoded", actual); break;
+                    case MediaType.Xml:             Assert.AreEqual("application/xml", actual); break;
+                    case MediaType.Unknown:         Assert.IsNull(actual); break;
+                    default:                        throw new NotImplementedException($"Need test code for {mediaType}");
+                }
             }
         }
     }

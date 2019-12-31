@@ -46,9 +46,12 @@ namespace AWhewell.Owin.WebApi
             if(!route.IsVoidMethod) {
                 var jsonText = _JsonSerialiser.Serialise(obj, route.TypeFormatterResolver);
 
-                // TODO: port the MIME stuff from VRS
                 var context = OwinContext.Create(owinEnvironment);
-                context.ReturnText(jsonText, Encoding.UTF8, "application/json");
+                context.ReturnText(
+                    jsonText,
+                    Encoding.UTF8,
+                    Formatter.FormatMediaType(MediaType.Json)
+                );
             }
         }
     }

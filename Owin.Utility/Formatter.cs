@@ -501,7 +501,6 @@ namespace AWhewell.Owin.Utility
                             ? FormatByteArray((byte[])value)
                             : FormatByteArray((byte[])value, typeFormatterResolver);
                     } else {
-                        // TODO: need test for this
                         result = value.ToString();
                     }
                 }
@@ -511,111 +510,77 @@ namespace AWhewell.Owin.Utility
         }
 
         /// <summary>
-        /// Returns the <see cref="HttpMethod"/> value corresponding with the text passed in.
+        /// Returns the standard HTTP method associated with the enum passed in.
         /// </summary>
         /// <param name="httpMethod"></param>
         /// <returns></returns>
-        public static HttpMethod FormatHttpMethod(string httpMethod)
+        public static string FormatHttpMethod(HttpMethod httpMethod)
         {
-            // TODO: needs writing...
-            switch((httpMethod ?? "").Trim().ToUpper()) {
-                case "CONNECT":     return HttpMethod.Connect;
-                case "DELETE":      return HttpMethod.Delete;
-                case "GET":         return HttpMethod.Get;
-                case "HEAD":        return HttpMethod.Head;
-                case "OPTIONS":     return HttpMethod.Options;
-                case "PATCH":       return HttpMethod.Patch;
-                case "POST":        return HttpMethod.Post;
-                case "PUT":         return HttpMethod.Put;
-                case "TRACE":       return HttpMethod.Trace;
-                default:            return HttpMethod.Unknown;
+            switch(httpMethod) {
+                case HttpMethod.Connect:    return "CONNECT";
+                case HttpMethod.Delete:     return "DELETE";
+                case HttpMethod.Get:        return "GET";
+                case HttpMethod.Head:       return "HEAD";
+                case HttpMethod.Options:    return "OPTIONS";
+                case HttpMethod.Patch:      return "PATCH";
+                case HttpMethod.Post:       return "POST";
+                case HttpMethod.Put:        return "PUT";
+                case HttpMethod.Trace:      return "TRACE";
+                case HttpMethod.Unknown:    return null;
+                default:                    throw new NotImplementedException();
             }
         }
 
         /// <summary>
-        /// Returns the <see cref="HttpProtocol"/> value corresponding with the text passed in.
+        /// Returns the standard HTTP protocol associated with the enum passed in.
         /// </summary>
         /// <param name="httpProtocol"></param>
         /// <returns></returns>
-        public static HttpProtocol FormatHttpProtocol(string httpProtocol)
+        public static string FormatHttpProtocol(HttpProtocol httpProtocol)
         {
-            // TODO: needs writing...
-            switch((httpProtocol ?? "").Trim().ToUpper()) {
-                case "HTTP/0.9":    return HttpProtocol.Http0_9;
-                case "HTTP/1.0":    return HttpProtocol.Http1_0;
-                case "HTTP/1.1":    return HttpProtocol.Http1_1;
-                case "HTTP/2.0":    return HttpProtocol.Http2_0;
-                case "HTTP/3.0":    return HttpProtocol.Http3_0;
-                default:            return HttpProtocol.Unknown;
+            switch(httpProtocol) {
+                case HttpProtocol.Http0_9:  return "HTTP/0.9";
+                case HttpProtocol.Http1_0:  return "HTTP/1.0";
+                case HttpProtocol.Http1_1:  return "HTTP/1.1";
+                case HttpProtocol.Http2_0:  return "HTTP/2.0";
+                case HttpProtocol.Http3_0:  return "HTTP/3.0";
+                case HttpProtocol.Unknown:  return null;
+                default:                    throw new NotImplementedException();
             }
         }
 
         /// <summary>
-        /// Returns the correct <see cref="HttpScheme"/> value corresponding with the text passed in.
+        /// Returns the standard HTTP scheme for the enum passed in.
         /// </summary>
         /// <param name="httpScheme"></param>
         /// <returns></returns>
-        public static HttpScheme FormatHttpScheme(string httpScheme)
+        public static string FormatHttpScheme(HttpScheme httpScheme)
         {
-            // TODO: needs writing...
-            switch((httpScheme ?? "").Trim().ToLower()) {
-                case "http":    return HttpScheme.Http;
-                case "https":   return HttpScheme.Https;
-                default:        return HttpScheme.Unknown;
+            switch(httpScheme) {
+                case HttpScheme.Http:       return "http";
+                case HttpScheme.Https:      return "https";
+                case HttpScheme.Unknown:    return null;
+                default:                    throw new NotImplementedException();
             }
         }
 
         /// <summary>
-        /// Returns the enum associated with the media type passed across.
+        /// Returns the MIME string associated with the media type passed across.
         /// </summary>
         /// <param name="mediaType"></param>
         /// <returns></returns>
-        public static MediaType FormatMediaType(string mediaType)
+        public static string FormatMediaType(MediaType mediaType)
         {
-            // TODO: needs writing...
-            switch((mediaType ?? "").Trim().ToLower()) {
-                case "application/javascript":              return MediaType.JavaScript;
-                case "application/json":                    return MediaType.Json;
-                case "multipart/form-data":                 return MediaType.MultipartForm;
-                case "text/plain":                          return MediaType.PlainText;
-                case "application/x-www-form-urlencoded":   return MediaType.UrlEncodedForm;
-                case "application/xml":
-                case "text/xml":                            return MediaType.Xml;
-                default:                                    return MediaType.Unknown;
+            switch(mediaType) {
+                case MediaType.JavaScript:      return "application/javascript";
+                case MediaType.Json:            return "application/json";
+                case MediaType.MultipartForm:   return "multipart/form-data";
+                case MediaType.PlainText:       return "text/plain";
+                case MediaType.UrlEncodedForm:  return "application/x-www-form-urlencoded";
+                case MediaType.Xml:             return "application/xml";
+                case MediaType.Unknown:         return null;
+                default:                        throw new NotImplementedException();
             }
-        }
-
-        /// <summary>
-        /// Returns the .NET encoding for a charset's name or null if the charset is not recognised. If the
-        /// charset is null or empty then UTF-8 is returned.
-        /// </summary>
-        /// <param name="charset"></param>
-        /// <returns></returns>
-        public static Encoding FormatCharset(string charset)
-        {
-            // TODO: needs writing...
-            Encoding result = Encoding.UTF8;
-
-            if(!String.IsNullOrEmpty(charset)) {
-                try {
-                    switch(charset.ToLower()) {
-                        case "csutf7":      charset = "utf-7"; break;
-                        case "csutf8":      charset = "utf-8"; break;
-                        case "csutf16":     charset = "utf-16"; break;
-                        case "csutf16be":   charset = "utf-16be"; break;
-                        case "csutf16le":   charset = "utf-16le"; break;
-                        case "csutf32":     charset = "utf-32"; break;
-                        case "csutf32be":   charset = "utf-32be"; break;
-                        case "csutf32le":   charset = "utf-32le"; break;
-                    }
-
-                    result = Encoding.GetEncoding(charset);
-                } catch(ArgumentException) {
-                    result = null;
-                }
-            }
-
-            return result;
         }
     }
 }
