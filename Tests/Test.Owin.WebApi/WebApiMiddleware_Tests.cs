@@ -221,6 +221,16 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
+        public void Middleware_Adds_Route_To_Environment()
+        {
+            var middleware = _WebApi.CreateMiddleware(MockMiddleware.Stub);
+
+            MockMiddleware.Call(middleware, _Environment.Environment);
+
+            Assert.AreSame(_FoundRoute, _Environment.Environment[WebApiEnvironmentKey.Route]);
+        }
+
+        [TestMethod]
         public void Middleware_Uses_WebApiResponder_To_Return_Route_Result()
         {
             _RouteOutcome = new object();

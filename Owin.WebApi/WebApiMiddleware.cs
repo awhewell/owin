@@ -70,15 +70,17 @@ namespace AWhewell.Owin.WebApi
 
             // TODO: Think about / implement exception handling
             // TODO: Permissions
-            // TODO: Route object should be available to route method via environment so that route methods can use IWebApiResponder
 
             return async(IDictionary<string, object> environment) =>
             {
                 var route = routeMapper.FindRouteForRequest(environment);
                 if(route != null) {
                     var parameters = routeMapper.BuildRouteParameters(route, environment);
+                    // TODO: Only have test for invalid parameters, nothing is testing status code when parameters are good
                     environment[EnvironmentKey.ResponseStatusCode] = 400;
                     if(parameters.IsValid) {
+                        environment[WebApiEnvironmentKey.Route] = route;
+
                         var result = routeCaller.CallRoute(environment, route, parameters);
                         responder.ReturnJsonObject(environment, route, result);
                     }
