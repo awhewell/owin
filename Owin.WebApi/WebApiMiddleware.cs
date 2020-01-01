@@ -76,9 +76,9 @@ namespace AWhewell.Owin.WebApi
                 var route = routeMapper.FindRouteForRequest(environment);
                 if(route != null) {
                     var parameters = routeMapper.BuildRouteParameters(route, environment);
-                    // TODO: Only have test for invalid parameters, nothing is testing status code when parameters are good
-                    environment[EnvironmentKey.ResponseStatusCode] = 400;
-                    if(parameters.IsValid) {
+                    if(!parameters.IsValid) {
+                        environment[EnvironmentKey.ResponseStatusCode] = 400;
+                    } else {
                         environment[WebApiEnvironmentKey.Route] = route;
 
                         var result = routeCaller.CallRoute(environment, route, parameters);

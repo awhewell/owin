@@ -211,6 +211,17 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
+        public void Middleware_Does_Not_Set_Status_If_Parameters_Could_Be_Built()
+        {
+            _RouteParameters = new RouteParameters(null, new object[0]);
+            var middleware = _WebApi.CreateMiddleware(MockMiddleware.Stub);
+
+            MockMiddleware.Call(middleware, _Environment.Environment);
+
+            Assert.IsNull(_Environment.ResponseStatusCode);
+        }
+
+        [TestMethod]
         public void Middleware_Calls_Route_If_Parameters_Could_Be_Built()
         {
             var middleware = _WebApi.CreateMiddleware(MockMiddleware.Stub);
