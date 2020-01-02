@@ -15,6 +15,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using AWhewell.Owin.Utility;
@@ -386,6 +387,38 @@ namespace Test.AWhewell.Owin.Utility
 
             _Environment[EnvironmentKey.RequestScheme] = "https";
             Assert.AreEqual(HttpScheme.Https, _Context.RequestHttpScheme);
+        }
+
+        [TestMethod]
+        public void RequestPrincipal_Is_Null_By_Default()
+        {
+            Assert.IsNull(_Context.RequestPrincipal);
+        }
+
+        [TestMethod]
+        public void RequestPrincipal_Can_Be_Assigned()
+        {
+            var user = new GenericPrincipal(
+                new GenericIdentity("foo", "basic"),
+                new string[] { "Admin" }
+            );
+
+            // Can overwrite principal when it's null
+            _Context.RequestPrincipal = user;
+            Assert.AreSame(user, _Context.RequestPrincipal);
+            Assert.AreSame(user, _Environment[CustomEnvironmentKey.Principal]);
+
+            // Can overwrite principal when it's the same value
+            _Context.RequestPrincipal = user;
+            Assert.AreSame(user, _Context.RequestPrincipal);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void RequestPrincipal_Cannot_Be_Changed_Once_Assigned()
+        {
+            _Context.RequestPrincipal = new GenericPrincipal(new GenericIdentity("foo", "basic"), new string[] {});
+            _Context.RequestPrincipal = new GenericPrincipal(new GenericIdentity("foo2", "basic"), new string[] {});
         }
 
         [TestMethod]

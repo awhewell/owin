@@ -43,5 +43,11 @@ namespace AWhewell.Owin.Utility
         /// Value is the path that <see cref="RequestPathParts"/> was built from.
         /// </summary>
         public const string RequestPathPartsBasis = "awowin.RequestPathPartsBasis";
+
+        /// <summary>
+        /// Value is the System.Security.Principal.IPrincipal that the request is running under or null if the
+        /// request is anonymous.
+        /// </summary>
+        public const string Principal = "awowin.Principal";
     }
 }

@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 
@@ -214,6 +215,16 @@ namespace AWhewell.Owin.Utility
         {
             get => Environment[EnvironmentKey.RequestScheme] as string;
             set => SetIfInitialisingOrNoChange(RequestScheme, value, EnvironmentKey.RequestScheme, "There is already a value set for RequestScheme");
+        }
+
+        /// <summary>
+        /// Gets or sets the user that the request is running under or null if the request is anonymous. Attempts to overwrite
+        /// an existing user with a new one will throw an exception unless they are the same user.
+        /// </summary>
+        public IPrincipal RequestPrincipal
+        {
+            get => Environment[CustomEnvironmentKey.Principal] as IPrincipal;
+            set => SetIfInitialisingOrNoChange(RequestPrincipal, value, CustomEnvironmentKey.Principal, "There is already a value set for RequestPrincipal");
         }
 
         /// <summary>

@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Web;
@@ -192,13 +193,13 @@ namespace Test.AWhewell.Owin
             Stream body = null
         )
         {
-            Environment["owin.RequestPathBase"] =       pathBase;
-            Environment["owin.RequestPath"] =           path;
-            Environment["owin.RequestProtocol"] =       protocol;
-            Environment["owin.RequestQueryString"] =    queryString;
-            Environment["owin.RequestScheme"] =         requestScheme;
-            Environment["owin.RequestHeaders"] =        headers ?? new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
-            Environment["owin.RequestBody"] =           body ?? Stream.Null;
+            Environment["owin.RequestPathBase"] = pathBase;
+            Environment["owin.RequestPath"] = path;
+            Environment["owin.RequestProtocol"] = protocol;
+            Environment["owin.RequestQueryString"] = queryString;
+            Environment["owin.RequestScheme"] = requestScheme;
+            Environment["owin.RequestHeaders"] = headers ?? new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+            Environment["owin.RequestBody"] = body ?? Stream.Null;
         }
 
         /// <summary>
@@ -250,8 +251,31 @@ namespace Test.AWhewell.Owin
         /// <param name="headers"></param>
         public void AddResponseEnvironment(Stream body = null, IDictionary<string, string[]> headers = null)
         {
-            Environment["owin.ResponseBody"] =      body ?? Stream.Null;
-            Environment["owin.ResponseHeaders"] =   headers ?? new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+            Environment["owin.ResponseBody"] = body ?? Stream.Null;
+            Environment["owin.ResponseHeaders"] = headers ?? new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Adds a principal to the request.
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <param name="authType"></param>
+        /// <param name="roles"></param>
+        public void SetRequestPrincipal(string userName, string authType, params string[] roles)
+        {
+            Environment[CustomEnvironmentKey.Principal] = new GenericPrincipal(
+                new GenericIdentity(userName, authType),
+                roles
+            );
+        }
+
+        /// <summary>
+        /// Adds a principal to the request.
+        /// </summary>
+        /// <param name="principal"></param>
+        public void SetRequestPrincipal(IPrincipal principal)
+        {
+            Environment[CustomEnvironmentKey.Principal] = principal;
         }
 
         /// <summary>

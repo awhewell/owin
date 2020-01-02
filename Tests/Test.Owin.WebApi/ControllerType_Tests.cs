@@ -23,6 +23,17 @@ namespace Test.AWhewell.Owin.WebApi
     [TestClass]
     public class ControllerType_Tests
     {
+        [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
+        public class Filter1Attribute : Attribute, IFilterAttribute
+        {
+            public bool AllowRequest(IDictionary<string, object> owinEnvironment) => throw new NotImplementedException();
+        }
+
+        public class Filter2Attribute : Attribute, IFilterAttribute
+        {
+            public bool AllowRequest(IDictionary<string, object> owinEnvironment) => throw new NotImplementedException();
+        }
+
         public class SampleController1 : IApiController
         {
             public IDictionary<string, object> OwinEnvironment { get; set; }
@@ -40,12 +51,30 @@ namespace Test.AWhewell.Owin.WebApi
             public IDictionary<string, object> OwinEnvironment { get; set; }
         }
 
+        [Filter1, Filter2]
+        public class SampleController4 : IApiController
+        {
+            public IDictionary<string, object> OwinEnvironment { get; set; }
+        }
+
         [TestMethod]
         public void Ctor_Fills_Type_Correctly()
         {
             var ctype = new ControllerType(typeof(SampleController1), null, null);
 
             Assert.AreEqual(typeof(SampleController1), ctype.Type);
+        }
+
+        [TestMethod]
+        public void Ctor_Fills_FilterAttributes_Correctly()
+        {
+            var noFilters = new ControllerType(typeof(SampleController2), null, null);
+            Assert.AreEqual(0, noFilters.FilterAttributes.Length);
+
+            var twoFilters = new ControllerType(typeof(SampleController4), null, null);
+            Assert.AreEqual(2, twoFilters.FilterAttributes.Length);
+            Assert.IsTrue(twoFilters.FilterAttributes.Any(r => r is Filter1Attribute));
+            Assert.IsTrue(twoFilters.FilterAttributes.Any(r => r is Filter2Attribute));
         }
 
         [TestMethod]

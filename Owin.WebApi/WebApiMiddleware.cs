@@ -65,24 +65,23 @@ namespace AWhewell.Owin.WebApi
             routeMapper.AreQueryStringNamesCaseSensitive =  AreQueryStringNamesCaseSensitive;
             routeMapper.Initialise(routes);
 
+            var routeFilter = Factory.Resolve<IRouteFilter>();
             var routeCaller = Factory.Resolve<IRouteCaller>();
             var responder = Factory.Resolve<IWebApiResponder>();
-
-            // TODO: Think about / implement exception handling
-            // TODO: Permissions
 
             return async(IDictionary<string, object> environment) =>
             {
                 var route = routeMapper.FindRouteForRequest(environment);
                 if(route != null) {
-                    var parameters = routeMapper.BuildRouteParameters(route, environment);
-                    if(!parameters.IsValid) {
-                        environment[EnvironmentKey.ResponseStatusCode] = 400;
-                    } else {
-                        environment[WebApiEnvironmentKey.Route] = route;
-
-                        var result = routeCaller.CallRoute(environment, route, parameters);
-                        responder.ReturnJsonObject(environment, route, result);
+                    environment[WebApiEnvironmentKey.Route] = route;
+                    if(routeFilter.CanCallRoute(route, environment)) {
+                        var parameters = routeMapper.BuildRouteParameters(route, environment);
+                        if(!parameters.IsValid) {
+                            environment[EnvironmentKey.ResponseStatusCode] = 400;
+                        } else {
+                            var result = routeCaller.CallRoute(environment, route, parameters);
+                            responder.ReturnJsonObject(environment, route, result);
+                        }
                     }
                 }
 

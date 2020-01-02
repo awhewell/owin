@@ -25,6 +25,11 @@ namespace AWhewell.Owin.Interface.WebApi
         public Type Type { get; }
 
         /// <summary>
+        /// Gets all of the filter attributes that apply to the controller and all routes on the controller.
+        /// </summary>
+        public IFilterAttribute[] FilterAttributes { get; }
+
+        /// <summary>
         /// Gets the type parser resolver to use for this controller. This is null if the controller does not
         /// have a <see cref="UseParserAttribute"/> attribute and there are no defaults in force.
         /// </summary>
@@ -46,14 +51,16 @@ namespace AWhewell.Owin.Interface.WebApi
         {
             Type = type;
 
-            const bool useInheritedAttributes = true;
+            FilterAttributes = Type.GetCustomAttributes(inherit: true)
+                .OfType<IFilterAttribute>()
+                .ToArray();
 
-            var useParserAttr = Type.GetCustomAttributes(typeof(UseParserAttribute), useInheritedAttributes)
+            var useParserAttr = Type.GetCustomAttributes(typeof(UseParserAttribute), inherit: true)
                 .OfType<UseParserAttribute>()
                 .FirstOrDefault();
             TypeParserResolver = UseParserAttribute.ToTypeParserResolver(useParserAttr, defaultParserResolver);
 
-            var useFormatterAttr = Type.GetCustomAttributes(typeof(UseFormatterAttribute), useInheritedAttributes)
+            var useFormatterAttr = Type.GetCustomAttributes(typeof(UseFormatterAttribute), inherit: true)
                 .OfType<UseFormatterAttribute>()
                 .FirstOrDefault();
             TypeFormatterResolver = UseFormatterAttribute.ToTypeFormatterResolver(useFormatterAttr, defaultFormatterResolver);

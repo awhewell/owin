@@ -234,6 +234,167 @@ namespace Test.AWhewell.Owin.WebApi
             Assert.AreSame(route.MethodParameters[0], pathPartParameter.MethodParameter);
         }
 
+        public class MethodFilterController : Controller
+        {
+            [ControllerType_Tests.Filter1]
+            [ControllerType_Tests.Filter2]
+            [Authorize]
+            [Route("filters")]
+            public void MethodFilters() { ; }
+
+            [ControllerType_Tests.Filter1]
+            [ControllerType_Tests.Filter1]
+            [Authorize]
+            [Authorize]
+            [Route("dupe-filters")]
+            public void DuplicateFilters() { ; }
+
+            [Authorize]
+            [AllowAnonymous]
+            [Route("allow-anon")]
+            public void AllowAnonymous() {;}
+        }
+
+        [ControllerType_Tests.Filter1]
+        [ControllerType_Tests.Filter2]
+        public class ControllerFilterController : Controller
+        {
+            [Route("no-filter")]
+            public void NoMethodFilter() {;}
+
+            [Authorize]
+            [Route("new-filters")]
+            public void ExtendFilters() {;}
+
+            [ControllerType_Tests.Filter2]
+            [Route("duplicate-filters")]
+            public void DuplicateFilters() {;}
+        }
+
+        [TestMethod]
+        public void Ctor_Fills_FilterAttributes_Correctly_When_There_Are_No_Filters()
+        {
+            var route = CreateRoute(typeof(Controller), nameof(Controller.Get));
+
+            Assert.AreEqual(0, route.FilterAttributes.Length);
+        }
+
+        [TestMethod]
+        public void Ctor_Fills_Method_FilterAttributes_Correctly()
+        {
+            var route = CreateRoute(typeof(MethodFilterController), nameof(MethodFilterController.MethodFilters));
+
+            Assert.AreEqual(3, route.FilterAttributes.Length);
+            Assert.IsTrue(route.FilterAttributes.Any(r => r is ControllerType_Tests.Filter1Attribute));
+            Assert.IsTrue(route.FilterAttributes.Any(r => r is ControllerType_Tests.Filter2Attribute));
+            Assert.IsTrue(route.FilterAttributes.Any(r => r is AuthorizeAttribute));
+        }
+
+        [TestMethod]
+        public void Ctor_FilterAttributes_Allows_Duplicate_Filters()
+        {
+            var route = CreateRoute(typeof(MethodFilterController), nameof(MethodFilterController.DuplicateFilters));
+
+            Assert.AreEqual(4, route.FilterAttributes.Length);
+
+            var filter1s = route.FilterAttributes.OfType<ControllerType_Tests.Filter1Attribute>().ToArray();
+            Assert.AreEqual(2, filter1s.Length);
+            Assert.AreNotSame(filter1s[0], filter1s[1]);
+
+            var authorises = route.FilterAttributes.OfType<AuthorizeAttribute>().ToArray();
+            Assert.AreEqual(2, authorises.Length);
+            Assert.AreNotSame(authorises[0], authorises[1]);
+        }
+
+        [TestMethod]
+        public void Ctor_FilterAttributes_Inherits_Filters_From_Controller()
+        {
+            var route = CreateRoute(typeof(ControllerFilterController), nameof(ControllerFilterController.NoMethodFilter));
+
+            Assert.AreEqual(2, route.FilterAttributes.Length);
+            Assert.IsTrue(route.FilterAttributes.Any(r => r is ControllerType_Tests.Filter1Attribute));
+            Assert.IsTrue(route.FilterAttributes.Any(r => r is ControllerType_Tests.Filter2Attribute));
+        }
+
+        [TestMethod]
+        public void Ctor_FilterAttributes_Extends_Filters_From_Controller()
+        {
+            var route = CreateRoute(typeof(ControllerFilterController), nameof(ControllerFilterController.ExtendFilters));
+
+            Assert.AreEqual(3, route.FilterAttributes.Length);
+            Assert.IsTrue(route.FilterAttributes.Any(r => r is ControllerType_Tests.Filter1Attribute));
+            Assert.IsTrue(route.FilterAttributes.Any(r => r is ControllerType_Tests.Filter2Attribute));
+            Assert.IsTrue(route.FilterAttributes.Any(r => r is AuthorizeAttribute));
+        }
+
+        [TestMethod]
+        public void Ctor_FilterAttributes_Adds_Duplicate_Filters_From_Controller()
+        {
+            var route = CreateRoute(typeof(ControllerFilterController), nameof(ControllerFilterController.DuplicateFilters));
+
+            Assert.AreEqual(3, route.FilterAttributes.Length);
+
+            var filter1s = route.FilterAttributes.OfType<ControllerType_Tests.Filter1Attribute>().ToArray();
+            Assert.AreEqual(1, filter1s.Length);
+
+            var filter2s = route.FilterAttributes.OfType<ControllerType_Tests.Filter2Attribute>().ToArray();
+            Assert.AreEqual(2, filter2s.Length);
+            Assert.AreNotSame(filter2s[0], filter2s[1]);
+        }
+
+        [TestMethod]
+        public void Ctor_AuthorizationFilters_Filled_Correctly_When_Method_Has_No_Authorisation_Filters()
+        {
+            var route = CreateRoute(typeof(Controller), nameof(Controller.Get));
+
+            Assert.AreEqual(0, route.AuthorizationFilters.Length);
+        }
+
+        [TestMethod]
+        public void Ctor_AuthorizationFilters_Filled_Correctly_When_Method_Has_Authorisation_Filters()
+        {
+            var route = CreateRoute(typeof(MethodFilterController), nameof(MethodFilterController.DuplicateFilters));
+
+            Assert.AreEqual(2, route.AuthorizationFilters.Length);
+            Assert.AreNotSame(route.AuthorizationFilters[0], route.AuthorizationFilters[1]);
+        }
+
+        [TestMethod]
+        public void Ctor_HasAllowAnonymousAttribute_Clear_When_Attribute_Not_Present()
+        {
+            var route = CreateRoute(typeof(Controller), nameof(Controller.Get));
+
+            Assert.IsFalse(route.HasAllowAnonymousAttribute);
+        }
+
+        [TestMethod]
+        public void Ctor_HasAllowAnonymousAttribute_Set_When_Attribute_Present()
+        {
+            var route = CreateRoute(typeof(MethodFilterController), nameof(MethodFilterController.AllowAnonymous));
+
+            Assert.IsTrue(route.HasAllowAnonymousAttribute);
+        }
+
+        [TestMethod]
+        public void Ctor_OtherFilters_Filled_Correctly_When_Method_Has_No_Other_Filters()
+        {
+            var route = CreateRoute(typeof(Controller), nameof(Controller.Get));
+
+            Assert.AreEqual(0, route.OtherFilters.Length);
+        }
+
+        [TestMethod]
+        public void Ctor_OtherFilters_Filled_Correctly_When_Method_Has_None_Authorisation_Filters()
+        {
+            var route = CreateRoute(typeof(MethodFilterController), nameof(MethodFilterController.DuplicateFilters));
+
+            Assert.AreEqual(2, route.OtherFilters.Length);
+
+            var filter1s = route.FilterAttributes.OfType<ControllerType_Tests.Filter1Attribute>().ToArray();
+            Assert.AreEqual(2, filter1s.Length);
+            Assert.AreNotSame(filter1s[0], filter1s[1]);
+        }
+
         public class NoDefaultResolverController : Controller
         {
             [HttpGet, Route("a1"), UseParser(typeof(DateTime_Local_Parser))] public int A1(int x) { return x + 1; }

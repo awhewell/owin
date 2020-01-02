@@ -9,6 +9,7 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -50,6 +51,29 @@ namespace AWhewell.Owin.Interface.WebApi
         /// Gets all of the parameters to the method in the order that they are passed.
         /// </summary>
         public MethodParameter[] MethodParameters { get; }
+
+        /// <summary>
+        /// Gets all of the filter attributes that apply to this route. These are a combination of the
+        /// attributes from the parent controller and the route method. Includes authorisation filters.
+        /// </summary>
+        public IFilterAttribute[] FilterAttributes { get; }
+
+        /// <summary>
+        /// Gets the subset of <see cref="FilterAttributes"/> that implement <see cref="IAuthorizationFilter"/>.
+        /// These filters are checked first.
+        /// </summary>
+        public IAuthorizationFilter[] AuthorizationFilters { get; }
+
+        /// <summary>
+        /// Gets the subset of <see cref="FilterAttributes"/> that does not implement <see cref="IAuthorizationFilter"/>.
+        /// These will not be called if an authorisation filter rejects the request.
+        /// </summary>
+        public IFilterAttribute[] OtherFilters { get; }
+
+        /// <summary>
+        /// True if the method is flagged with <see cref="AllowAnonymousAttribute"/>.
+        /// </summary>
+        public bool HasAllowAnonymousAttribute { get; }
 
         /// <summary>
         /// Gets the default type parser resolver to use for all parameters on the method. This will be null if
@@ -100,13 +124,35 @@ namespace AWhewell.Owin.Interface.WebApi
             Method =         method;
             RouteAttribute = routeAttribute;
 
-            TypeParserResolver =    BuildTypeParserResolver(controllerType, method);
-            TypeFormatterResolver = BuildTypeFormatterResolver(controllerType, method);
-            MethodParameters =      ExtractMethodParameters(method, TypeParserResolver);
-            HttpMethod =            ExtractHttpMethod(method);
-            PathParts =             ExtractPathParts(MethodParameters, routeAttribute);
+            FilterAttributes =              BuildFilterAttributes(controllerType, method);
+            AuthorizationFilters =          FilterAttributes.OfType<IAuthorizationFilter>().ToArray();
+            OtherFilters =                  BuildOtherFilters(FilterAttributes, AuthorizationFilters);
+            HasAllowAnonymousAttribute =    method.GetCustomAttributes<AllowAnonymousAttribute>(inherit: false).Any();
+            TypeParserResolver =            BuildTypeParserResolver(controllerType, method);
+            TypeFormatterResolver =         BuildTypeFormatterResolver(controllerType, method);
+            MethodParameters =              ExtractMethodParameters(method, TypeParserResolver);
+            HttpMethod =                    ExtractHttpMethod(method);
+            PathParts =                     ExtractPathParts(MethodParameters, routeAttribute);
 
             ID = Interlocked.Increment(ref _NextID);
+        }
+
+        private IFilterAttribute[] BuildFilterAttributes(ControllerType controllerType, MethodInfo method)
+        {
+            return controllerType.FilterAttributes
+                .Concat(
+                    method.GetCustomAttributes(inherit: true)
+                        .OfType<IFilterAttribute>()
+                )
+                .ToArray();
+        }
+
+        private IFilterAttribute[] BuildOtherFilters(IFilterAttribute[] filterAttributes, IAuthorizationFilter[] authorizationFilters)
+        {
+            // The Except() LINQ call will remove duplicates from filterAttributes - we need to preserve them
+            return filterAttributes
+                .Where(r => !authorizationFilters.Contains(r))
+                .ToArray();
         }
 
         private TypeParserResolver BuildTypeParserResolver(ControllerType controllerType, MethodInfo method)
