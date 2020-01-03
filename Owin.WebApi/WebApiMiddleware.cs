@@ -81,7 +81,11 @@ namespace AWhewell.Owin.WebApi
                         } else {
                             var result = routeCaller.CallRoute(environment, route, parameters);
                             if(!route.IsVoidMethod) {
-                                responder.ReturnJsonObject(environment, result);
+                                if(result == null && (route.RouteAttribute?.NullStatusCode ?? 0) != 0) {
+                                    environment[EnvironmentKey.ResponseStatusCode] = route.RouteAttribute.NullStatusCode;
+                                } else {
+                                    responder.ReturnJsonObject(environment, result);
+                                }
                             }
                         }
                     }

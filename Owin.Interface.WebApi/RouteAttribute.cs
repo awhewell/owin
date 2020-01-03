@@ -10,6 +10,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 
 namespace AWhewell.Owin.Interface.WebApi
@@ -22,9 +23,15 @@ namespace AWhewell.Owin.Interface.WebApi
     public class RouteAttribute : Attribute
     {
         /// <summary>
-        /// The route to the method.
+        /// Gets the route to the method.
         /// </summary>
         public string Route { get; }
+
+        /// <summary>
+        /// Gets the status code to return with an empty body if the response is null. If this is zero
+        /// (default) then null result will be returned as a null object with a status of 200 (OK).
+        /// </summary>
+        public int NullStatusCode { get; set; }
 
         /// <summary>
         /// Creates a new object.

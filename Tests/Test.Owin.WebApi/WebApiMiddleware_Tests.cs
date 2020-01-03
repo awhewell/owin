@@ -19,6 +19,7 @@ using AWhewell.Owin.Interface;
 using AWhewell.Owin.Interface.WebApi;
 using AWhewell.Owin.Utility.Parsers;
 using AWhewell.Owin.Utility.Formatters;
+using System.Net;
 
 namespace Test.AWhewell.Owin.WebApi
 {
@@ -31,6 +32,12 @@ namespace Test.AWhewell.Owin.WebApi
 
             [Route("a")]
             public void VoidMethod() {;}
+
+            [Route("b", NullStatusCode = (int)HttpStatusCode.Conflict)]
+            public object HasNullStatusCode() { return new object(); }
+
+            [Route("c")]
+            public object DoesNotHaveNullStatusCode() { return new object(); }
         }
 
         private IClassFactory               _Snapshot;
@@ -303,6 +310,32 @@ namespace Test.AWhewell.Owin.WebApi
             MockMiddleware.Call(middleware, _Environment.Environment);
 
             _Responder.Verify(r => r.ReturnJsonObject(_Environment.Environment, _RouteOutcome), Times.Never());
+        }
+
+        [TestMethod]
+        [DataRow(false, false,  true)]      // Does not have null status code, is not null outcome, should pass to responder
+        [DataRow(false, true,   true)]      // Does not have null status code, is null outcome, should pass to responder
+        [DataRow(true,  false,  true)]      // Has null status code, is not null outcome, should pass to responder
+        [DataRow(true,  true,   false)]     // Has null status code, is null outcome, should NOT pass to responder
+        public void Middleware_Handles_NullStatusCode_Correctly(bool hasNullStatusCode, bool hasNullOutcome, bool expectResponderCall)
+        {
+            _RouteOutcome = hasNullOutcome ? null : new Object();
+            _FoundRoute = Route_Tests.CreateRoute<Controller>(
+                hasNullStatusCode
+                    ? nameof(Controller.HasNullStatusCode)
+                    : nameof(Controller.DoesNotHaveNullStatusCode)
+            );
+            var middleware = _WebApi.CreateMiddleware(MockMiddleware.Stub);
+
+            MockMiddleware.Call(middleware, _Environment.Environment);
+
+            if(expectResponderCall) {
+                _Responder.Verify(r => r.ReturnJsonObject(_Environment.Environment, _RouteOutcome), Times.Once());
+                Assert.IsNull(_Environment.ResponseStatusCode);
+            } else {
+                _Responder.Verify(r => r.ReturnJsonObject(_Environment.Environment, _RouteOutcome), Times.Never());
+                Assert.AreEqual((int)HttpStatusCode.Conflict, _Environment.ResponseStatusCode);
+            }
         }
     }
 }

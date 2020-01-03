@@ -17,6 +17,7 @@ using AWhewell.Owin.Interface.WebApi;
 using AWhewell.Owin.Utility;
 using AWhewell.Owin.Utility.Parsers;
 using AWhewell.Owin.Utility.Formatters;
+using System.Net;
 
 namespace Test.AWhewell.Owin.WebApi
 {
