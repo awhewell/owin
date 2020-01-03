@@ -95,9 +95,12 @@ namespace AWhewell.Owin.WebApi
         /// <param name="mimeType"></param>
         public void ReturnJsonObject(OwinContext context, object obj, TypeFormatterResolver resolver, Encoding encoding, string mimeType)
         {
-            var jsonText = _JsonSerialiser.Serialise(obj, resolver);
+            if(String.IsNullOrEmpty(context.ResponseHeadersDictionary.CacheControl)) {
+                context.ResponseHeadersDictionary.CacheControl = "max-age=0,no-cache,no-store,must-revalidate";
+            }
+
             context.ReturnText(
-                jsonText,
+                _JsonSerialiser.Serialise(obj, resolver),
                 encoding ?? Encoding.UTF8,
                 String.IsNullOrEmpty(mimeType) ? Formatter.FormatMediaType(MediaType.Json) : mimeType
             );

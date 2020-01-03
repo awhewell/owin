@@ -107,6 +107,32 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
+        public void ReturnJsonObject_Blocks_Caching()
+        {
+            _Responder.ReturnJsonObject(_Environment.Environment, "1");
+
+            var cacheControl = _Environment.ResponseHeadersDictionary.CacheControlValue;
+            Assert.AreEqual(0,    cacheControl.MaxAgeSeconds);
+            Assert.AreEqual(true, cacheControl.NoCache);
+            Assert.AreEqual(true, cacheControl.NoStore);
+            Assert.AreEqual(true, cacheControl.MustRevalidate);
+        }
+
+        [TestMethod]
+        public void ReturnJsonObject_Does_Not_Overwrite_CacheControl()
+        {
+            _Environment.ResponseHeadersDictionary.CacheControl = "max-age=10";
+
+            _Responder.ReturnJsonObject(_Environment.Environment, "1");
+
+            var cacheControl = _Environment.ResponseHeadersDictionary.CacheControlValue;
+            Assert.AreEqual(10,    cacheControl.MaxAgeSeconds);
+            Assert.AreEqual(false, cacheControl.NoCache);
+            Assert.AreEqual(false, cacheControl.NoStore);
+            Assert.AreEqual(false, cacheControl.MustRevalidate);
+        }
+
+        [TestMethod]
         public void ReturnJsonObject_Will_Write_Body_For_Void_Routes()
         {
             var route = Route_Tests.CreateRoute<Controller>(nameof(Controller.VoidMethod));
@@ -174,6 +200,32 @@ namespace Test.AWhewell.Owin.WebApi
 
             var actual = _Environment.ResponseBodyText;
             Assert.AreEqual("\"c151f1a8d2354f288c0d5521a768be9e\"", actual);
+        }
+
+        [TestMethod]
+        public void ReturnJsonObject_FullControlVersion_Blocks_Caching()
+        {
+            _Responder.ReturnJsonObject(_Environment.Environment, "1", null, null, null);
+
+            var cacheControl = _Environment.ResponseHeadersDictionary.CacheControlValue;
+            Assert.AreEqual(0,    cacheControl.MaxAgeSeconds);
+            Assert.AreEqual(true, cacheControl.NoCache);
+            Assert.AreEqual(true, cacheControl.NoStore);
+            Assert.AreEqual(true, cacheControl.MustRevalidate);
+        }
+
+        [TestMethod]
+        public void ReturnJsonObject_FullControlVersion_Does_Not_Overwrite_CacheControl()
+        {
+            _Environment.ResponseHeadersDictionary.CacheControl = "max-age=10";
+
+            _Responder.ReturnJsonObject(_Environment.Environment, "1", null, null, null);
+
+            var cacheControl = _Environment.ResponseHeadersDictionary.CacheControlValue;
+            Assert.AreEqual(10,    cacheControl.MaxAgeSeconds);
+            Assert.AreEqual(false, cacheControl.NoCache);
+            Assert.AreEqual(false, cacheControl.NoStore);
+            Assert.AreEqual(false, cacheControl.MustRevalidate);
         }
     }
 }
