@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
@@ -44,6 +45,51 @@ namespace AWhewell.Owin.Utility
                 Environment[EnvironmentKey.CallCancelled] = value;
             }
         }
+
+        /// <summary>
+        /// Gets the IP address of the machine that made the request. If the request came from a
+        /// proxy server on the LAN then it is the address of the machine that last called the
+        /// proxy server, otherwise it is <see cref="ServerRemoteIpAddress"/>.
+        /// </summary>
+        public string ClientIpAddress
+        {
+            get {
+                DetermineClientAndProxyAddresses();
+                return Environment[CustomEnvironmentKey.ClientIpAddress] as string;
+            }
+        }
+
+        /// <summary>
+        /// Gets the IP address of the proxy that the request came through, if applicable.
+        /// </summary>
+        public string ProxyIpAddress
+        {
+            get {
+                DetermineClientAndProxyAddresses();
+                return Environment[CustomEnvironmentKey.ProxyIpAddress] as string;
+            }
+        }
+
+        /// <summary>
+        /// Gets <see cref="ClientIpAddress"/> parsed into an <see cref="IPAddress"/>.
+        /// </summary>
+        public IPAddress ClientIpAddressParsed
+        {
+            get {
+                DetermineClientAndProxyAddresses();
+                return Environment[CustomEnvironmentKey.ClientIpAddressParsed] as IPAddress;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating that the request originated from the local machine or the LAN.
+        /// </summary>
+        public bool IsLocalOrLan => IPAddressHelper.IsLocalOrLanAddress(ClientIpAddressParsed);
+
+        /// <summary>
+        /// Gets a value indicating that the request originated from the Internet.
+        /// </summary>
+        public bool IsInternet => !IsLocalOrLan;
 
         /// <summary>
         /// Gets the environment that this context is wrapping.
@@ -553,6 +599,58 @@ namespace AWhewell.Owin.Utility
                 environmentKey,
                 exceptionMessage
             );
+        }
+
+        /// <summary>
+        /// Tries to determine the true IP address of the client and the address of the proxy, if any. If the
+        /// values have already been calculated and aren't going to change then this does nothing.
+        /// </summary>
+        private void DetermineClientAndProxyAddresses()
+        {
+            var serverRemoteIpAddress = ServerRemoteIpAddress ?? "";
+            var xForwardedFor = RequestHeadersDictionary.XForwardedFor ?? "";
+            var translationBasis = new StringBuilder(serverRemoteIpAddress);
+            translationBasis.Append('-');
+            translationBasis.Append(xForwardedFor);
+
+            if(translationBasis.ToString() != Environment[CustomEnvironmentKey.ClientIpAddressBasis] as string) {
+                Environment[CustomEnvironmentKey.ClientIpAddressBasis] = translationBasis.ToString();
+
+                var serverRemoteIpAddressParsed = ParseIpAddress(serverRemoteIpAddress);
+                var localOrLanRequest = IPAddressHelper.IsLocalOrLanAddress(serverRemoteIpAddressParsed);
+                var xff = localOrLanRequest ? xForwardedFor : null;
+
+                IPAddress xffParsed = null;
+                if(!String.IsNullOrEmpty(xff)) {
+                    xff = xff.Split(',').Last().Trim();
+                    if(!IPAddress.TryParse(xff, out xffParsed)) {
+                        xff = null;
+                    }
+                }
+
+                if(String.IsNullOrEmpty(xff)) {
+                    Environment[CustomEnvironmentKey.ClientIpAddress] =         serverRemoteIpAddress;
+                    Environment[CustomEnvironmentKey.ClientIpAddressParsed] =   serverRemoteIpAddressParsed;
+                    Environment[CustomEnvironmentKey.ProxyIpAddress] =          null;
+                } else {
+                    Environment[CustomEnvironmentKey.ClientIpAddress] =         xff;
+                    Environment[CustomEnvironmentKey.ClientIpAddressParsed] =   xffParsed;
+                    Environment[CustomEnvironmentKey.ProxyIpAddress] =          serverRemoteIpAddress;
+                }
+            }
+        }
+
+        private IPAddress ParseIpAddress(string ipAddress)
+        {
+            var result = IPAddress.None;
+
+            if(!String.IsNullOrEmpty(ipAddress)) {
+                if(!IPAddress.TryParse(ipAddress, out result)) {
+                    result = IPAddress.None;
+                }
+            }
+
+            return result;
         }
     }
 }

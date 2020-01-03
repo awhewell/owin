@@ -37,6 +37,7 @@ namespace Test.AWhewell.Owin.Utility
         [DataRow(nameof(RequestHeadersDictionary.Origin),           "Origin")]
         [DataRow(nameof(RequestHeadersDictionary.Referer),          "Referer")]
         [DataRow(nameof(RequestHeadersDictionary.UserAgent),        "User-Agent")]
+        [DataRow(nameof(RequestHeadersDictionary.XForwardedFor),    "X-Forwarded-For")]
         public void ReadOnly_String_Values_Exposed_Correctly(string propertyName, string headerKey)
         {
             var propertyInfo = typeof(RequestHeadersDictionary).GetProperty(propertyName);

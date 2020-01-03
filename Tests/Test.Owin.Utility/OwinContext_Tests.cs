@@ -694,5 +694,34 @@ namespace Test.AWhewell.Owin.Utility
             Assert.AreEqual(1, form.Count);
             Assert.AreEqual("1,2", form.GetValue("VALUE"));
         }
+
+        [TestMethod]
+        [DataRow("192.168.0.1", null,                   null,             "192.168.0.1",  false)]     // Without an X-Forwarded-For header all requests from the LAN are considered to be local or LAN
+        [DataRow("192.168.0.1", "1.2.3.4",              "192.168.0.1",  "1.2.3.4",      true)]      // X-Forwarded-For headers from LAN requests are used (remote client)
+        [DataRow("192.168.0.1", "192.168.0.2",          "192.168.0.1",  "192.168.0.2",  false)]     // X-Forwarded-For headers from LAN requests are used (LAN client)
+        [DataRow("1.2.3.4",     "192.168.0.1",          null,           "1.2.3.4",      true)]      // X-Forwarded-For headers from non-LAN requests are ignored
+        [DataRow("192.168.0.1", "192.168.0.2, 1.2.3.4", "192.168.0.1",  "1.2.3.4",      true)]      // Only the last entry in the XFF header is considered
+        [DataRow("192.168.0.1", "garbage",              null,           "192.168.0.1",  false)]     // If the entire XFF header is unparseable then it is ignored…
+        [DataRow("192.168.0.1", "garbage, 1.2.3.4",     "192.168.0.1",  "1.2.3.4",      true)]      // If the last entry in the header is parseable then it is used
+        public void Request_IpAddress_Is_Resolved_Correctly(string serverRemoteIpAddress, string xForwardedFor, string expectedProxyIpAddress, string expectedClientIpAddress, bool expectedIsInternet)
+        {
+            var expectedClientIpAddressParsed = IPAddress.Parse(expectedClientIpAddress);
+
+            var env = UseEnvironmentWithRequiredFields();
+            env.Environment[EnvironmentKey.ServerRemoteIpAddress] = serverRemoteIpAddress;
+            env.RequestHeaders["X-Forwarded-For"] = xForwardedFor;
+
+            var actualProxyIpAddress =          _Context.ProxyIpAddress;
+            var actualClientIpAddress =         _Context.ClientIpAddress;
+            var actualClientIpAddressParsed =   _Context.ClientIpAddressParsed;
+            var actualIsInternet =              _Context.IsInternet;
+            var actualIsLocalOrLan =            _Context.IsLocalOrLan;
+
+            Assert.AreEqual(expectedProxyIpAddress,         actualProxyIpAddress);
+            Assert.AreEqual(expectedClientIpAddress,        actualClientIpAddress);
+            Assert.AreEqual(expectedClientIpAddressParsed,  actualClientIpAddressParsed);
+            Assert.AreEqual(expectedIsInternet,             actualIsInternet);
+            Assert.AreEqual(!expectedIsInternet,            actualIsLocalOrLan);
+        }
     }
 }

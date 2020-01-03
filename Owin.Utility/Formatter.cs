@@ -572,6 +572,7 @@ namespace AWhewell.Owin.Utility
         public static string FormatMediaType(MediaType mediaType)
         {
             switch(mediaType) {
+                case MediaType.Html:            return "text/html";
                 case MediaType.JavaScript:      return "application/javascript";
                 case MediaType.Json:            return "application/json";
                 case MediaType.MultipartForm:   return "multipart/form-data";

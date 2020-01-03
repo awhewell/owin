@@ -20,9 +20,29 @@ namespace AWhewell.Owin.Utility
     public static class CustomEnvironmentKey
     {
         /// <summary>
+        /// Value is a string representing the client's IP address after taking possible proxies into account.
+        /// </summary>
+        public const string ClientIpAddress = "awowin.ClientIpAddress";
+
+        /// <summary>
+        /// Value is the basis on which <see cref="ClientIpAddress"/> and <see cref="ProxyIpAddress"/> was calculated.
+        /// </summary>
+        public const string ClientIpAddressBasis = "awowin.ClientIpAddressBasis";
+
+        /// <summary>
+        /// Value is an IPAddress parsed from <see cref="ClientIpAddress"/>.
+        /// </summary>
+        public const string ClientIpAddressParsed = "awowin.ClientIpAddressParsed";
+
+        /// <summary>
         /// Value is an <see cref="OwinContext"/> object that was created by a prior call to <see cref="OwinContext.Create"/>.
         /// </summary>
         public const string Context =  "awowin.Context";
+
+        /// <summary>
+        /// Value is a string representing the last proxy that the request was routed through, if any.
+        /// </summary>
+        public const string ProxyIpAddress = "awowin.ProxyIpAddress";
 
         /// <summary>
         /// Value is the content body bytes. See <see cref="OwinContext.RequestBodyBytes"/>.

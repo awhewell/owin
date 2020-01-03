@@ -62,6 +62,11 @@ namespace AWhewell.Owin.Utility
         public string UserAgent => base["User-Agent"];
 
         /// <summary>
+        /// Gets the X-Forwarded-For IP address as a string.
+        /// </summary>
+        public string XForwardedFor => base["X-Forwarded-For"];
+
+        /// <summary>
         /// Creates a new object.
         /// </summary>
         public RequestHeadersDictionary() : base()

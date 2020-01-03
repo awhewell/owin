@@ -460,6 +460,7 @@ namespace Test.AWhewell.Owin.Utility
                 var actual = Formatter.FormatMediaType(mediaType);
 
                 switch(mediaType) {
+                    case MediaType.Html:            Assert.AreEqual("text/html", actual); break;
                     case MediaType.JavaScript:      Assert.AreEqual("application/javascript", actual); break;
                     case MediaType.Json:            Assert.AreEqual("application/json", actual); break;
                     case MediaType.MultipartForm:   Assert.AreEqual("multipart/form-data", actual); break;

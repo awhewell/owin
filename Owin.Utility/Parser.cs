@@ -627,7 +627,12 @@ namespace AWhewell.Owin.Utility
         public static MediaType ParseMediaType(string mediaType)
         {
             switch((mediaType ?? "").Trim().ToLower()) {
-                case "application/javascript":              return MediaType.JavaScript;
+                case "text/html":
+                case "application/xhtml+xml":               return MediaType.Html;
+                case "application/javascript":
+                case "application/ecmascript":
+                case "text/javascript":
+                case "text/ecmascript":                     return MediaType.JavaScript;
                 case "application/json":                    return MediaType.Json;
                 case "multipart/form-data":                 return MediaType.MultipartForm;
                 case "text/plain":                          return MediaType.PlainText;
