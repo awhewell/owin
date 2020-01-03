@@ -87,6 +87,21 @@ namespace Test.AWhewell.Owin.Utility
         }
 
         [TestMethod]
+        [DataRow(null,          false)]
+        [DataRow("",            false)]
+        [DataRow("no-cache",    true)]
+        public void CacheControlValue_Returns_CacheControl_Parsed_Into_CacheControlValue(string headerValue, bool expectedNoCache)
+        {
+            if(headerValue != null) {
+                _RequestHeaders["Cache-Control"] = headerValue;
+            }
+
+            var actual = _RequestHeaders.CacheControlValue;
+
+            Assert.AreEqual(expectedNoCache, actual.NoCache);
+        }
+
+        [TestMethod]
         [DataRow(null,  "")]
         [DataRow("",    "")]
         [DataRow("abc", "abc")]

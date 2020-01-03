@@ -37,6 +37,11 @@ namespace AWhewell.Owin.Utility
         public string CacheControl => base["Cache-Control"];
 
         /// <summary>
+        /// Gets the <see cref="CacheControl"/> value parsed into a <see cref="CacheControlRequestValue"/>.
+        /// </summary>
+        public CacheControlRequestValue CacheControlValue => CacheControlRequestValue.Parse(CacheControl ?? "");
+
+        /// <summary>
         /// Gets the MIME type of the body.
         /// </summary>
         public string ContentType => base["Content-Type"];

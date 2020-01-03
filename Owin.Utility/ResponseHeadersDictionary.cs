@@ -30,6 +30,24 @@ namespace AWhewell.Owin.Utility
         }
 
         /// <summary>
+        /// Gets or sets the Cache-Control header sent with the response.
+        /// </summary>
+        public string CacheControl
+        {
+            get => base["Cache-Control"];
+            set => base["Cache-Control"] = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the Cache-Control header as a parsed object.
+        /// </summary>
+        public CacheControlResponseValue CacheControlValue
+        {
+            get => CacheControlResponseValue.Parse(CacheControl);
+            set => CacheControl = value?.ToString();
+        }
+
+        /// <summary>
         /// Gets or sets the content type of the response.
         /// </summary>
         public string ContentType

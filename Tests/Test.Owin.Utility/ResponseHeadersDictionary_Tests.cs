@@ -31,6 +31,7 @@ namespace Test.AWhewell.Owin.Utility
         }
 
         [TestMethod]
+        [DataRow(nameof(ResponseHeadersDictionary.CacheControl),                "Cache-Control")]
         [DataRow(nameof(ResponseHeadersDictionary.ContentType),                 "Content-Type")]
         [DataRow(nameof(ResponseHeadersDictionary.AccessControlAllowOrigin),    "Access-Control-Allow-Origin")]
         public void String_Values_Exposed_Correctly(string propertyName, string headerKey)
@@ -83,5 +84,22 @@ namespace Test.AWhewell.Owin.Utility
             _ResponseHeaders.ContentTypeValue = new ContentTypeValue("application/json");
             Assert.IsTrue(new string[] { "application/json" }.SequenceEqual(_UnderlyingDictionary["Content-Type"]));
         }
+
+        [TestMethod]
+        public void CacheControlValue_Gets_And_Sets_Correctly()
+        {
+            _UnderlyingDictionary["Cache-Control"] = new string[] { "no-cache" };
+
+            var value = _ResponseHeaders.CacheControlValue;
+            Assert.AreEqual(true, value.NoCache);
+
+            _ResponseHeaders.CacheControlValue = null;
+            Assert.IsFalse(_UnderlyingDictionary.ContainsKey("Cache-Control"));
+            Assert.IsNull(_ResponseHeaders.CacheControlValue);
+
+            _ResponseHeaders.CacheControlValue = new CacheControlResponseValue(maxAgeSeconds: 10, isPublic: true);
+            Assert.IsTrue(new string[] { "max-age=10,public" }.SequenceEqual(_UnderlyingDictionary["Cache-Control"]));
+        }
+
     }
 }

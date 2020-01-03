@@ -119,5 +119,19 @@ namespace Test.AWhewell.Owin.Utility
 
             Assert.AreEqual(expected, actual);
         }
+
+        [TestMethod]
+        [DataRow("",  ",", "a",  "a")]
+        [DataRow("a", ",", "b",  "a,b")]
+        [DataRow("a", ",", "",   "a,")]
+        [DataRow("a", ",", null, "a,")]
+        public void AppendWithSeparator_Returns_Expected_Results(string initialBuilderContent, string separator, object value, string expected)
+        {
+            var builder = new StringBuilder(initialBuilderContent);
+
+            builder.AppendWithSeparator(separator, value);
+
+            Assert.AreEqual(expected, builder.ToString());
+        }
     }
 }

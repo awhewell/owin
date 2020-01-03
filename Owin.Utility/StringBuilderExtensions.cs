@@ -107,5 +107,20 @@ namespace AWhewell.Owin.Utility
         {
             return IndexOf(builder, value) != -1;
         }
+
+        /// <summary>
+        /// Appends the value to the builder. If the builder already has content then the
+        /// separator is appended before the value.
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <param name="separator"></param>
+        /// <param name="value"></param>
+        public static void AppendWithSeparator(this StringBuilder builder, string separator, object value)
+        {
+            if(builder.Length > 0) {
+                builder.Append(separator);
+            }
+            builder.Append(value);
+        }
     }
 }
