@@ -43,6 +43,43 @@ namespace Test.AWhewell.Owin.Utility
         }
 
         [TestMethod]
+        [DataRow("name=Andrew",             true,   "name", "Andrew")]
+        [DataRow("name=Andrew",             true,   "Name", null)]
+        [DataRow("name=Andrew",             false,  "Name", "Andrew")]
+        [DataRow("name=Andrew%20Whewell",   true,   "name", "Andrew Whewell")]
+        [DataRow("a=1&b=2",                 true,   "a",    "1")]
+        [DataRow("a=1&b=2",                 true,   "b",    "2")]
+        [DataRow("a=1%262&b=3",             true,   "a",    "1&2")]
+        [DataRow("a=1%262&b=3",             true,   "b",    "3")]
+        [DataRow("a",                       true,   "a",    "")]
+        [DataRow("a=",                      true,   "a",    "")]
+        [DataRow("a=1",                     true,   null,   null)]
+        [DataRow("a=1",                     true,   "",     null)]
+        [DataRow("=1",                      true,   "",     null)]
+        [DataRow("a=1&a=2",                 true,   "a",    "1,2")]
+        [DataRow("a=1&A=2",                 true,   "a",    "1")]
+        [DataRow("a=1&A=2",                 true,   "A",    "2")]
+        [DataRow("a=1&A=2",                 false,  "a",    "1,2")]
+        [DataRow("a&a=",                    true,   "a",    "")]
+        [DataRow("a=&a",                    true,   "a",    "")]
+        [DataRow("a&a=&a=1",                true,   "a",    ",1")]
+        [DataRow("a&a=1&a=",                true,   "a",    "1,")]
+        [DataRow("a%20=%201",               true,   "a",    null)]
+        [DataRow("a%20=%201",               true,   "a ",   " 1")]
+        [DataRow("a=1;b=2",                 true,   "a",    "1")]
+        [DataRow("a=1;b=2",                 true,   "b",    "2")]
+        [DataRow("a=1&b=2;c=3",             true,   "b",    "2")]
+        [DataRow("a=1&b=2;c=3",             true,   "c",    "3")]
+        public void QueryString_Index_Returns_Expected_Value(string queryString, bool caseSensitiveKey, string indexValue, string expected)
+        {
+            var dictionary = new QueryStringDictionary(queryString, caseSensitiveKey);
+
+            var actual = dictionary[indexValue];
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
         [DataRow("name=Andrew",             true,   "name", new string[] { "Andrew" })]
         [DataRow("name=Andrew",             true,   "Name", null)]
         [DataRow("name=Andrew",             false,  "Name", new string[] { "Andrew" })]
@@ -70,11 +107,11 @@ namespace Test.AWhewell.Owin.Utility
         [DataRow("a=1;b=2",                 true,   "b",    new string[] { "2" })]
         [DataRow("a=1&b=2;c=3",             true,   "b",    new string[] { "2" })]
         [DataRow("a=1&b=2;c=3",             true,   "c",    new string[] { "3" })]
-        public void QueryString_Index_Returns_Expected_Value(string queryString, bool caseSensitiveKey, string indexValue, string[] expected)
+        public void QueryString_GetValues_Returns_Expected_Values(string queryString, bool caseSensitiveKey, string key, string[] expected)
         {
             var dictionary = new QueryStringDictionary(queryString, caseSensitiveKey);
 
-            var actual = dictionary[indexValue];
+            var actual = dictionary.GetValues(key);
 
             if(expected == null) {
                 Assert.IsNull(actual);
@@ -106,35 +143,15 @@ namespace Test.AWhewell.Owin.Utility
         [TestMethod]
         [DataRow("Name=Andrew", true, new string[] { "Andrew" })]
         [DataRow("a=1&b=2;c=3", true, new string[] { "1", "2", "3" })]
-        [DataRow("=1",          true, null)]
-        public void Values_Returns_All_Values(string queryString, bool caseSensitiveKey, string[] expectedSingleElementValues)
+        [DataRow("a=1&a=2",     true, new string[] { "1,2" })]
+        [DataRow("=1",          true, new string[] { })]
+        public void Values_Returns_All_Values(string queryString, bool caseSensitiveKey, string[] expected)
         {
-            // It appears that you can't have arrays of arrays in attributes, hence the test being restricted to single element values
-
             var dictionary = new QueryStringDictionary(queryString, caseSensitiveKey);
+
             var actual = dictionary.Values.ToArray();
 
-            if(expectedSingleElementValues == null) {
-                Assert.AreEqual(0, actual.Length);
-            } else {
-                Assert.AreEqual(expectedSingleElementValues.Length, actual.Length);
-                var copy = new List<string>(actual.Select(r => r.Single()));
-                foreach(var expectedValue in expectedSingleElementValues) {
-                    var actualIdx = copy.IndexOf(expectedValue);
-                    Assert.AreNotEqual(-1, actualIdx, $"Cannot find {expectedValue} in Values");
-                    copy.RemoveAt(actualIdx);
-                }
-            }
-        }
-
-        [TestMethod]
-        public void Values_Returns_Array_Values_Correctly()
-        {
-            var dictionary = new QueryStringDictionary("a=1&a=2;a=3;a=;a");
-
-            var actual = dictionary.Values.Single();
-
-            Assert.IsTrue(new string[] { "1", "2", "3", "" }.SequenceEqual(actual));
+            Assertions.AreEqual(expected, actual);
         }
 
         [TestMethod]
@@ -176,15 +193,15 @@ namespace Test.AWhewell.Owin.Utility
                     Assert.IsFalse(seenKeys.Contains(key));
                     seenKeys.Add(key);
 
-                    string[] expected = null;
+                    string expected = null;
                     switch(key) {
-                        case "a":   expected = new string[] { "1", "2" }; break;
-                        case "b":   expected = new string[] { "3" }; break;
-                        case "c":   expected = new string[] { "4" }; break;
+                        case "a":   expected = "1,2"; break;
+                        case "b":   expected = "3"; break;
+                        case "c":   expected = "4"; break;
                         default:    Assert.Fail($"Unexpected key {key}"); break;
                     }
 
-                    Assert.IsTrue(expected.SequenceEqual(value));
+                    Assert.AreEqual(expected, value);
                 }
             }
 
@@ -199,43 +216,40 @@ namespace Test.AWhewell.Owin.Utility
             var seenKeys = new HashSet<string>();
             var enumerator = ((IEnumerable)dictionary).GetEnumerator();
             while(enumerator.MoveNext()) {
-                var kvp = (KeyValuePair<string, string[]>)enumerator.Current;
+                var kvp = (KeyValuePair<string, string>)enumerator.Current;
                 var key = kvp.Key;
                 var value = kvp.Value;
 
                 Assert.IsFalse(seenKeys.Contains(key));
                 seenKeys.Add(key);
 
-                string[] expected = null;
+                string expected = null;
                 switch(key) {
-                    case "a":   expected = new string[] { "1", "2" }; break;
-                    case "b":   expected = new string[] { "3" }; break;
-                    case "c":   expected = new string[] { "4" }; break;
+                    case "a":   expected = "1,2"; break;
+                    case "b":   expected = "3"; break;
+                    case "c":   expected = "4"; break;
                     default:    Assert.Fail($"Unexpected key {key}"); break;
                 }
 
-                Assert.IsTrue(expected.SequenceEqual(value));
+                Assert.AreEqual(expected, value);
             }
 
             Assert.AreEqual(3, seenKeys.Count);
         }
 
         [TestMethod]
-        [DataRow("a=1", true,  "a", true, new string[] { "1" })]
-        [DataRow("a=1", true,  "A", false, null)]
-        [DataRow("a=1", false, "A", true, new string[] { "1" })]
-        public void TryGetValue_Returns_Expected_Value(string queryString, bool caseSensitiveKeys, string searchKey, bool expectedReturn, string[] expectedValue)
+        [DataRow("a=1",     true,  "a", true,   "1")]
+        [DataRow("a=1",     true,  "A", false,  null)]
+        [DataRow("a=1",     false, "A", true,   "1")]
+        [DataRow("a=1&a=2", false, "a", true,   "1,2")]
+        public void TryGetValue_Returns_Expected_Value(string queryString, bool caseSensitiveKeys, string searchKey, bool expectedReturn, string expectedValue)
         {
             var dictionary = new QueryStringDictionary(queryString, caseSensitiveKeys);
 
             var actualReturn = dictionary.TryGetValue(searchKey, out var actualValue);
 
             Assert.AreEqual(expectedReturn, actualReturn);
-            if(expectedValue == null) {
-                Assert.IsNull(actualValue);
-            } else {
-                Assert.IsTrue(expectedValue.SequenceEqual(actualValue));
-            }
+            Assert.AreEqual(expectedValue, actualValue);
         }
 
         [TestMethod]

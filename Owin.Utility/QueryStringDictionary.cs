@@ -11,6 +11,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace AWhewell.Owin.Utility
 {
@@ -18,15 +19,58 @@ namespace AWhewell.Owin.Utility
     /// Wraps an OWIN owin.RequestQueryString query string to access keys and values from within it.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Query strings are split on ampersands or semicolons. Keys are case sensitive by default but can
-    /// be made case insensitive to comply with Microsoft's query string implementations. If the same
-    /// key is seen more than once then each value is added to the array of values. Indexed searches can
-    /// use a key that does not exist - in that case they will return null. Keys with no value return
-    /// an empty array. Keys with an equals sign but no value return an array containing a single
-    /// empty string.
+    /// be made case insensitive to comply with Microsoft's query string implementations.
+    /// </para><para>
+    /// Query strings can be expressed as either a string or an array of strings. If the same
+    /// key is seen more than once during parsing then each value is added to the array of values.
+    /// </para><para>
+    /// Searches for a non-existent key return a null string and a null array.
+    /// </para><para>
+    /// Searches for keys that had no value return an empty string and an empty array.
+    /// </para><para>
+    /// Searches for keys with an equals sign but no value return an empty string and an array with
+    /// a single empty string.
+    /// </para><para>
+    /// Searches for keys with multiple values return a comma-separated string of all values and an
+    /// array with all values.
+    /// </para>
     /// </remarks>
-    public class QueryStringDictionary : IReadOnlyDictionary<string, string[]>
+    public class QueryStringDictionary : IReadOnlyDictionary<string, string>
     {
+        /// <summary>
+        /// An enumerator that exposes values in the underlying Dictionary&lt;string, string[]&gt; as
+        /// strings.
+        /// </summary>
+        class Enumerator : IEnumerator<KeyValuePair<string, string>>
+        {
+            private readonly IEnumerator<KeyValuePair<string, string[]>> _WrappedEnumerator;
+
+            public KeyValuePair<string, string> Current => TranslateWrappedValue(_WrappedEnumerator.Current);
+
+            object IEnumerator.Current => TranslateWrappedValue(_WrappedEnumerator.Current);
+
+            public Enumerator(QueryStringDictionary parentDictionary)
+            {
+                _WrappedEnumerator = parentDictionary._KeyValueMap.GetEnumerator();
+            }
+
+            public void Dispose() => _WrappedEnumerator.Dispose();
+
+            public bool MoveNext() => _WrappedEnumerator.MoveNext();
+
+            public void Reset() => _WrappedEnumerator.Reset();
+
+            private KeyValuePair<string, string> TranslateWrappedValue(KeyValuePair<string, string[]> wrappedKvp)
+            {
+                return new KeyValuePair<string, string>(
+                    wrappedKvp.Key,
+                    wrappedKvp.Value == null ? null : JoinValue(wrappedKvp.Value)
+                );
+            }
+        }
+
         /// <summary>
         /// The object that splits key=value pairs up for us.
         /// </summary>
@@ -105,14 +149,14 @@ namespace AWhewell.Owin.Utility
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public string[] this[string key]
+        public string this[string key]
         {
             get {
                 string[] result = null;
                 if(key != null) {
                     _KeyValueMap.TryGetValue(key, out result);
                 }
-                return result;
+                return result == null ? null : JoinValue(result);
             }
         }
 
@@ -124,7 +168,7 @@ namespace AWhewell.Owin.Utility
         /// <summary>
         /// See interface docs.
         /// </summary>
-        public IEnumerable<string[]> Values => _KeyValueMap.Values;
+        public IEnumerable<string> Values => _KeyValueMap.Values.Select(r => JoinValue(r));
 
         /// <summary>
         /// See interface docs.
@@ -142,7 +186,13 @@ namespace AWhewell.Owin.Utility
         /// See interface docs.
         /// </summary>
         /// <returns></returns>
-        public IEnumerator<KeyValuePair<string, string[]>> GetEnumerator() => _KeyValueMap.GetEnumerator();
+        public IEnumerator<KeyValuePair<string, string>> GetEnumerator() => new Enumerator(this);
+
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        /// <returns></returns>
+        IEnumerator IEnumerable.GetEnumerator() => new Enumerator(this);
 
         /// <summary>
         /// See interface docs.
@@ -150,18 +200,32 @@ namespace AWhewell.Owin.Utility
         /// <param name="key"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool TryGetValue(string key, out string[] value) => _KeyValueMap.TryGetValue(key, out value);
+        public bool TryGetValue(string key, out string value)
+        {
+            var result = _KeyValueMap.TryGetValue(key, out var arrayValue);
+            value = arrayValue == null ? null : JoinValue(arrayValue);
+
+            return result;
+        }
 
         /// <summary>
-        /// See interface docs.
+        /// Returns the query string as an array of strings. If the key does not exist then null is returned.
         /// </summary>
+        /// <param name="key"></param>
         /// <returns></returns>
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_KeyValueMap).GetEnumerator();
+        public string[] GetValues(string key)
+        {
+            string[] result = null;
+            if(key != null) {
+                _KeyValueMap.TryGetValue(key, out result);
+            }
+            return result;
+        }
 
         /// <summary>
-        /// Returns a value as a single string instead of a string array. Values with more than one element
-        /// are joined together into a single string. Unknown keys return null. Keys with no value or keys
-        /// with a single empty string value both return an empty string.
+        /// Returns a value as a single string. Values with more than one element are joined together into a
+        /// single string. Unknown keys return null. Keys with no value or keys with a single empty string
+        /// value both return an empty string.
         /// </summary>
         /// <param name="key"></param>
         /// <param name="join">The string to use to join values together</param>
@@ -169,14 +233,13 @@ namespace AWhewell.Owin.Utility
         public string GetValue(string key, string join)
         {
             _KeyValueMap.TryGetValue(key, out var value);
-
             return JoinValue(value, join);
         }
 
         /// <summary>
-        /// Returns a value as a single string instead of a string array. Values with more than one element
-        /// are joined together into a single string. Unknown keys return null. Keys with no value or keys
-        /// with a single empty string value both return an empty string.
+        /// Returns a value as a single string. Values with more than one element are joined together into a
+        /// single string. Unknown keys return null. Keys with no value or keys with a single empty string
+        /// value both return an empty string.
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>

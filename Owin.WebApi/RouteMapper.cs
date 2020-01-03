@@ -319,7 +319,8 @@ namespace AWhewell.Owin.WebApi
         {
             var filled = false;
 
-            if(queryStringDictionary.TryGetValue(methodParameter.Name, out var queryStringArray)) {
+            var queryStringArray = queryStringDictionary.GetValues(methodParameter.Name);
+            if(queryStringArray != null) {
                 var parseSingleValue = !methodParameter.IsArray || methodParameter.IsArrayPassedAsSingleValue;
 
                 if(parseSingleValue) {
