@@ -25,6 +25,14 @@ namespace Test.AWhewell.Owin.WebApi
     [TestClass]
     public class WebApiMiddleware_Tests
     {
+        class Controller : IApiController
+        {
+            public IDictionary<string, object> OwinEnvironment { get; set; }
+
+            [Route("a")]
+            public void VoidMethod() {;}
+        }
+
         private IClassFactory               _Snapshot;
         private IWebApiMiddleware           _WebApi;
         private MockPipeline                _Pipeline;
@@ -282,7 +290,19 @@ namespace Test.AWhewell.Owin.WebApi
 
             MockMiddleware.Call(middleware, _Environment.Environment);
 
-            _Responder.Verify(r => r.ReturnJsonObject(_Environment.Environment, _FoundRoute, _RouteOutcome), Times.Once());
+            _Responder.Verify(r => r.ReturnJsonObject(_Environment.Environment, _RouteOutcome), Times.Once());
+        }
+
+        [TestMethod]
+        public void Middleware_Does_Not_Call_WebApiResponder_For_Void_Routes()
+        {
+            _RouteOutcome = null;
+            _FoundRoute = Route_Tests.CreateRoute<Controller>(nameof(Controller.VoidMethod));
+            var middleware = _WebApi.CreateMiddleware(MockMiddleware.Stub);
+
+            MockMiddleware.Call(middleware, _Environment.Environment);
+
+            _Responder.Verify(r => r.ReturnJsonObject(_Environment.Environment, _RouteOutcome), Times.Never());
         }
     }
 }

@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Test.AWhewell.Owin
@@ -191,6 +192,22 @@ namespace Test.AWhewell.Owin
         }
 
         /// <summary>
+        /// Parses the encoding from an encoding's web name.
+        /// </summary>
+        /// <param name="webName"></param>
+        /// <returns></returns>
+        public static Encoding Encoding(string webName)
+        {
+            Encoding result = null;
+
+            if(!String.IsNullOrEmpty(webName)) {
+                result = System.Text.Encoding.GetEncoding(webName);
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Parses the text into a nullable GUID.
         /// </summary>
         /// <param name="expected"></param>
@@ -226,6 +243,8 @@ namespace Test.AWhewell.Owin
                 result = DateTime((string)expected);
             } else if(type == typeof(DateTimeOffset) || type == typeof(DateTimeOffset?)) {
                 result = DateTimeOffset((string)expected);
+            } else if(type == typeof(Encoding)) {
+                result = Encoding((string)expected);
             } else if(type == typeof(Guid) || type == typeof(Guid?)) {
                 result = Guid((string)expected);
             } else if(type != typeof(string) && expected?.GetType() == typeof(string)) {

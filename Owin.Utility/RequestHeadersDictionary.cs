@@ -62,6 +62,11 @@ namespace AWhewell.Owin.Utility
         public string UserAgent => base["User-Agent"];
 
         /// <summary>
+        /// Gets the <see cref="UserAgent"/> parsed into a <see cref="UserAgentValue"/>.
+        /// </summary>
+        public UserAgentValue UserAgentValue => new UserAgentValue(UserAgent);
+
+        /// <summary>
         /// Gets the X-Forwarded-For IP address as a string.
         /// </summary>
         public string XForwardedFor => base["X-Forwarded-For"];

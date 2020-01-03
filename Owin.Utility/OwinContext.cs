@@ -232,6 +232,18 @@ namespace AWhewell.Owin.Utility
         }
 
         /// <summary>
+        /// Gets the filename portion of the request URL. If no filename has been specified then an empty string is returned.
+        /// </summary>
+        public string RequestPathFileName
+        {
+            get {
+                var path = RequestPathFlattened;
+                var lastFolderIndex = path.LastIndexOf('/');
+                return lastFolderIndex == -1 ? "" : path.Substring(lastFolderIndex + 1);
+            }
+        }
+
+        /// <summary>
         /// Gets the request path split into parts.
         /// </summary>
         public string[] RequestPathParts => OwinPath.RequestPathParts(Environment, createAndUseCachedResult: true);
@@ -518,6 +530,37 @@ namespace AWhewell.Owin.Utility
         public QueryStringDictionary RequestBodyForm(bool caseSensitiveKeys)
         {
             return new QueryStringDictionary(RequestBodyText(), caseSensitiveKeys);
+        }
+
+        /// <summary>
+        /// Sets up the environment for a byte response.
+        /// </summary>
+        /// <param name="mimeType"></param>
+        /// <param name="bytes"></param>
+        public void ReturnBytes(string mimeType, byte[] bytes)
+        {
+            ReturnBytes(mimeType, bytes, 0, bytes.Length);
+        }
+
+        /// <summary>
+        /// Sets up the environment for a byte response.
+        /// </summary>
+        /// <param name="mimeType"></param>
+        /// <param name="bytes"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public void ReturnBytes(string mimeType, byte[] bytes, int offset, int length)
+        {
+            var headers = ResponseHeadersDictionary;
+            if(headers != null) {
+                headers.ContentType = mimeType;
+                headers.ContentLength = length;
+            }
+
+            var stream = ResponseBody;
+            if(stream != null) {
+                ResponseBody.Write(bytes, offset, length);
+            }
         }
 
         /// <summary>

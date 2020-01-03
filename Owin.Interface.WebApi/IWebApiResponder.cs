@@ -9,6 +9,7 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using System.Collections.Generic;
+using System.Text;
 using AWhewell.Owin.Utility;
 
 namespace AWhewell.Owin.Interface.WebApi
@@ -19,11 +20,49 @@ namespace AWhewell.Owin.Interface.WebApi
     public interface IWebApiResponder
     {
         /// <summary>
-        /// Returns the object passed across. The format of the response is always JSON.
+        /// Sets up the environment to return the object passed across. The format of the response is always
+        /// JSON. The formatters attached to the route stored in the environment are used to format dates etc.
         /// </summary>
-        /// <param name="owinEnvironment">The OWIN environment to populate with the response.</param>
-        /// <param name="route">The route that was called to obtain the <paramref name="obj"/>.</param>
-        /// <param name="obj">The object to return. If this is null then the body is set to the word 'null' unless it is a void route.</param>
-        void ReturnJsonObject(IDictionary<string, object> owinEnvironment, Route route, object obj);
+        /// <param name="owinEnvironment">The OWIN environment to set up with the response.</param>
+        /// <param name="obj">The object to return.</param>
+        void ReturnJsonObject(IDictionary<string, object> owinEnvironment, object obj);
+
+        /// <summary>
+        /// Sets up the environment to return the object passed across. The format of the response is always
+        /// JSON. The formatters attached to the route stored in the environment are used to format dates etc.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="obj"></param>
+        void ReturnJsonObject(OwinContext context, object obj);
+
+        /// <summary>
+        /// Sets up the environment to return the object passed across.
+        /// </summary>
+        /// <param name="owinEnvironment">The OWIN environment to set up with the response.</param>
+        /// <param name="obj">The object to return.</param>
+        /// <param name="resolver">
+        /// The resolver to use when formatting the object. Formatters associated with the route in the
+        /// environment (if any) are ignored.
+        /// </param>
+        /// <param name="encoding">The encoding to use when formatting the JSON.</param>
+        /// <param name="mimeType">
+        /// The mime type to use. If this is null or empty then it defaults to application/json.
+        /// </param>
+        void ReturnJsonObject(IDictionary<string, object> owinEnvironment, object obj, TypeFormatterResolver resolver, Encoding encoding, string mimeType);
+
+        /// <summary>
+        /// Sets up the environment to return the object passed across.
+        /// </summary>
+        /// <param name="context">The OWIN environment to set up with the response.</param>
+        /// <param name="obj">The object to return.</param>
+        /// <param name="resolver">
+        /// The resolver to use when formatting the object. Formatters associated with the route in the
+        /// environment (if any) are ignored.
+        /// </param>
+        /// <param name="encoding">The encoding to use when formatting the JSON.</param>
+        /// <param name="mimeType">
+        /// The mime type to use. If this is null or empty then it defaults to application/json.
+        /// </param>
+        void ReturnJsonObject(OwinContext context, object obj, TypeFormatterResolver resolver, Encoding encoding, string mimeType);
     }
 }

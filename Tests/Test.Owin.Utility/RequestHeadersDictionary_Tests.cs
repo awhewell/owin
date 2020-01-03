@@ -85,5 +85,20 @@ namespace Test.AWhewell.Owin.Utility
             Assert.AreEqual(expectedCharset,    contentTypeValue.Charset);
             Assert.AreEqual(expectedBoundary,   contentTypeValue.Boundary);
         }
+
+        [TestMethod]
+        [DataRow(null,  "")]
+        [DataRow("",    "")]
+        [DataRow("abc", "abc")]
+        public void UserAgentValue_UserAgent_Parsed_Into_UserAgentValue(string userAgent, string expectedUserAgentValue)
+        {
+            if(userAgent != null) {
+                _RequestHeaders["User-Agent"] = userAgent;
+            }
+
+            var userAgentValue = _RequestHeaders.UserAgentValue;
+
+            Assert.AreEqual(expectedUserAgentValue, userAgentValue.UserAgent);
+        }
     }
 }

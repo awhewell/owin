@@ -307,6 +307,21 @@ namespace Test.AWhewell.Owin.Utility
         }
 
         [TestMethod]
+        [DataRow(null,          "")]
+        [DataRow("",            "")]
+        [DataRow("/a",          "a")]
+        [DataRow("/a/",         "")]
+        [DataRow("/a/b",        "b")]
+        [DataRow("/a/b/c",      "c")]
+        [DataRow("/a/b/../c",   "c")]
+        public void RequestPathFilename_Returns_Expected_Value(string requestPath, string expected)
+        {
+            _Environment[EnvironmentKey.RequestPath] = requestPath;
+
+            Assert.AreEqual(expected, _Context.RequestPathFileName);
+        }
+
+        [TestMethod]
         public void RequestPathParts_Responds_To_Changes_In_Underlying_RequestPath()
         {
             var pathParts = _Context.RequestPathParts;
@@ -588,6 +603,38 @@ namespace Test.AWhewell.Owin.Utility
             _Context.ReturnText("1", Encoding.UTF7, "");
 
             Assert.AreEqual("text/plain", _Context.ResponseHeadersDictionary.ContentTypeValue.MediaType);
+        }
+
+        [TestMethod]
+        public void ReturnBytes_Silently_Fails_If_Environment_Not_Set_Up_By_Host()
+        {
+            _Context.ReturnBytes("application/octet-stream", new byte[] { 1 });
+
+            Assert.AreEqual(0, _Environment.Count);
+        }
+
+        [TestMethod]
+        public void ReturnBytes_Sets_Environment_Up_Correctly()
+        {
+            var env = UseEnvironmentWithRequiredFields();
+
+            _Context.ReturnBytes("application/octet-stream", new byte[] { 5, 2, 1, 7 });
+
+            Assert.AreEqual("application/octet-stream", env.ResponseHeadersDictionary.ContentType);
+            Assert.AreEqual(4, env.ResponseHeadersDictionary.ContentLength);
+            Assertions.AreEqual(new byte[] { 5, 2, 1, 7}, env.ResponseBodyBytes);
+        }
+
+        [TestMethod]
+        public void ReturnBytes_Can_Send_Part_Of_Array()
+        {
+            var env = UseEnvironmentWithRequiredFields();
+
+            _Context.ReturnBytes("foo-foo", new byte[] { 5, 2, 1, 7 }, 1, 2);
+
+            Assert.AreEqual("foo-foo", env.ResponseHeadersDictionary.ContentType);
+            Assert.AreEqual(2, env.ResponseHeadersDictionary.ContentLength);
+            Assertions.AreEqual(new byte[] { 2, 1 }, env.ResponseBodyBytes);
         }
 
         [TestMethod]

@@ -80,7 +80,9 @@ namespace AWhewell.Owin.WebApi
                             environment[EnvironmentKey.ResponseStatusCode] = 400;
                         } else {
                             var result = routeCaller.CallRoute(environment, route, parameters);
-                            responder.ReturnJsonObject(environment, route, result);
+                            if(!route.IsVoidMethod) {
+                                responder.ReturnJsonObject(environment, result);
+                            }
                         }
                     }
                 }

@@ -27,6 +27,11 @@ namespace Test.AWhewell.Owin.WebApi
             public string Format(Guid value) => value.ToString().ToUpper().Replace("-", "");
         }
 
+        class Guid_LowerNoHyphens_Formatter : ITypeFormatter<Guid>
+        {
+            public string Format(Guid value) => value.ToString().ToLower().Replace("-", "");
+        }
+
         class Controller : IApiController
         {
             public IDictionary<string, object> OwinEnvironment { get; set; }
@@ -74,11 +79,12 @@ namespace Test.AWhewell.Owin.WebApi
         public void ReturnJsonObject_Returns_Simple_Values_Correctly(Type type, object value, string expectedBody)
         {
             var route = Route_Tests.CreateRoute<Controller>(nameof(Controller.IntMethod));
+            _Environment.Environment[WebApiEnvironmentKey.Route] = route;
 
             using(new CultureSwap("en-GB")) {
                 var parsedValue = DataRowParser.ConvertExpected(type, value);
 
-                _Responder.ReturnJsonObject(_Environment.Environment, route, parsedValue);
+                _Responder.ReturnJsonObject(_Environment.Environment, parsedValue);
 
                 Assert.AreEqual("application/json; charset=utf-8",                          _Environment.ResponseHeadersDictionary["Content-Type"]);
                 Assert.AreEqual(expectedBody.Length.ToString(CultureInfo.InvariantCulture), _Environment.ResponseHeadersDictionary["Content-Length"]);
@@ -91,25 +97,83 @@ namespace Test.AWhewell.Owin.WebApi
         {
             var resolver = TypeFormatterResolverCache.Find(new Guid_UpperNoHyphens_Formatter());
             var route = Route_Tests.CreateRoute<Controller>(nameof(Controller.IntMethod), formatterResolver: resolver);
+            _Environment.Environment[WebApiEnvironmentKey.Route] = route;
             var guid = Guid.Parse("c151f1a8-d235-4f28-8c0d-5521a768be9e");
 
-            _Responder.ReturnJsonObject(_Environment.Environment, route, guid);
+            _Responder.ReturnJsonObject(_Environment.Environment, guid);
 
             var actual = _Environment.ResponseBodyText;
             Assert.AreEqual("\"C151F1A8D2354F288C0D5521A768BE9E\"", actual);
         }
 
         [TestMethod]
-        public void ReturnJsonObject_Does_Not_Write_To_Body_For_Void_Routes()
+        public void ReturnJsonObject_Will_Write_Body_For_Void_Routes()
         {
             var route = Route_Tests.CreateRoute<Controller>(nameof(Controller.VoidMethod));
-            var value = 1;
+            _Environment.Environment[WebApiEnvironmentKey.Route] = route;
+            var value = 7;
 
-            _Responder.ReturnJsonObject(_Environment.Environment, route, value);
+            _Responder.ReturnJsonObject(_Environment.Environment, value);
 
-            Assert.IsNull(_Environment.ResponseHeadersDictionary["Content-Type"]);
-            Assert.IsNull(_Environment.ResponseHeadersDictionary["Content-Length"]);
-            Assert.AreEqual(0, _Environment.ResponseBodyBytes.Length);
+            Assert.AreEqual("application/json; charset=utf-8",  _Environment.ResponseHeadersDictionary["Content-Type"]);
+            Assert.AreEqual("1",                                _Environment.ResponseHeadersDictionary["Content-Length"]);
+            Assert.AreEqual("7",                                _Environment.ResponseBodyText);
+        }
+
+        [TestMethod]
+        public void ReturnJsonObject_Copes_If_Environment_Does_Not_Contain_Route()
+        {
+            var value = 7;
+
+            _Responder.ReturnJsonObject(_Environment.Environment, value);
+
+            Assert.AreEqual("application/json; charset=utf-8",  _Environment.ResponseHeadersDictionary["Content-Type"]);
+            Assert.AreEqual("1",                                _Environment.ResponseHeadersDictionary["Content-Length"]);
+            Assert.AreEqual("7",                                _Environment.ResponseBodyText);
+        }
+
+        [TestMethod]
+        [DataRow("©", "utf-8",  "text/plain")]
+        [DataRow("©", "utf-16", "foo-foo/magoo")]
+        [DataRow("©", "utf-8",  null)]
+        [DataRow("©", "utf-8",  "")]
+        [DataRow("©", null,     "application/json")]
+        public void ReturnJsonObject_FullControlVersion_Sets_Environment_Correctly(string input, string encodingName, string mimeType)
+        {
+            var encoding = DataRowParser.Encoding(encodingName);
+            var expectedEncoding = encoding ?? Encoding.UTF8;
+            var expectedMimeType = String.IsNullOrEmpty(mimeType)
+                ? "application/json"
+                : mimeType;
+            var expectedText = input == null
+                ? "null"
+                : $"\"{input}\"";
+            var expectedBody = expectedEncoding.GetBytes(expectedText);
+            var expectedLength = expectedBody.Length.ToString(CultureInfo.InvariantCulture);
+
+            _Responder.ReturnJsonObject(_Environment.Environment, input, null, encoding, mimeType);
+
+            var contentType = _Environment.ResponseHeadersDictionary.ContentTypeValue;
+
+            Assert.AreEqual(expectedMimeType,           contentType.MediaType);
+            Assert.AreEqual(expectedEncoding.WebName,   contentType.Charset);
+            Assert.AreEqual(expectedLength,             _Environment.ResponseHeadersDictionary["Content-Length"]);
+            Assertions.AreEqual(expectedBody,           _Environment.ResponseBodyBytes);
+        }
+
+        [TestMethod]
+        public void ReturnJsonObject_FullControlVersion_Uses_Formatter_In_Preference_To_Route_Formatter()
+        {
+            var routeResolver = TypeFormatterResolverCache.Find(new Guid_UpperNoHyphens_Formatter());
+            var usedResolver =  TypeFormatterResolverCache.Find(new Guid_LowerNoHyphens_Formatter());
+            var route = Route_Tests.CreateRoute<Controller>(nameof(Controller.IntMethod), formatterResolver: routeResolver);
+            _Environment.Environment[WebApiEnvironmentKey.Route] = route;
+            var guid = Guid.Parse("c151f1a8-d235-4f28-8c0d-5521a768be9e");
+
+            _Responder.ReturnJsonObject(_Environment.Environment, guid, usedResolver, Encoding.UTF8, null);
+
+            var actual = _Environment.ResponseBodyText;
+            Assert.AreEqual("\"c151f1a8d2354f288c0d5521a768be9e\"", actual);
         }
     }
 }

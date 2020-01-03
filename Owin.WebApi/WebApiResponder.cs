@@ -41,18 +41,66 @@ namespace AWhewell.Owin.WebApi
         /// <param name="owinEnvironment"></param>
         /// <param name="route"></param>
         /// <param name="obj"></param>
-        public void ReturnJsonObject(IDictionary<string, object> owinEnvironment, Route route, object obj)
+        public void ReturnJsonObject(IDictionary<string, object> owinEnvironment, object obj)
         {
-            if(!route.IsVoidMethod) {
-                var jsonText = _JsonSerialiser.Serialise(obj, route.TypeFormatterResolver);
+            ReturnJsonObject(
+                OwinContext.Create(owinEnvironment),
+                obj
+            );
+        }
 
-                var context = OwinContext.Create(owinEnvironment);
-                context.ReturnText(
-                    jsonText,
-                    Encoding.UTF8,
-                    Formatter.FormatMediaType(MediaType.Json)
-                );
-            }
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="obj"></param>
+        public void ReturnJsonObject(OwinContext context, object obj)
+        {
+            var route = context.Environment[WebApiEnvironmentKey.Route] as Route;
+            ReturnJsonObject(
+                context,
+                obj,
+                route?.TypeFormatterResolver,
+                Encoding.UTF8,
+                null
+            );
+        }
+
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        /// <param name="owinEnvironment"></param>
+        /// <param name="obj"></param>
+        /// <param name="resolver"></param>
+        /// <param name="encoding"></param>
+        /// <param name="mimeType"></param>
+        public void ReturnJsonObject(IDictionary<string, object> owinEnvironment, object obj, TypeFormatterResolver resolver, Encoding encoding, string mimeType)
+        {
+            ReturnJsonObject(
+                OwinContext.Create(owinEnvironment),
+                obj,
+                resolver,
+                encoding,
+                mimeType
+            );
+        }
+
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="obj"></param>
+        /// <param name="resolver"></param>
+        /// <param name="encoding"></param>
+        /// <param name="mimeType"></param>
+        public void ReturnJsonObject(OwinContext context, object obj, TypeFormatterResolver resolver, Encoding encoding, string mimeType)
+        {
+            var jsonText = _JsonSerialiser.Serialise(obj, resolver);
+            context.ReturnText(
+                jsonText,
+                encoding ?? Encoding.UTF8,
+                String.IsNullOrEmpty(mimeType) ? Formatter.FormatMediaType(MediaType.Json) : mimeType
+            );
         }
     }
 }
