@@ -111,6 +111,18 @@ namespace Test.AWhewell.Owin.Utility
         }
 
         [TestMethod]
+        public void Create_Works_When_Environment_Is_Normal_Dictionary()
+        {
+            // The library has its own dictionary that supports indexing elements that do not exist - it
+            // just returns null. However, the environment could just be a standard dictionary that will
+            // throw an exception when indexing by a non-existent key
+            var environment = new Dictionary<string, object>();
+            var context = OwinContext.Create(environment);
+            Assert.IsNotNull(context);
+            Assert.AreSame(context.Environment.WrappedDictionary, environment);
+        }
+
+        [TestMethod]
         [DataRow(nameof(OwinContext.RequestBody),   EnvironmentKey.RequestBody)]
         [DataRow(nameof(OwinContext.ResponseBody),  EnvironmentKey.ResponseBody)]
         public void Stream_Properties_Expose_Underlying_Stream_Correctly(string propertyName, string environmentKey)

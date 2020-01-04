@@ -496,7 +496,11 @@ namespace AWhewell.Owin.Utility
         /// <returns></returns>
         public static OwinContext Create(IDictionary<string, object> environment)
         {
-            var result = environment == null ? null : environment[CustomEnvironmentKey.Context] as OwinContext;
+            OwinContext result = null;
+
+            if(environment != null && environment.TryGetValue(CustomEnvironmentKey.Context, out var contextObj)) {
+                result = contextObj as OwinContext;
+            }
             if(result == null) {
                 result = new OwinContext(environment);
                 result.Environment[CustomEnvironmentKey.Context] = result;
