@@ -721,6 +721,17 @@ namespace Test.AWhewell.Owin.Utility
         }
 
         [TestMethod]
+        public void Redirect_Sets_Environment_Correctly()
+        {
+            var env = UseEnvironmentWithRequiredFields();
+
+            _Context.Redirect("somewhere");
+
+            Assert.AreEqual(302, env.ResponseStatusCode);
+            Assert.AreEqual("somewhere", env.ResponseHeadersDictionary.Location);
+        }
+
+        [TestMethod]
         [DataRow(null,                   -1, new byte[0],            -1)]
         [DataRow(new byte[] { 1, 2, 3 }, 0,  new byte[] { 1, 2, 3 }, 3)]
         [DataRow(new byte[] { 1, 2, 3 }, 1,  new byte[] { 2, 3 },    3)]

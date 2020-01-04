@@ -30,9 +30,21 @@ namespace AWhewell.Owin.Utility
         public string MediaType { get; }
 
         /// <summary>
+        /// Gets <see cref="MediaType"/> parsed into a <see cref="MediaType"/> enum.
+        /// </summary>
+        public MediaType MediaTypeParsed => Parser.ParseMediaType(MediaType);
+
+        /// <summary>
         /// Gets the charset of the content.
         /// </summary>
         public string Charset { get; }
+
+        /// <summary>
+        /// Gets the encoding associated with <see cref="Charset"/>. If there is no <see cref="Charset"/>
+        /// specified then UTF8 is returned. If the <see cref="Charset"/> is not recognised then null
+        /// is returned.
+        /// </summary>
+        public Encoding Encoding => Parser.ParseCharset(Charset);
 
         /// <summary>
         /// Gets the bounday for multipart content.

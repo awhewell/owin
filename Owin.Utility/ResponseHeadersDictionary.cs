@@ -75,6 +75,15 @@ namespace AWhewell.Owin.Utility
         }
 
         /// <summary>
+        /// Gets or sets the address to redirect to.
+        /// </summary>
+        public string Location
+        {
+            get => base["Location"];
+            set => base["Location"] = value;
+        }
+
+        /// <summary>
         /// Creates a new object.
         /// </summary>
         public ResponseHeadersDictionary() : base()

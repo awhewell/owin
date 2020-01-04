@@ -26,7 +26,32 @@ namespace Test.AWhewell.Owin.Utility
 
             Assert.AreEqual("Mime", value.MediaType);
             Assert.AreEqual("Abc", value.Charset);
+            Assert.AreEqual(null, value.Encoding);
             Assert.AreEqual("Bounds", value.Boundary);
+        }
+
+        [TestMethod]
+        public void Ctor_Defaults_Encoding_When_There_Is_No_Charset()
+        {
+            var value = new ContentTypeValue("text/plain");
+
+            Assert.AreEqual(Encoding.UTF8.WebName, value.Encoding.WebName);
+        }
+
+        [TestMethod]
+        public void Ctor_Sets_Encoding_When_There_Is_A_Known_Charset()
+        {
+            var value = new ContentTypeValue("text/plain", charset: "utf-7");
+
+            Assert.AreEqual(Encoding.UTF7.WebName, value.Encoding.WebName);
+        }
+
+        [TestMethod]
+        public void Ctor_Nulls_Encoding_When_There_Is_An_Unknown_Charset()
+        {
+            var value = new ContentTypeValue("text/plain", charset: "foofoo");
+
+            Assert.AreEqual(null, value.Encoding);
         }
 
         [TestMethod]

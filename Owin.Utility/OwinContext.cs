@@ -630,6 +630,16 @@ namespace AWhewell.Owin.Utility
         }
 
         /// <summary>
+        /// Sets up the environment for a redirection response.
+        /// </summary>
+        /// <param name="location"></param>
+        public void Redirect(string location)
+        {
+            ResponseHttpStatusCode = HttpStatusCode.Redirect;
+            ResponseHeadersDictionary.Location = location;
+        }
+
+        /// <summary>
         /// Gets or creates a wrapper around a headers dictionary.
         /// </summary>
         /// <typeparam name="T"></typeparam>

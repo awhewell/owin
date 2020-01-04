@@ -31,9 +31,10 @@ namespace Test.AWhewell.Owin.Utility
         }
 
         [TestMethod]
+        [DataRow(nameof(ResponseHeadersDictionary.AccessControlAllowOrigin),    "Access-Control-Allow-Origin")]
         [DataRow(nameof(ResponseHeadersDictionary.CacheControl),                "Cache-Control")]
         [DataRow(nameof(ResponseHeadersDictionary.ContentType),                 "Content-Type")]
-        [DataRow(nameof(ResponseHeadersDictionary.AccessControlAllowOrigin),    "Access-Control-Allow-Origin")]
+        [DataRow(nameof(ResponseHeadersDictionary.Location),                    "Location")]
         public void String_Values_Exposed_Correctly(string propertyName, string headerKey)
         {
             var propertyInfo = typeof(ResponseHeadersDictionary).GetProperty(propertyName);
