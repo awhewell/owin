@@ -304,9 +304,9 @@ namespace AWhewell.Owin.Host.HttpListener
 
             result.ServerIsLocal =          request.IsLocal;
             result.ServerLocalIpAddress =   request.LocalEndPoint?.Address?.ToString();
-            result.ServerLocalPort =        request.LocalEndPoint?.Port.ToString();
+            result.ServerLocalPortNumber =  request.LocalEndPoint?.Port;
             result.ServerRemoteIpAddress =  request.RemoteEndPoint?.Address?.ToString();
-            result.ServerRemotePort =       request.RemoteEndPoint?.Port.ToString();
+            result.ServerRemotePortNumber = request.RemoteEndPoint?.Port;
 
             if(String.Equals(request.Url.Scheme, "https", StringComparison.OrdinalIgnoreCase)) {
                 result.SslClientCertificate = request.GetClientCertificate();

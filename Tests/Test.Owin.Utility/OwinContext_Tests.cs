@@ -145,7 +145,7 @@ namespace Test.AWhewell.Owin.Utility
         [TestMethod]
         [DataRow(nameof(OwinContext.RequestHeaders),    EnvironmentKey.RequestHeaders)]
         [DataRow(nameof(OwinContext.ResponseHeaders),   EnvironmentKey.ResponseHeaders)]
-        public void Headers_Properties_Expose_Underlying_Headers_Correctly(string propertyName, string environmentKey)
+        public void Headers_Properties_Expose_Underlying_Header_Dictionaries_Correctly(string propertyName, string environmentKey)
         {
             var propertyInfo = typeof(OwinContext).GetProperty(propertyName);
             var dictionary = new Dictionary<string, string[]>();
@@ -160,6 +160,35 @@ namespace Test.AWhewell.Owin.Utility
 
             // Setter throws if you overwrite existing dictionary
             AssertExceptionThrownOnAction(() => propertyInfo.SetValue(_Context, new Dictionary<string, string[]>()));
+        }
+
+        [TestMethod]
+        [DataRow(nameof(OwinContext.RequestHost), nameof(OwinContext.RequestHeaders), "Host")]
+        public void String_Properties_Expose_Values_From_Header_Dictionaries_Correctly(string propertyName, string headerDictionaryName, string headerKey)
+        {
+            UseEnvironmentWithRequiredFields();
+
+            var propertyInfo = typeof(OwinContext).GetProperty(propertyName);
+            var dictionaryPropertyInfo = typeof(OwinContext).GetProperty(headerDictionaryName);
+            var headerDictionary = (IDictionary<string, string[]>)dictionaryPropertyInfo.GetValue(_Context, null);
+
+            // If it's missing from the dictionary then the property should be null
+            if(headerDictionary.ContainsKey(headerKey)) {
+                headerDictionary.Remove(headerKey);
+            }
+            Assert.IsNull(propertyInfo.GetValue(_Context, null));
+
+            // A non-null value should show up in the property
+            headerDictionary.Add(headerKey, new string[] { "Ab" });
+            Assert.AreEqual("Ab", propertyInfo.GetValue(_Context, null));
+
+            // Assigning a value to the property should change the header
+            propertyInfo.SetValue(_Context, "Cd");
+            Assert.AreEqual("Cd", headerDictionary[headerKey][0]);
+
+            // Nulling the property should remove the header value
+            propertyInfo.SetValue(_Context, null);
+            Assert.IsFalse(headerDictionary.ContainsKey(headerKey));
         }
 
         [TestMethod]
@@ -246,6 +275,60 @@ namespace Test.AWhewell.Owin.Utility
 
             // Setter throws if you overwrite existing value
             AssertExceptionThrownOnAction(() => propertyInfo.SetValue(_Context, !boolValue));
+        }
+
+        [TestMethod]
+        [DataRow(nameof(OwinContext.ServerLocalPortNumber),     EnvironmentKey.ServerLocalPort,     true,   false)]
+        [DataRow(nameof(OwinContext.ServerRemotePortNumber),    EnvironmentKey.ServerRemotePort,    true,   false)]
+        public void Nullable_Integers_Parsed_From_Strings_Correctly(string intPropertyName, string environmentKey, bool writable, bool changeable)
+        {
+            var intProperty = typeof(OwinContext).GetProperty(intPropertyName);
+
+            // When the string is null the integer should also be null
+            _Environment[environmentKey] = null;
+            Assert.IsNull(intProperty.GetValue(_Context, null));
+
+            // When the string is a number the integer should reflect it
+            _Environment[environmentKey] = "123";
+            Assert.AreEqual(123, intProperty.GetValue(_Context, null));
+
+            // Setting the string to an unparseable value should report a null integer
+            _Environment[environmentKey] = "not a number";
+            Assert.IsNull(intProperty.GetValue(_Context, null));
+
+            if(writable) {
+                if(changeable) {
+                    // Setting the integer value should change the environment
+                    intProperty.SetValue(_Context, 88);
+                    Assert.AreEqual("88", _Environment[environmentKey]);
+
+                    // Setting the integer to null should remove the environment value
+                    intProperty.SetValue(_Context, null);
+                    Assert.IsFalse(_Environment.ContainsKey(environmentKey));
+                } else {
+                    // We can write if it's unchanged
+                    _Environment[environmentKey] = "88";
+                    intProperty.SetValue(_Context, 88);
+                    Assert.AreEqual("88", _Environment[environmentKey]);
+
+                    // We can write brand new values
+                    _Environment.Remove(environmentKey);
+                    intProperty.SetValue(_Context, 99);
+                    Assert.AreEqual("99", _Environment[environmentKey]);
+
+                    // We cannot change existing values to new ones
+                    var sawException = false;
+                    try {
+                        intProperty.SetValue(_Context, 200);
+                    } catch(TargetInvocationException ex) {
+                        if(ex.InnerException is InvalidOperationException) {
+                            sawException = true;
+                        }
+                    }
+                    Assert.IsTrue(sawException);
+                    Assert.AreEqual("99", _Environment[environmentKey]);
+                }
+            }
         }
 
         [TestMethod]
@@ -769,6 +852,36 @@ namespace Test.AWhewell.Owin.Utility
             Assert.AreEqual(expectedClientIpAddressParsed,  actualClientIpAddressParsed);
             Assert.AreEqual(expectedIsInternet,             actualIsInternet);
             Assert.AreEqual(!expectedIsInternet,            actualIsLocalOrLan);
+        }
+
+        [TestMethod]
+        [DataRow("http",    "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "name=value",               "http://1.2.3.4/VirtualRadar/poobah.html?name=value")]
+        [DataRow("http",    "1.2.3.4",      "",                 "/poobah.html", "name=value",               "http://1.2.3.4/poobah.html?name=value")]
+        [DataRow("http",    "1.2.3.4",      "",                 "/",            "name=value",               "http://1.2.3.4/?name=value")]
+        [DataRow("http",    "1.2.3.4",      "",                 "/",            "",                         "http://1.2.3.4/")]
+        [DataRow("http",    "1.2.3.4",      "",                 "/",            null,                       "http://1.2.3.4/")]
+        [DataRow("http",    "1.2.3.4",      "/Root",            "",             null,                       "http://1.2.3.4/Root")]
+        [DataRow("http",    "1.2.3.4",      "/Root",            "/",            null,                       "http://1.2.3.4/Root/")]
+        [DataRow(null,      "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "name=value",               "http://1.2.3.4/VirtualRadar/poobah.html?name=value")]
+        [DataRow("",        "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "name=value",               "http://1.2.3.4/VirtualRadar/poobah.html?name=value")]
+        [DataRow("https",   "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "name=value",               "https://1.2.3.4/VirtualRadar/poobah.html?name=value")]
+        [DataRow("http",    null,           "/VirtualRadar",    "/poobah.html", "name=value",               "http://127.0.0.1/VirtualRadar/poobah.html?name=value")]
+        [DataRow("http",    "",             "/VirtualRadar",    "/poobah.html", "name=value",               "http://127.0.0.1/VirtualRadar/poobah.html?name=value")]
+        [DataRow("http",    "1.2.3.4:80",   "/VirtualRadar",    "/poobah.html", "name=value",               "http://1.2.3.4:80/VirtualRadar/poobah.html?name=value")]
+        [DataRow("http",    "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "name=percent%2Dencoded",   "http://1.2.3.4/VirtualRadar/poobah.html?name=percent%2Dencoded")]
+        [DataRow("http",    "1.2.3.4",      "/VirtualRadar",    "/poobah.html", null,                       "http://1.2.3.4/VirtualRadar/poobah.html")]
+        [DataRow("http",    "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "",                         "http://1.2.3.4/VirtualRadar/poobah.html")]
+        public void RequestUrl_Returns_Correct_Value(string scheme, string host, string pathBase, string path, string queryString, string expected)
+        {
+            var env = UseEnvironmentWithRequiredFields();
+
+            env.Environment[EnvironmentKey.RequestScheme] =         scheme;
+            env.RequestHeaders["Host"] =                            host;
+            env.Environment[EnvironmentKey.RequestPathBase] =       pathBase;
+            env.Environment[EnvironmentKey.RequestPath] =           path;
+            env.Environment[EnvironmentKey.RequestQueryString] =    queryString;
+
+            Assert.AreEqual(expected, _Context.RequestUrl);
         }
     }
 }

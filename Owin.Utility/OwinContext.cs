@@ -10,6 +10,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -127,6 +128,15 @@ namespace AWhewell.Owin.Utility
                     wrapper => _RequestHeadersDictionary = wrapper
                 );
             }
+        }
+
+        /// <summary>
+        /// Gets or sets the host portion of the request address.
+        /// </summary>
+        public string RequestHost
+        {
+            get => RequestHeadersDictionary.Host;
+            set => RequestHeadersDictionary.SetValues("Host", value);
         }
 
         /// <summary>
@@ -286,6 +296,20 @@ namespace AWhewell.Owin.Utility
         }
 
         /// <summary>
+        /// Returns the full URL that the request was made to.
+        /// </summary>
+        public string RequestUrl
+        {
+            get => OwinPath.ConstructUrl(
+                RequestScheme,
+                RequestHost,
+                RequestPathBase,
+                RequestPath,
+                RequestQueryString
+            );
+        }
+
+        /// <summary>
         /// Gets or sets the response stream. Attempts to overwrite a non-null / non-Stream.Null stream with a
         /// new stream will throw an exception.
         /// </summary>
@@ -389,6 +413,15 @@ namespace AWhewell.Owin.Utility
         }
 
         /// <summary>
+        /// Gets or sets the <see cref="ServerLocalPort"/> as a number.
+        /// </summary>
+        public int? ServerLocalPortNumber
+        {
+            get => ParseInteger(ServerLocalPort);
+            set => ServerLocalPort = value?.ToString(CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
         /// Gets or sets the IP address that the request was received from. Attempts to overwrite this when
         /// it is not a null value will throw an exception.
         /// </summary>
@@ -406,6 +439,15 @@ namespace AWhewell.Owin.Utility
         {
             get => Environment[EnvironmentKey.ServerRemotePort] as string;
             set => SetIfInitialisingOrNoChange(ServerRemotePort, value, EnvironmentKey.ServerRemotePort, "There is already a value set for ServerRemotePort");
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="ServerRemotePort"/> as a number.
+        /// </summary>
+        public int? ServerRemotePortNumber
+        {
+            get => ParseInteger(ServerRemotePort);
+            set => ServerRemotePort = value?.ToString(CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -691,6 +733,17 @@ namespace AWhewell.Owin.Utility
                 if(!IPAddress.TryParse(ipAddress, out result)) {
                     result = IPAddress.None;
                 }
+            }
+
+            return result;
+        }
+
+        private static int? ParseInteger(string value)
+        {
+            int? result = null;
+
+            if(!String.IsNullOrEmpty(value) && int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var number)) {
+                result = number;
             }
 
             return result;

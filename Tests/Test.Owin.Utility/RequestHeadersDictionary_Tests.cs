@@ -34,6 +34,7 @@ namespace Test.AWhewell.Owin.Utility
         [DataRow(nameof(RequestHeadersDictionary.Authorization),    "Authorization")]
         [DataRow(nameof(RequestHeadersDictionary.CacheControl),     "Cache-Control")]
         [DataRow(nameof(RequestHeadersDictionary.ContentType),      "Content-Type")]
+        [DataRow(nameof(RequestHeadersDictionary.Host),             "Host")]
         [DataRow(nameof(RequestHeadersDictionary.Origin),           "Origin")]
         [DataRow(nameof(RequestHeadersDictionary.Referer),          "Referer")]
         [DataRow(nameof(RequestHeadersDictionary.UserAgent),        "User-Agent")]
