@@ -23,7 +23,7 @@ namespace AWhewell.Owin.Host.HttpListener
         /// <param name="factory"></param>
         public static void Register(IClassFactory factory)
         {
-            factory.Register<AWhewell.Owin.Interface.IHostHttpListener, HostHttpListener>();
+            factory.Register<AWhewell.Owin.Interface.Host.HttpListener.IHostHttpListener, HostHttpListener>();
             factory.Register<AWhewell.Owin.Interface.Host.HttpListener.HttpListenerWrapper.IHttpListener, HttpListenerWrapper.HttpListener>();
         }
     }

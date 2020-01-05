@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using AWhewell.Owin.Interface;
+using AWhewell.Owin.Interface.Host.HttpListener;
 using AWhewell.Owin.Interface.Host.HttpListener.HttpListenerWrapper;
 using AWhewell.Owin.Utility;
 using InterfaceFactory;
