@@ -598,7 +598,7 @@ namespace Test.AWhewell.Owin.Host.HttpListener
         }
 
         [TestMethod]
-        public void GetContext_Environment_ssl_ClientCertificate_Set_To_Null_For_Http()
+        public void GetContext_Environment_SSL_ClientCertificate_Set_To_Null_For_Http()
         {
             using(var certificate = new X509Certificate2()) {
                 AssertEnvironment(
@@ -613,7 +613,7 @@ namespace Test.AWhewell.Owin.Host.HttpListener
         }
 
         [TestMethod]
-        public void GetContext_Environment_ssl_ClientCertificate_Fetched_For_Https()
+        public void GetContext_Environment_SSL_ClientCertificate_Fetched_For_Https()
         {
             using(var certificate = new X509Certificate2()) {
                 AssertEnvironment(
@@ -632,7 +632,7 @@ namespace Test.AWhewell.Owin.Host.HttpListener
         [DataRow("192.168.0.12")]
         [DataRow("::1")]
         [DataRow(null)]
-        public void GetContext_Environment_server_RemoteIpAddress_Filled_Correctly(string remoteIPAddress)
+        public void GetContext_Environment_Server_RemoteIpAddress_Filled_Correctly(string remoteIPAddress)
         {
             var expected = remoteIPAddress == null ? null : IPEndPoint.Parse(remoteIPAddress);
 
@@ -647,7 +647,7 @@ namespace Test.AWhewell.Owin.Host.HttpListener
         [DataRow("192.168.0.12:12345", "12345")]
         [DataRow("[::1]:2",            "2")]
         [DataRow(null,                 null)]
-        public void GetContext_Environment_server_RemotePort_Filled_Correctly(string remoteIPAddress, string expectedPort)
+        public void GetContext_Environment_Server_RemotePort_Filled_Correctly(string remoteIPAddress, string expectedPort)
         {
             var remoteIPEndPoint = remoteIPAddress == null ? null : IPEndPoint.Parse(remoteIPAddress);
 
@@ -662,7 +662,7 @@ namespace Test.AWhewell.Owin.Host.HttpListener
         [DataRow("192.168.0.12")]
         [DataRow("::1")]
         [DataRow(null)]
-        public void GetContext_Environment_server_LocalIpAddress_Filled_Correctly(string localIPAddress)
+        public void GetContext_Environment_Server_LocalIpAddress_Filled_Correctly(string localIPAddress)
         {
             var expected = localIPAddress == null ? null : IPEndPoint.Parse(localIPAddress);
 
@@ -677,7 +677,7 @@ namespace Test.AWhewell.Owin.Host.HttpListener
         [DataRow("192.168.0.12:12345", "12345")]
         [DataRow("[::1]:2",            "2")]
         [DataRow(null,                 null)]
-        public void GetContext_Environment_server_LocalPort_Filled_Correctly(string localIPAddress, string expectedPort)
+        public void GetContext_Environment_Server_LocalPort_Filled_Correctly(string localIPAddress, string expectedPort)
         {
             var localIPEndPoint = localIPAddress == null ? null : IPEndPoint.Parse(localIPAddress);
 
@@ -689,7 +689,7 @@ namespace Test.AWhewell.Owin.Host.HttpListener
         }
 
         [TestMethod]
-        public void GetContext_Environment_server_IsLocal_Filled_Correctly()
+        public void GetContext_Environment_Server_IsLocal_Filled_Correctly()
         {
             foreach(var isLocal in new bool[] { true, false }) {
                 TestCleanup();
@@ -704,7 +704,7 @@ namespace Test.AWhewell.Owin.Host.HttpListener
         }
 
         [TestMethod]
-        public void GetContext_Environment_ResponseBody_Filled__Correctly()
+        public void GetContext_Environment_ResponseBody_Filled_Correctly()
         {
             Initialise();
             var expected = _HttpListener.MockContext.MockResponse.UnderlyingStream;
@@ -742,6 +742,49 @@ namespace Test.AWhewell.Owin.Host.HttpListener
             };
 
             InitialiseAndStart();
+        }
+
+        [TestMethod]
+        public void GetContext_Response_Closed_After_Pipeline_Processed()
+        {
+            InitialiseAndStart();
+
+            _HttpListener.MockContext.MockResponse.Verify(r => r.Close(), Times.Once());
+        }
+
+        [TestMethod]
+        public void GetContext_Response_Close_Exceptions_Are_Ignored()
+        {
+            // There are LOTS of reasons why close throws, chief among them being that the client disconnects mid-send.
+            // We don't want to see any of them.
+
+            _HttpListener.MockContext.MockResponse
+                .Setup(r => r.Close())
+                .Callback(() => throw new IOException());
+
+            InitialiseAndStart();
+
+            _HttpListener.MockContext.MockResponse.Verify(r => r.Close(), Times.Once());
+        }
+
+        [TestMethod]
+        public void GetContext_Disposes_Of_Response_After_Pipeline_Processed()
+        {
+            InitialiseAndStart();
+
+            _HttpListener.MockContext.MockResponse.Verify(r => r.Dispose(), Times.Once());
+        }
+
+        [TestMethod]
+        public void GetContext_Response_Dispose_Exceptions_Are_Ignored()
+        {
+            _HttpListener.MockContext.MockResponse
+                .Setup(r => r.Dispose())
+                .Callback(() => throw new IOException());
+
+            InitialiseAndStart();
+
+            _HttpListener.MockContext.MockResponse.Verify(r => r.Dispose(), Times.Once());
         }
     }
 }

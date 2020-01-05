@@ -19,7 +19,7 @@ namespace AWhewell.Owin.Interface.Host.HttpListener.HttpListenerWrapper
     /// <summary>
     /// The interface for wrappers around an HttpListenerResponse.
     /// </summary>
-    public interface IHttpListenerResponse
+    public interface IHttpListenerResponse : IDisposable
     {
         //
         // Summary:

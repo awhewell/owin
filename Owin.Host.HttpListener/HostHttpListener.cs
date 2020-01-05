@@ -235,6 +235,18 @@ namespace AWhewell.Owin.Host.HttpListener
 
                 if(context != null) {
                     ProcessRequest(context);
+
+                    try {
+                        context.Response.Close();
+                    } catch {
+                        ; // This will get hit a lot, the close call will fail if clients close connections etc.
+                    }
+
+                    try {
+                        context.Response.Dispose();
+                    } catch {
+                        ;
+                    }
                 }
             }
         }

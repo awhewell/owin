@@ -198,5 +198,10 @@ namespace AWhewell.Owin.Host.HttpListener.HttpListenerWrapper
         /// </summary>
         /// <param name="cookie"></param>
         public void SetCookie(Cookie cookie) => _Wrapped.SetCookie(cookie);
+
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        public void Dispose() => ((IDisposable)_Wrapped).Dispose();
     }
 }
