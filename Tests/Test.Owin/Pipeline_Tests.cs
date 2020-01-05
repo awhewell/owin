@@ -143,6 +143,17 @@ namespace Test.AWhewell.Owin
         }
 
         [TestMethod]
+        public void ProcessRequest_Does_Not_Change_Status_Code_If_Already_Set()
+        {
+            _Pipeline.Construct(_BuilderEnvironment.Object);
+            _Environment[EnvironmentKey.ResponseStatusCode] = 201;
+
+            _Pipeline.ProcessRequest(_Environment).Wait();
+
+            Assert.AreEqual(201, (int)_Environment[EnvironmentKey.ResponseStatusCode]);
+        }
+
+        [TestMethod]
         public void ProcessRequest_Calls_Middleware()
         {
             var middleware = new MockMiddleware();
@@ -343,7 +354,7 @@ namespace Test.AWhewell.Owin
         }
 
         [TestMethod]
-        public void ProcessRequest_Only_Copies_Up_To_Current_Position_Of_Replacement_Stream()
+        public void ProcessRequest_Ignores_Position_Of_Replacement_Stream()
         {
             using(var hostStream = new MemoryStream()) {
                 _Environment[EnvironmentKey.ResponseBody] = hostStream;
@@ -364,8 +375,34 @@ namespace Test.AWhewell.Owin
                 _Pipeline.ProcessRequest(_Environment).Wait();
 
                 var hostStreamContent = hostStream.ToArray();
-                Assert.AreEqual(2, hostStreamContent.Length);
-                Assert.IsTrue(new byte[] { 1, 2 }.SequenceEqual(hostStreamContent));
+                Assert.AreEqual(3, hostStreamContent.Length);
+                Assert.IsTrue(new byte[] { 1, 2, 3 }.SequenceEqual(hostStreamContent));
+            }
+        }
+
+        [TestMethod]
+        public void ProcessRequest_Overrides_Content_Length_Header_If_Using_Replacement_Stream()
+        {
+            using(var hostStream = new MemoryStream()) {
+                _Environment[EnvironmentKey.ResponseBody] = hostStream;
+                var responseHeaders = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+                _Environment[EnvironmentKey.ResponseHeaders] = responseHeaders;
+
+                var middleware = new MockMiddleware();
+                middleware.Action = () => {
+                    var pipelineStream = middleware.LastEnvironment[EnvironmentKey.ResponseBody] as Stream;
+                    pipelineStream.Write(new byte[] { 1, 2, 3 });
+                    responseHeaders["Content-Length"] = new string[] { "20" };
+                    --pipelineStream.Position;
+                };
+
+                _StreamManipulatorChain.Add(middleware.CreateAppFunc);
+                _Pipeline.Construct(_BuilderEnvironment.Object);
+
+                _Pipeline.ProcessRequest(_Environment).Wait();
+
+                Assert.AreEqual(1,   responseHeaders["Content-Length"].Length);
+                Assert.AreEqual("3", responseHeaders["Content-Length"][0]);
             }
         }
     }

@@ -10,6 +10,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -50,14 +51,14 @@ namespace AWhewell.Owin
                 throw new InvalidOperationException($"You cannot call {nameof(Construct)} twice");
             }
 
-            _MiddlewareChain = NotFoundAppFunc;
+            _MiddlewareChain = ChainTerminatorAppFunc;
             foreach(var chainLink in buildEnvironment.MiddlewareChain.Reverse()) {
                 _MiddlewareChain = chainLink.Invoke(_MiddlewareChain);
             }
 
             var streamManipulators = new List<AppFunc>();
             foreach(var chainLink in buildEnvironment.StreamManipulatorChain) {
-                streamManipulators.Add(chainLink.Invoke(NotFoundAppFunc));
+                streamManipulators.Add(chainLink.Invoke(ChainTerminatorAppFunc));
             }
             _StreamManipulatorChain = streamManipulators.ToArray();
         }
@@ -93,40 +94,45 @@ namespace AWhewell.Owin
                     }
                 } finally {
                     if(responseBodyWrapper != null) {
-                        environment[EnvironmentKey.ResponseBody] = originalResponseBody;
-                        CopyStreamToPosition(responseBodyWrapper, originalResponseBody);
+                        CopyStream(
+                            environment,
+                            responseBodyWrapper,
+                            originalResponseBody
+                        );
                         responseBodyWrapper.Dispose();
                     }
                 }
             }
         }
 
-        private void CopyStreamToPosition(Stream source, Stream destination)
+        private void CopyStream(IDictionary<string, object> environment, MemoryStream source, Stream destination)
         {
-            var length = source.Position;
-            var bytesCopied = 0L;
-            var buffer = new byte[1024];
+            environment[EnvironmentKey.ResponseBody] = destination;
 
-            source.Position = 0L;
-            while(bytesCopied < length) {
-                var bytesRead = source.Read(buffer, 0, (int)Math.Min(length - bytesCopied, buffer.Length));
-                if(bytesRead == 0) {
-                    break;
-                } else {
-                    destination.Write(buffer, 0, bytesRead);
-                    bytesCopied += bytesRead;
+            var sourceBytes = source.ToArray();
+            var length = sourceBytes.Length;
+
+            if(length < (long)int.MaxValue) {
+                if(   environment.TryGetValue(EnvironmentKey.ResponseHeaders, out var rawResponseHeaders)
+                   && rawResponseHeaders is IDictionary<string, string[]> responseHeaders
+                ) {
+                    responseHeaders["Content-Length"] = new string[] { length.ToString(CultureInfo.InvariantCulture) };
                 }
+
+                destination.Write(sourceBytes, 0, (int)length);
             }
         }
 
         /// <summary>
-        /// An AppFunc that sets the status to 404 not found.
+        /// An AppFunc that sets the status to 404 not found if no other status has been set.
         /// </summary>
         /// <param name="environment"></param>
         /// <returns></returns>
-        private static Task NotFoundAppFunc(IDictionary<string, object> environment)
+        private static Task ChainTerminatorAppFunc(IDictionary<string, object> environment)
         {
-            environment[EnvironmentKey.ResponseStatusCode] = (int)HttpStatusCode.NotFound;
+            if(!environment.ContainsKey(EnvironmentKey.ResponseStatusCode)) {
+                environment[EnvironmentKey.ResponseStatusCode] = (int)HttpStatusCode.NotFound;
+            }
             return Task.FromResult(0);
         }
     }
