@@ -43,7 +43,7 @@ namespace AWhewell.Owin.Utility
         /// </summary>
         public CacheControlResponseValue CacheControlValue
         {
-            get => CacheControlResponseValue.Parse(CacheControl);
+            get => CacheControlResponseValue.Parse(CacheControl ?? "");
             set => CacheControl = value?.ToString();
         }
 
@@ -61,7 +61,7 @@ namespace AWhewell.Owin.Utility
         /// </summary>
         public ContentTypeValue ContentTypeValue
         {
-            get => ContentTypeValue.Parse(ContentType);
+            get => ContentTypeValue.Parse(ContentType ?? "");
             set => ContentType = value?.ToString();
         }
 

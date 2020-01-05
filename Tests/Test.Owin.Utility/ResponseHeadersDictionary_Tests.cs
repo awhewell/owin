@@ -80,10 +80,20 @@ namespace Test.AWhewell.Owin.Utility
 
             _ResponseHeaders.ContentTypeValue = null;
             Assert.IsFalse(_UnderlyingDictionary.ContainsKey("Content-Type"));
-            Assert.IsNull(_ResponseHeaders.ContentTypeValue);
 
             _ResponseHeaders.ContentTypeValue = new ContentTypeValue("application/json");
             Assert.IsTrue(new string[] { "application/json" }.SequenceEqual(_UnderlyingDictionary["Content-Type"]));
+        }
+
+        [TestMethod]
+        public void ContentTypeValue_Returns_Empty_Object_Even_If_ContentType_Is_Not_Set()
+        {
+            // This keeps things consistent with RequestHeadersDictionary where empty values are shown even when the
+            // request does not specify a content type. If one dictionary never returns null and the other dictionary
+            // sometimes returns null then people (especially me) are going to forget which one needs a null check
+            // and which does not.
+
+            Assert.IsNotNull(_ResponseHeaders.ContentTypeValue);
         }
 
         [TestMethod]
@@ -96,11 +106,17 @@ namespace Test.AWhewell.Owin.Utility
 
             _ResponseHeaders.CacheControlValue = null;
             Assert.IsFalse(_UnderlyingDictionary.ContainsKey("Cache-Control"));
-            Assert.IsNull(_ResponseHeaders.CacheControlValue);
 
             _ResponseHeaders.CacheControlValue = new CacheControlResponseValue(maxAgeSeconds: 10, isPublic: true);
             Assert.IsTrue(new string[] { "max-age=10,public" }.SequenceEqual(_UnderlyingDictionary["Cache-Control"]));
         }
 
+        [TestMethod]
+        public void CacheControlValue_Returns_Empty_Object_Even_If_CacheControl_Is_Not_Set()
+        {
+            // See ContentTypeValue tests for reasoning behind this
+
+            Assert.IsNotNull(_ResponseHeaders.CacheControlValue);
+        }
     }
 }
