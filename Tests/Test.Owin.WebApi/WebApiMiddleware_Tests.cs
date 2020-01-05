@@ -253,17 +253,6 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        public void Middleware_Does_Not_Set_Status_If_Parameters_Could_Be_Built()
-        {
-            _RouteParameters = new RouteParameters(null, new object[0]);
-            var middleware = _WebApi.CreateMiddleware(MockMiddleware.Stub);
-
-            MockMiddleware.Call(middleware, _Environment.Environment);
-
-            Assert.IsNull(_Environment.ResponseStatusCode);
-        }
-
-        [TestMethod]
         public void Middleware_Calls_Route_If_Parameters_Could_Be_Built()
         {
             var middleware = _WebApi.CreateMiddleware(MockMiddleware.Stub);
@@ -301,6 +290,16 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
+        public void Middleware_Defaults_To_Status_200()
+        {
+            var middleware = _WebApi.CreateMiddleware(MockMiddleware.Stub);
+
+            MockMiddleware.Call(middleware, _Environment.Environment);
+
+            Assert.AreEqual(200, _Environment.ResponseStatusCode);
+        }
+
+        [TestMethod]
         public void Middleware_Does_Not_Call_WebApiResponder_For_Void_Routes()
         {
             _RouteOutcome = null;
@@ -331,7 +330,7 @@ namespace Test.AWhewell.Owin.WebApi
 
             if(expectResponderCall) {
                 _Responder.Verify(r => r.ReturnJsonObject(_Environment.Environment, _RouteOutcome), Times.Once());
-                Assert.IsNull(_Environment.ResponseStatusCode);
+                Assert.AreEqual(200, _Environment.ResponseStatusCode);
             } else {
                 _Responder.Verify(r => r.ReturnJsonObject(_Environment.Environment, _RouteOutcome), Times.Never());
                 Assert.AreEqual((int)HttpStatusCode.Conflict, _Environment.ResponseStatusCode);

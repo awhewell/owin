@@ -88,6 +88,10 @@ namespace AWhewell.Owin.WebApi
                                 }
                             }
                         }
+
+                        if(!environment.ContainsKey(EnvironmentKey.ResponseStatusCode)) {
+                            environment[EnvironmentKey.ResponseStatusCode] = 200;
+                        }
                     }
                 }
 
