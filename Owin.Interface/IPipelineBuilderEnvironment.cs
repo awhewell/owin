@@ -76,6 +76,11 @@ namespace AWhewell.Owin.Interface
         /// The position of the response stream in the environment is always at the end of the
         /// stream when the manipulator is first called. Each manipulator is expected to ensure
         /// that the position is at the end of the stream content before returning.
+        /// </para><para>
+        /// To support manipulation of the response stream with hosts that use forward-only response
+        /// streams the pipeline replaces the host response stream with a memory stream when stream
+        /// manipulators are used. It will copy the content of the memory stream to the host stream
+        /// once all stream manipulators have been called.
         /// </para>
         /// </remarks>
         void UseStreamManipulator(Func<AppFunc, AppFunc> middleware);

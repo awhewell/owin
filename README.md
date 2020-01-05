@@ -36,8 +36,8 @@ To facilitate this the library has a two-step process to create a pipeline:
    passing into it a new instance of an `IPipelineBuilderEnvironment`.
 
    The builder will call each callback in ascending order of priority. Each callback is passed the
-   pipeline builder environment. The environment has methods on it to tell the pipeline to use a
-   middleware function.
+   pipeline builder environment. The environment has a `UseMiddleware` that can be passed a middleware
+   function.
 
    The environment also has a `Properties` dictionary that contains information about the server
    environment, as per section 4 (Application Startup) of the OWIN 1.0.0 spec.
@@ -45,6 +45,26 @@ To facilitate this the library has a two-step process to create a pipeline:
 The result of calling `CreatePipeline` is an `IPipeline` object. The pipeline has a `ProcessRequest`
 method that can be used to send a request (as described by a standard OWIN environment dictionary)
 through the pipeline.
+
+### Middleware vs. Stream Manipulators
+
+The OWIN spec defines middleware, tasks that are chained together to form the processing pipeline
+for a web request.
+
+The Owin package adds the concept of stream manipulators. Virtual Radar Server has a requirement
+for tasks that modify the response that middleware creates. The `IPipelineBuilderEnvironment`
+object has a method called `UseStreamManipulator` which tasks a AppFunc middleware function.
+Stream manipulators are identical to middleware in all but two aspects:
+
+1. They have their own set of priorities and are always called *after* the middleware chain has
+   been called.
+
+2. If a stream manipulator is registered then the `IPipeline` object will replace the response
+   stream with a memory stream. It will copy the content of the memory stream back to the original
+   environment stream once all of the stream manipulators have finished running.
+
+The switching out of the host's response stream with a memory stream lets stream manipulators work
+with hosts that use a forward-only response stream.
 
 ## Building and Running the Server
 

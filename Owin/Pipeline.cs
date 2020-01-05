@@ -10,6 +10,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -74,10 +75,47 @@ namespace AWhewell.Owin
                 throw new InvalidOperationException($"You cannot call {nameof(ProcessRequest)} before calling {nameof(Construct)}");
             }
 
-            await _MiddlewareChain(environment);
+            if(!HasStreamManipulators) {
+                await _MiddlewareChain(environment);
+            } else {
+                environment.TryGetValue(EnvironmentKey.ResponseBody, out var originalResponseBodyObj);
+                var originalResponseBody = originalResponseBodyObj as Stream;
+                var responseBodyWrapper = originalResponseBody != null && originalResponseBody != Stream.Null ? new MemoryStream() : null;
+                if(responseBodyWrapper != null) {
+                    environment[EnvironmentKey.ResponseBody] = responseBodyWrapper;
+                }
 
-            foreach(var streamManipulatorAppFunc in _StreamManipulatorChain) {
-                await streamManipulatorAppFunc(environment);
+                try {
+                    await _MiddlewareChain(environment);
+
+                    foreach(var streamManipulatorAppFunc in _StreamManipulatorChain) {
+                        await streamManipulatorAppFunc(environment);
+                    }
+                } finally {
+                    if(responseBodyWrapper != null) {
+                        environment[EnvironmentKey.ResponseBody] = originalResponseBody;
+                        CopyStreamToPosition(responseBodyWrapper, originalResponseBody);
+                        responseBodyWrapper.Dispose();
+                    }
+                }
+            }
+        }
+
+        private void CopyStreamToPosition(Stream source, Stream destination)
+        {
+            var length = source.Position;
+            var bytesCopied = 0L;
+            var buffer = new byte[1024];
+
+            source.Position = 0L;
+            while(bytesCopied < length) {
+                var bytesRead = source.Read(buffer, 0, (int)Math.Min(length - bytesCopied, buffer.Length));
+                if(bytesRead == 0) {
+                    break;
+                } else {
+                    destination.Write(buffer, 0, bytesRead);
+                    bytesCopied += bytesRead;
+                }
             }
         }
 

@@ -10,6 +10,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using AWhewell.Owin.Interface;
 using AWhewell.Owin.Utility;
@@ -274,6 +276,97 @@ namespace Test.AWhewell.Owin
             Assert.AreEqual(1, middleware_1.AppFuncCallCount);
             Assert.AreEqual(0, middleware_2.AppFuncCallCount);
             Assert.AreEqual(1, streamManipulator.AppFuncCallCount);
+        }
+
+        [TestMethod]
+        public void ProcessRequest_Replaces_Response_Stream_If_Stream_Manipulators_Are_Used()
+        {
+            using(var hostStream = new MemoryStream()) {
+                _Environment[EnvironmentKey.ResponseBody] = hostStream;
+
+                var middleware = new MockMiddleware();
+                middleware.Action = () => {
+                    var pipelineStream = middleware.LastEnvironment[EnvironmentKey.ResponseBody] as Stream;
+                    Assert.IsNotNull(pipelineStream);
+                    Assert.AreNotSame(hostStream, pipelineStream);
+
+                    pipelineStream.WriteByte(99);
+                };
+
+                _StreamManipulatorChain.Add(middleware.CreateAppFunc);
+                _Pipeline.Construct(_BuilderEnvironment.Object);
+
+                _Pipeline.ProcessRequest(_Environment).Wait();
+
+                Assert.AreSame(hostStream, _Environment[EnvironmentKey.ResponseBody]);
+
+                var hostStreamContent = hostStream.ToArray();
+                Assert.AreEqual(1, hostStreamContent.Length);
+                Assert.AreEqual(99, hostStreamContent[0]);
+            }
+        }
+
+        [TestMethod]
+        public void ProcessRequest_Does_Not_Replace_Stream_If_Host_Stream_Is_Null()
+        {
+            _Environment[EnvironmentKey.ResponseBody] = Stream.Null;
+
+            var middleware = new MockMiddleware();
+            middleware.Action = () => {
+                var pipelineStream = middleware.LastEnvironment[EnvironmentKey.ResponseBody] as Stream;
+                Assert.IsTrue(pipelineStream == Stream.Null);
+            };
+
+            _StreamManipulatorChain.Add(middleware.CreateAppFunc);
+            _Pipeline.Construct(_BuilderEnvironment.Object);
+
+            _Pipeline.ProcessRequest(_Environment).Wait();
+        }
+
+        [TestMethod]
+        public void ProcessRequest_Does_Not_Replace_Stream_If_Stream_Manipulators_Are_Not_Used()
+        {
+            using(var hostStream = new MemoryStream()) {
+                _Environment[EnvironmentKey.ResponseBody] = hostStream;
+
+                var middleware = new MockMiddleware();
+                middleware.Action = () => {
+                    var pipelineStream = middleware.LastEnvironment[EnvironmentKey.ResponseBody] as Stream;
+                    Assert.AreSame(hostStream, pipelineStream);
+                };
+
+                _MiddlewareChain.Add(middleware.CreateAppFunc);
+                _Pipeline.Construct(_BuilderEnvironment.Object);
+
+                _Pipeline.ProcessRequest(_Environment).Wait();
+            }
+        }
+
+        [TestMethod]
+        public void ProcessRequest_Only_Copies_Up_To_Current_Position_Of_Replacement_Stream()
+        {
+            using(var hostStream = new MemoryStream()) {
+                _Environment[EnvironmentKey.ResponseBody] = hostStream;
+
+                var middleware = new MockMiddleware();
+                middleware.Action = () => {
+                    var pipelineStream = middleware.LastEnvironment[EnvironmentKey.ResponseBody] as Stream;
+                    Assert.IsNotNull(pipelineStream);
+                    Assert.AreNotSame(hostStream, pipelineStream);
+
+                    pipelineStream.Write(new byte[] { 1, 2, 3 });
+                    --pipelineStream.Position;
+                };
+
+                _StreamManipulatorChain.Add(middleware.CreateAppFunc);
+                _Pipeline.Construct(_BuilderEnvironment.Object);
+
+                _Pipeline.ProcessRequest(_Environment).Wait();
+
+                var hostStreamContent = hostStream.ToArray();
+                Assert.AreEqual(2, hostStreamContent.Length);
+                Assert.IsTrue(new byte[] { 1, 2 }.SequenceEqual(hostStreamContent));
+            }
         }
     }
 }
