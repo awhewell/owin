@@ -745,6 +745,28 @@ namespace Test.AWhewell.Owin.Host.HttpListener
         }
 
         [TestMethod]
+        public void GetContext_Environment_ResponseStatusCode_Applied_In_Real_Time()
+        {
+            _ProcessRequestAction = (env) => {
+                env[EnvironmentKey.ResponseStatusCode] = 102;
+                Assert.AreEqual(102, _HttpListener.MockContext.MockResponse.Object.StatusCode);
+            };
+
+            InitialiseAndStart();
+        }
+
+        [TestMethod]
+        public void GetContext_Environment_ResponseReasonPhrase_Applied_In_Real_Time()
+        {
+            _ProcessRequestAction = (env) => {
+                env[EnvironmentKey.ResponseReasonPhrase] = "Ab";
+                Assert.AreEqual("Ab", _HttpListener.MockContext.MockResponse.Object.StatusDescription);
+            };
+
+            InitialiseAndStart();
+        }
+
+        [TestMethod]
         public void GetContext_Response_Closed_After_Pipeline_Processed()
         {
             InitialiseAndStart();

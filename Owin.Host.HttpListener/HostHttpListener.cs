@@ -300,7 +300,7 @@ namespace AWhewell.Owin.Host.HttpListener
             var path = pathQuery.Item1;
             var query = pathQuery.Item2;
 
-            var result = OwinContext.Create(null);
+            var result = OwinContext.Create(new HttpListenerEnvironment(context));
             result.Version =                Constants.Version;
             result.CallCancelled =          cancellationToken;
             result.RequestMethod =          request.HttpMethod;
