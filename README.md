@@ -10,8 +10,9 @@ An OWIN server for Virtual Radar Server version 3. The server targets
 
 ## Interfaces
 
-The library uses the same class factory that Virtual Radar Server uses to break everything
-up into interfaces and then register and obtain implementations of those interfaces.
+The packages (with the exception of **Owin.Utility**) use the same class factory that
+Virtual Radar Server uses to break everything up into interfaces and then register and
+obtain implementations of those interfaces.
 
 See https://github.com/awhewell/interface-factory for more details.
 
@@ -30,6 +31,7 @@ To facilitate this the library has a two-step process to create a pipeline:
 
    Each callback registered with the builder is assigned a priority. It is up to the program and
    the plugins to decide on how priorities are assigned.
+
 2. Whenever a pipeline needs to be built the program should call `CreatePipeline` on the builder,
    passing into it a new instance of an `IPipelineBuilderEnvironment`.
 
@@ -44,7 +46,7 @@ The result of calling `CreatePipeline` is an `IPipeline` object. The pipeline ha
 method that can be used to send a request (as described by a standard OWIN environment dictionary)
 through the pipeline.
 
-## Starting the Server
+## Building and Running the Server
 
 The **Owin** package only deals with building the pipeline and processing the pipeline. It declares an
 interface for hosts (`IHost`) but it does not contain an implementation.
@@ -62,8 +64,9 @@ a call to `Initialise`. This method is passed a pipeline builder and an environm
 sets up the environment properties, calls the builder to create a pipeline and then uses the
 resulting pipeline to process requests.
 
-This means that pipelines are tied to a single instance of a host, they are not shared between
-hosts.
+This means that pipeline instances are tied to a single instance of a host, they are not shared
+between hosts. Hosts are also free to use different pipeline builders and therefore different
+pipelines.
 
 `IHost` contains methods to start and stop the server.
 
