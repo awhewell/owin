@@ -35,6 +35,17 @@ namespace Test.AWhewell.Owin.WebApi
             }
         }
 
+        class MultiRoutes : IApiController
+        {
+            public IDictionary<string, object> OwinEnvironment { get; set; }
+
+            [Route("path-1")]
+            [Route("path-2")]
+            public void MultiRouteExample()
+            {
+            }
+        }
+
         class PrivateMethods : IApiController
         {
             public IDictionary<string, object> OwinEnvironment { get; set; }
@@ -50,7 +61,7 @@ namespace Test.AWhewell.Owin.WebApi
             public IDictionary<string, object> OwinEnvironment { get; set; }
 
             [Route("static-route")]
-            public static void StaticRoute()
+            public static void StaticRoute(IDictionary<string, object> environment)
             {
             }
         }
@@ -91,11 +102,36 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        public void DiscoverRoutes_Ignores_Static_Methods()
+        public void DiscoverRoutes_Returns_One_Route_For_Each_Route_Tag()
         {
-            var routes = _RouteFinder.DiscoverRoutes(new ControllerType[] { new ControllerType(typeof(StaticMethods), null, null) });
+            var routes = _RouteFinder
+                .DiscoverRoutes(new ControllerType[] { new ControllerType(typeof(MultiRoutes), null, null) })
+                .ToArray();
 
-            Assert.AreEqual(0, routes.Count());
+            Assert.AreEqual(2, routes.Length);
+            Assert.IsTrue(routes.Any(r => r.RouteAttribute.Route == "path-1"));
+            Assert.IsTrue(routes.Any(r => r.RouteAttribute.Route == "path-2"));
+        }
+
+        [TestMethod]
+        public void DiscoverRoutes_Ignores_Private_Routes()
+        {
+            var routes = _RouteFinder
+                .DiscoverRoutes(new ControllerType[] { new ControllerType(typeof(PrivateMethods), null, null) })
+                .ToArray();
+
+            Assert.AreEqual(0, routes.Length);
+        }
+
+        [TestMethod]
+        public void DiscoverRoutes_Returns_Static_Methods()
+        {
+            var routes = _RouteFinder
+                .DiscoverRoutes(new ControllerType[] { new ControllerType(typeof(StaticMethods), null, null) })
+                .ToArray();
+
+            Assert.AreEqual(1, routes.Length);
+            Assert.AreEqual("static-route", routes[0].RouteAttribute.Route);
         }
     }
 }

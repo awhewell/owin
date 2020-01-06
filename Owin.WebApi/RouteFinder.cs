@@ -35,9 +35,8 @@ namespace AWhewell.Owin.WebApi
             var result = new List<Route>();
 
             foreach(var controllerType in controllerTypes) {
-                foreach(var methodInfo in controllerType.Type.GetMethods(BindingFlags.Public | BindingFlags.Instance)) {
-                    var routeAttribute = methodInfo.GetCustomAttributes().OfType<RouteAttribute>().FirstOrDefault();
-                    if(routeAttribute != null) {
+                foreach(var methodInfo in controllerType.Type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)) {
+                    foreach(var routeAttribute in methodInfo.GetCustomAttributes().OfType<RouteAttribute>()) {
                         result.Add(new Route(
                             controllerType,
                             methodInfo,
