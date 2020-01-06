@@ -381,6 +381,26 @@ namespace Test.AWhewell.Owin.WebApi
             Assert.IsFalse(parameters.IsValid);
         }
 
+        public class DefaultsController : Controller
+        {
+            [HttpGet, Route("defaulted")]
+            public int DefaultedRoute(int id = -1) => id + 1;
+        }
+
+        [TestMethod]
+        public void BuildRouteParameters_Will_Use_Defaults_If_No_Value_Is_Supplied()
+        {
+            var route = Route_Tests.CreateRoute(typeof(DefaultsController), nameof(DefaultsController.DefaultedRoute));
+            _RouteMapper.Initialise(new Route[] { route });
+
+            _Environment.SetRequestPath(route.PathParts[0].Part);
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
+
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual(1, parameters.Parameters.Length);
+            Assert.AreEqual(-1, parameters.Parameters[0]);
+        }
+
         // This is expected to use Parser.ParseType so the test of conversions is not exhaustive, it's just a handful
         // of basic tests to make sure things appear to be working OK
         public class QueryStringController : Controller

@@ -223,13 +223,17 @@ namespace AWhewell.Owin.WebApi
                         if(!filledParameter && failedValidationMessage == null) {
                             filledParameter = ExtractParameterFromRequestPathParts(ref parameterValue, ref failedValidationMessage, methodParameter, route, pathParts);
                         }
-
                         if(!filledParameter && failedValidationMessage == null) {
                             filledParameter = ExtractParameterFromQueryString(ref parameterValue, methodParameter, context);
                         }
                         if(!filledParameter && failedValidationMessage == null) {
                             filledParameter = ExtractParameterFromRequestBody(ref parameterValue, methodParameter, context);
                         }
+                    }
+
+                    if(!filledParameter && failedValidationMessage == null && methodParameter.IsOptional) {
+                        filledParameter = true;
+                        parameterValue = methodParameter.DefaultValue;
                     }
 
                     if(filledParameter && failedValidationMessage == null) {
@@ -278,12 +282,7 @@ namespace AWhewell.Owin.WebApi
             }
 
             if(pathPartParameter != null) {
-                if(pathParts.Length <= pathPartIdx) {
-                    if(methodParameter.IsOptional) {
-                        filled = true;
-                        parameterValue = methodParameter.DefaultValue;
-                    }
-                } else {
+                if(pathPartIdx < pathParts.Length) {
                     var pathPart = pathParts[pathPartIdx];
                     parameterValue = Parser.ParseType(
                         methodParameter.ParameterType,
