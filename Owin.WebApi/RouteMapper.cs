@@ -115,7 +115,7 @@ namespace AWhewell.Owin.WebApi
                 if(route.HttpMethod == httpMethod && route.PathParts.Length >= requestPathParts.Length) {
                     var failedMatch = false;
 
-                    for(var i = 0;i < route.PathParts.Length;++i) {
+                    for(var i = 0;!failedMatch && i < route.PathParts.Length;++i) {
                         var routePathPart = route.PathParts[i];
                         var pathPartParameter = routePathPart as PathPartParameter;
                         var requestPathPart = requestPathParts.Length > i ? requestPathParts[i] : null;

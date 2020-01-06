@@ -158,6 +158,41 @@ namespace Test.AWhewell.Owin.WebApi
             }
         }
 
+        public class Issue_1_Controller1 : Controller
+        {
+            [HttpGet]
+            [Route("api/3.00/settings/server")]
+            public int GetServerConfig() { return 1; }
+        }
+
+        public class Issue_1_Controller2 : Controller
+        {
+            [HttpGet]
+            [Route("api/3.00/feeds/polar-plot/{feedId}")]
+            public int GetPolarPlot(int feedId = -1) { return 1; }
+        }
+
+        [TestMethod]
+        public void Issue_1_Not_Choosing_Correct_Multipart_Route()
+        {
+            // This was found in an alpha build
+            var getServerConfigRoute = Route_Tests.CreateRoute<Issue_1_Controller1>(nameof(Issue_1_Controller1.GetServerConfig));
+            var getPolarPlotRoute =    Route_Tests.CreateRoute<Issue_1_Controller2>(nameof(Issue_1_Controller2.GetPolarPlot));
+
+            _RouteMapper.Initialise(new Route[] {
+                getPolarPlotRoute,
+                getServerConfigRoute,
+            });
+
+            _Environment.RequestMethod = "GET";
+            _Environment.RequestPath = "/api/3.00/settings/server";
+
+            var actual = _RouteMapper.FindRouteForRequest(_Environment.Environment);
+
+            Assert.IsNotNull(actual);
+            Assert.AreSame(getServerConfigRoute, actual);   // Bug is that it's returning the GetPolarPlot route
+        }
+
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
         public void BuildRouteParameters_Throws_If_Route_Is_Null()
