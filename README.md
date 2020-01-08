@@ -5,6 +5,7 @@ An OWIN server for Virtual Radar Server version 3. The server targets
 ## Packages
 * **AWhewell.Owin**: An OWIN compliant server.
 * **AWhewell.Owin.Host.HttpListener**: HTTP.sys hosting for OWIN server.
+* **AWhewell.Owin.Host.Ram**: In-memory hosting for OWIN server.
 * **AWhewell.Owin.Utility**: Utility classes usable with any OWIN server.
 * **AWhewell.Owin.WebApi**: Web API framework usable with any OWIN server.
 
@@ -71,10 +72,11 @@ with hosts that use a forward-only response stream.
 The **Owin** package only deals with building the pipeline and processing the pipeline. It declares an
 interface for hosts (`IHost`) but it does not contain an implementation.
 
-As of time of writing there is one implementation of `IHost`, an `HttpListener` based implementation
-in **Owin.Host.HttpListener**.
+As of time of writing there are two implementations of `IHost`:
 
-The interface for the HttpListener host is `IHostHttpListener`.
+* An `HttpListener` based implementation in **Owin.Host.HttpListener**. The interface is
+  `IHostHttpListener`.
+* An in-memory implementation in **Owin.Host.Ram**. The interface is `IHostRam`.
 
 Every host has some standard properties that need to be supplied (the port to listen on etc., see
 `IHost`).
