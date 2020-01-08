@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+
+    <RootNamespace>Test.AWhewell.Owin.Host.Ram</RootNamespace>
+
+    <AssemblyName>Test.AWhewell.Owin.Host.Ram</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWhewell.InterfaceFactory" Version="4.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
+    <PackageReference Include="Moq" Version="4.13.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="1.4.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="1.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Owin.Host.Ram\Owin.Host.Ram.csproj" />
+    <ProjectReference Include="..\..\Owin.Interface.Host.Ram\Owin.Interface.Host.Ram.csproj" />
+    <ProjectReference Include="..\..\Owin.Interface\Owin.Interface.csproj" />
+    <ProjectReference Include="..\..\Owin.Utility\Owin.Utility.csproj" />
+    <ProjectReference Include="..\Test.Owin.Utility\Test.Owin.Utility.csproj" />
+    <ProjectReference Include="..\Test.Owin\Test.Owin.csproj" />
+  </ItemGroup>
+
+</Project>

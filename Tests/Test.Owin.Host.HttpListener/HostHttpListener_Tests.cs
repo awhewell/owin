@@ -46,6 +46,7 @@ namespace Test.AWhewell.Owin.Host.HttpListener
             _PipelineBuilderEnvironment = MockHelper.FactoryImplementation<IPipelineBuilderEnvironment>();
             _Pipeline = MockHelper.FactoryImplementation<IPipeline>();
             _ProcessRequestAction = null;
+            _PipelineEnvironment = null;
             _Pipeline.Setup(r => r.ProcessRequest(It.IsAny<IDictionary<string, object>>()))
             .Callback((IDictionary<string, object> environment) => {
                 _PipelineEnvironment = environment;
