@@ -175,5 +175,27 @@ namespace Test.AWhewell.Owin.Host.Ram
 
             _Pipeline.Verify(r => r.ProcessRequest(env), Times.Never());
         }
+
+        [TestMethod]
+        public void BeforeProcessingRequest_Called_Before_Pipeline_Called()
+        {
+            var env = new OwinDictionary<object>();
+
+            var actionCalled = false;
+            _Host.BeforeProcessingRequest = (actionEnv) => {
+                Assert.AreSame(env, actionEnv);
+                actionCalled = true;
+            };
+
+            _Pipeline.Setup(r => r.ProcessRequest(env)).Callback(() => {
+                Assert.IsTrue(actionCalled);
+            });
+
+            _Host.Initialise(_PipelineBuilder.Object, _PipelineBuilderEnvironment.Object);
+            _Host.Start();
+            _Host.ProcessRequest(env);
+
+            Assert.IsTrue(actionCalled);
+        }
     }
 }

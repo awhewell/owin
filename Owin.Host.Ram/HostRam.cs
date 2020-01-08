@@ -123,6 +123,7 @@ namespace AWhewell.Owin.Host.Ram
                 throw new InvalidOperationException($"{nameof(Initialise)} must be called before {nameof(ProcessRequest)}");
             }
             if(IsListening) {
+                BeforeProcessingRequest?.Invoke(environment);
                 _Pipeline.ProcessRequest(environment).Wait();
             }
         }
