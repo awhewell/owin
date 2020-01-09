@@ -17,6 +17,7 @@ using System.Text;
 using System.Threading;
 using System.Web;
 using AWhewell.Owin.Utility;
+using Newtonsoft.Json;
 
 namespace Test.AWhewell.Owin
 {
@@ -242,6 +243,17 @@ namespace Test.AWhewell.Owin
         public void SetRequestBody(string text, Encoding encoding = null, string contentType = null, int? contentLength = null)
         {
             AddRequestBody((encoding ?? Encoding.UTF8).GetBytes(text ?? ""), contentType, contentLength);
+        }
+
+        /// <summary>
+        /// Sets the request body up with JSON content.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        public void SetJsonRequestBody<T>(T obj)
+        {
+            var text = JsonConvert.SerializeObject(obj);
+            SetRequestBody(text, Encoding.UTF8, Formatter.FormatMediaType(MediaType.Json));
         }
 
         /// <summary>

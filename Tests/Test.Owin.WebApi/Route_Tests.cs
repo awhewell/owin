@@ -140,7 +140,7 @@ namespace Test.AWhewell.Owin.WebApi
         public class NullRoute : Controller         { [HttpGet, Route(null)]                public int Method() { return 1; } }
         public class EmptyRoute : Controller        { [HttpGet, Route("")]                  public int Method() { return 1; } }
         public class SpaceRoute : Controller        { [HttpGet, Route(" ")]                 public int Method() { return 1; } }
-        public class MultiPartRoute : Controller    { [HttpGet, Route("api/entity/{id}")]   public int Method() { return 1; } }
+        public class MultiPartRoute : Controller    { [HttpGet, Route("api/entity/{id}")]   public int Method(int id) { return id + 1; } }
         public class BackslashRoute : Controller    { [HttpGet, Route("api\\entity")]       public int Method() { return 1; } }
         public class PercentRoute : Controller      { [HttpGet, Route("api%2Fentity")]      public int Method() { return 1; } }
         public class UpperCaseRoute : Controller    { [HttpGet, Route("API")]               public int Method() { return 1; } }
@@ -173,6 +173,29 @@ namespace Test.AWhewell.Owin.WebApi
                     Assert.AreEqual(expectedPathParts[i], route.PathParts[i].Part);
                 }
             }
+        }
+
+        public class BadPathParts : Controller
+        {
+            [Route("a/{b}")]
+            public void Method1(int c) {;}
+
+            [Route("a/{b?}")]
+            public void Method2(int b) {;}
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidRouteException))]
+        public void Ctor_Throws_If_PathParts_Do_Not_Match_Method()
+        {
+            var route = CreateRoute(typeof(BadPathParts), nameof(BadPathParts.Method1));
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidRouteException))]
+        public void Ctor_Throws_If_Microsoft_Web_API_Question_Mark_Suffix_Used_On_Non_Optional_Parameter()
+        {
+            var route = CreateRoute(typeof(BadPathParts), nameof(BadPathParts.Method2));
         }
 
         [TestMethod]

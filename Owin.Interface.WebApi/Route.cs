@@ -134,6 +134,8 @@ namespace AWhewell.Owin.Interface.WebApi
             HttpMethod =                    ExtractHttpMethod(method);
             PathParts =                     ExtractPathParts(MethodParameters, routeAttribute);
 
+            ValidatePathParts();
+
             ID = Interlocked.Increment(ref _NextID);
         }
 
@@ -213,6 +215,19 @@ namespace AWhewell.Owin.Interface.WebApi
             }
 
             return result;
+        }
+
+        private void ValidatePathParts()
+        {
+            foreach(var textPart in (PathParts ?? new PathPart[0]).OfType<PathPartText>()) {
+                // If the text part starts with { and finishes with } then it looks
+                // like they were trying to specify a PathPartParameter but got the
+                // name wrong. We need to flag those up otherwise the route will
+                // never fill the parameter, and could even accept the parameter as text
+                if(textPart.Part.StartsWith("{") && textPart.Part.EndsWith("}")) {
+                    throw new InvalidRouteException($"Fatal error - route {RouteAttribute?.Route} on {ControllerType?.Type.FullName} method {Method?.Name} has path part {textPart.Part} that does not match a parameter");
+                }
+            }
         }
 
         /// <summary>

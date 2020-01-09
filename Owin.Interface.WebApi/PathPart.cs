@@ -24,7 +24,7 @@ namespace AWhewell.Owin.Interface.WebApi
         /// <summary>
         /// The regular expression that extracts parameter details out of a path part.
         /// </summary>
-        private static Regex ParameterRegex = new Regex(@"^{(?<name>[a-zA-Z_][a-zA-Z_0-9]*)}$");
+        private static Regex ParameterRegex = new Regex(@"^{(?<name>[a-zA-Z_][a-zA-Z_0-9]*)(?<optional>\?)?}$");
 
         /// <summary>
         /// Gets the part without normalisation.
@@ -64,6 +64,17 @@ namespace AWhewell.Owin.Interface.WebApi
 
             var parameterName = match.Success ? Normalise(match.Groups["name"].Value) : null;
             var methodParameter = parameterName == null ? null : methodParameters.FirstOrDefault(r => r.NormalisedName == parameterName);
+
+            if(match.Success && match.Groups["optional"].Value == "?") {
+                if(methodParameter != null && !methodParameter.IsOptional) {
+                    // The Microsoft Web API ? suffix is only there to make it easier to port Web API
+                    // code across. However, it can only be applied against optional parameters. In
+                    // our world optional parameters are always optional and are the only way of marking
+                    // optional parameters. If they use ? against a non-optional parameter then we cannot
+                    // allow it.
+                    methodParameter = null;
+                }
+            }
 
             if(parameterName == null || methodParameter == null) {
                 return new PathPartText(part, Normalise(part));

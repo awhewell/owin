@@ -48,7 +48,9 @@ namespace Test.AWhewell.Owin.WebApi
         [DataRow("{_abc123}",   typeof(PathPartParameter),  "{_abc123}",    "_abc123")]
         [DataRow("{ABC_123}",   typeof(PathPartParameter),  "{ABC_123}",    "abc_123")]
         [DataRow("{no}",        typeof(PathPartText),       "{no}",         "{no}")]        // The method has no parameter called "no", therefore it must be a text parameter
-
+        [DataRow("{optional}",  typeof(PathPartParameter),  "{optional}",   "optional")]    // Optional parameters can either be specified as per usual parameters
+        [DataRow("{optional?}", typeof(PathPartParameter),  "{optional?}",  "optional")]    // ... or with the Microsoft Web API ? suffix. The parameter can be omitted in both cases, it is the defaulting of the parameter that counts.
+        [DataRow("{a?}",        typeof(PathPartText),       "{a?}",         "{a?}")]        // You cannot mark non-default parameters with a question mark.
         public void Create_Fills_Properties(string inputText, Type expectedType, string part, string normalisedPart)
         {
             var methodInfo = GetType().GetMethod(nameof(ValidExampleParameterNames));
@@ -67,7 +69,7 @@ namespace Test.AWhewell.Owin.WebApi
             }
         }
 
-        public void ValidExampleParameterNames(string a, string a1, string _, string _abc123, string ABC_123)
+        public void ValidExampleParameterNames(string a, string a1, string _, string _abc123, string ABC_123, int optional = 123)
         {
         }
 
