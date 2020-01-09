@@ -209,13 +209,16 @@ namespace Test.AWhewell.Owin
         /// <param name="bytes"></param>
         /// <param name="contentType"></param>
         /// <param name="contentLength"></param>
-        public void AddRequestBody(byte[] bytes, string contentType = null, int? contentLength = null)
+        public MemoryStream AddRequestBody(byte[] bytes, string contentType = null, int? contentLength = null)
         {
-            Environment["owin.RequestBody"] = new MemoryStream(bytes);
+            var result = new MemoryStream(bytes);
+            Environment["owin.RequestBody"] = result;
             if(contentType != null) {
                 RequestHeaders.Set("Content-Type", contentType);
             }
             RequestHeaders.Set("Content-Length", (contentLength ?? bytes.Length).ToString(CultureInfo.InvariantCulture));
+
+            return result;
         }
 
         /// <summary>
@@ -224,13 +227,16 @@ namespace Test.AWhewell.Owin
         /// <param name="bytes"></param>
         /// <param name="contentType"></param>
         /// <param name="contentLength"></param>
-        public void AddRequestBody(byte[] bytes, ContentTypeValue contentType, int? contentLength = null)
+        public MemoryStream AddRequestBody(byte[] bytes, ContentTypeValue contentType, int? contentLength = null)
         {
-            Environment["owin.RequestBody"] = new MemoryStream(bytes);
+            var result = new MemoryStream(bytes);
+            Environment["owin.RequestBody"] = result;
             if(contentType != null) {
                 RequestHeaders.Set("Content-Type", contentType.ToString());
             }
             RequestHeaders.Set("Content-Length", (contentLength ?? bytes.Length).ToString(CultureInfo.InvariantCulture));
+
+            return result;
         }
 
         /// <summary>
@@ -240,9 +246,9 @@ namespace Test.AWhewell.Owin
         /// <param name="encoding"></param>
         /// <param name="contentType"></param>
         /// <param name="contentLength"></param>
-        public void SetRequestBody(string text, Encoding encoding = null, string contentType = null, int? contentLength = null)
+        public MemoryStream SetRequestBody(string text, Encoding encoding = null, string contentType = null, int? contentLength = null)
         {
-            AddRequestBody((encoding ?? Encoding.UTF8).GetBytes(text ?? ""), contentType, contentLength);
+            return AddRequestBody((encoding ?? Encoding.UTF8).GetBytes(text ?? ""), contentType, contentLength);
         }
 
         /// <summary>

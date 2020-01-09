@@ -566,6 +566,22 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
+        public void BuildRouteParameters_Resets_Stream_Before_Use_If_Seekable()
+        {
+            var route = Route_Tests.CreateRoute(typeof(PostFormController), nameof(PostFormController.StringParam));
+            _RouteMapper.Initialise(new Route[] { route });
+            _Environment.SetRequestPath(route.PathParts[0].Part);
+            var stream = _Environment.SetRequestBody("param=Hello", contentType: "application/x-www-form-urlencoded");
+            stream.Position = stream.Length;
+
+            var parameters = _RouteMapper.BuildRouteParameters(route, _Environment.Environment);
+
+            Assert.IsTrue(parameters.IsValid);
+            Assert.AreEqual(1, parameters.Parameters.Length);
+            Assert.AreEqual("Hello", parameters.Parameters[0]);
+        }
+
+        [TestMethod]
         public void BuildRouteParameters_Can_Use_Case_Sensitive_Form_Body_Matching()
         {
             var route = Route_Tests.CreateRoute(typeof(PostFormController), nameof(PostFormController.StringParam));

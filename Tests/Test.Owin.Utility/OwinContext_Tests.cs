@@ -750,10 +750,10 @@ namespace Test.AWhewell.Owin.Utility
         public void RequestBodyBytes_Returns_Content_Of_Stream(byte[] streamContent, int startPosition, byte[] expectedContent, int expectedPosition)
         {
             var env = UseEnvironmentWithRequiredFields();
-            using(var stream = new MemoryStream()) {
+            using(var stream = new ForwardOnlyMemoryStream()) {
                 if(streamContent != null) {
-                    stream.Write(streamContent, 0, streamContent.Length);
-                    stream.Position = startPosition;
+                    stream.MemoryStream.Write(streamContent, 0, streamContent.Length);
+                    stream.MemoryStream.Position = startPosition;
                     env.Environment[EnvironmentKey.RequestBody] = stream;
                 }
 
@@ -792,6 +792,32 @@ namespace Test.AWhewell.Owin.Utility
 
             Assertions.AreEqual(result1, result2);
             Assert.AreNotSame(result1, result2);
+        }
+
+        [TestMethod]
+        public void RequestBodyBytes_Resets_Stream_If_Seekable()
+        {
+            var env = UseEnvironmentWithRequiredFields();
+            var memoryStream = env.AddRequestBody(new byte[] { 1, 2, 3 }, new ContentTypeValue("text/plain"));
+            memoryStream.Position = memoryStream.Length;
+
+            var result = _Context.RequestBodyBytes();
+
+            Assertions.AreEqual(new byte[] { 1, 2, 3 }, result);
+        }
+
+        [TestMethod]
+        public void RequestBodyBytes_Does_Not_Reset_Stream_If_Not_Seekable()
+        {
+            var env = UseEnvironmentWithRequiredFields();
+            using(var stream = new ForwardOnlyMemoryStream(new byte[] { 1, 2, 3})) {
+                env.Environment[EnvironmentKey.RequestBody] = stream;
+                stream.MemoryStream.Position = stream.MemoryStream.Length;
+
+                var result = _Context.RequestBodyBytes();
+
+                Assertions.AreEqual(new byte[0], result);
+            }
         }
 
         [TestMethod]

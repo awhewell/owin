@@ -541,6 +541,9 @@ namespace AWhewell.Owin.Utility
                 if(Object.ReferenceEquals(bodyStream, Environment[CustomEnvironmentKey.RequestBodyBytesBasis])) {
                     result = (byte[])Environment[CustomEnvironmentKey.RequestBodyBytes];
                 } else {
+                    if(bodyStream.CanSeek && bodyStream.Position != 0) {
+                        bodyStream.Position = 0;
+                    }
                     using(var memoryStream = new MemoryStream()) {
                         bodyStream.CopyTo(memoryStream);
                         result = memoryStream.ToArray();
