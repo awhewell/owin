@@ -29,7 +29,7 @@ namespace AWhewell.Owin.Utility.Formatters
         /// <returns></returns>
         public string Format(DateTime value)
         {
-            var result = new StringBuilder(@"\/Date(");
+            var result = new StringBuilder("/Date(");
 
             if(value.Kind == DateTimeKind.Utc) {
                 AddMilliseconds(result, value);
@@ -38,7 +38,7 @@ namespace AWhewell.Owin.Utility.Formatters
                 result.Append(value.ToString("zzz").Replace(":", ""));
             }
 
-            result.Append(@")\/");
+            result.Append(")/");
 
             return result.ToString();
         }

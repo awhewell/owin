@@ -17,9 +17,9 @@ namespace Test.AWhewell.Owin.Utility.Formatters
     public class DateTime_MicrosoftJson_Formatter_Tests
     {
         [TestMethod]
-        [DataRow("en-GB", "2007-07-29 05:11:57.056 Local",       @"\/Date(1185682317056+0100)\/")]
-        [DataRow("en-GB", "2007-07-29 05:11:57.056 Unspecified", @"\/Date(1185682317056+0100)\/")]
-        [DataRow("en-GB", "2007-07-29 05:11:57.056 Utc",         @"\/Date(1185685917056)\/")]
+        [DataRow("en-GB", "2007-07-29 05:11:57.056 Local",       "/Date(1185682317056+0100)/")]
+        [DataRow("en-GB", "2007-07-29 05:11:57.056 Unspecified", "/Date(1185682317056+0100)/")]
+        [DataRow("en-GB", "2007-07-29 05:11:57.056 Utc",         "/Date(1185685917056)/")]
         public void Format_Behaves_Correctly(string culture, string rawValue, string expected)
         {
             using(new CultureSwap(culture)) {

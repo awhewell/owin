@@ -60,19 +60,14 @@ class X
         */
         [TestMethod]
         [DataRow("en-GB", null,                             false,  "0001-01-01 00:00:00.000")]             // Cannot parse null
-        [DataRow("en-GB", @"rubbish",                        false,  "0001-01-01 00:00:00.000")]             // Cannot parse non-date
-        [DataRow("en-GB", @"2019-07-01 17:42:32.123",        false,  "0001-01-01 00:00:00.000")]             // Not a Microsoft JSON date
-        [DataRow("en-GB", @"2019-07-01T17:42:32.123Z",       false,  "0001-01-01 00:00:00.000")]             // Not a Microsoft JSON date
-        [DataRow("en-GB", @"/Date(1185682317056+0100)/",     true,   "2007-07-29 05:11:57.056 Local")]
-        [DataRow("en-GB", @"/Date(1185682317056+0000)/",     true,   "2007-07-29 05:11:57.056 Local")]       // In testing DataContractJsonSerializer it turned out that +0000, +0100, -0100, +0200 and -0200 all produced the same local time. I think on deserialisation the timezone just indicates "local" for DateTime
-        [DataRow("en-GB", @"/Date(1185682317056-0100)/",     true,   "2007-07-29 05:11:57.056 Local")]       // See above
-        [DataRow("en-GB", @"/Date(1185682317056+0200)/",     true,   "2007-07-29 05:11:57.056 Local")]       // See above
-        [DataRow("en-GB", @"/Date(1185682317056)/",          true,   "2007-07-29 04:11:57.056 Utc")]
-        [DataRow("en-GB", @"\/Date(1185682317056+0100)\/",   true,   "2007-07-29 05:11:57.056 Local")]
-        [DataRow("en-GB", @"\/Date(1185682317056+0000)\/",   true,   "2007-07-29 05:11:57.056 Local")]       // In testing DataContractJsonSerializer it turned out that +0000, +0100, -0100, +0200 and -0200 all produced the same local time. I think on deserialisation the timezone just indicates "local" for DateTime
-        [DataRow("en-GB", @"\/Date(1185682317056-0100)\/",   true,   "2007-07-29 05:11:57.056 Local")]       // See above
-        [DataRow("en-GB", @"\/Date(1185682317056+0200)\/",   true,   "2007-07-29 05:11:57.056 Local")]       // See above
-        [DataRow("en-GB", @"\/Date(1185682317056)\/",        true,   "2007-07-29 04:11:57.056 Utc")]
+        [DataRow("en-GB", "rubbish",                        false,  "0001-01-01 00:00:00.000")]             // Cannot parse non-date
+        [DataRow("en-GB", "2019-07-01 17:42:32.123",        false,  "0001-01-01 00:00:00.000")]             // Not a Microsoft JSON date
+        [DataRow("en-GB", "2019-07-01T17:42:32.123Z",       false,  "0001-01-01 00:00:00.000")]             // Not a Microsoft JSON date
+        [DataRow("en-GB", "/Date(1185682317056+0100)/",     true,   "2007-07-29 05:11:57.056 Local")]
+        [DataRow("en-GB", "/Date(1185682317056+0000)/",     true,   "2007-07-29 05:11:57.056 Local")]       // In testing DataContractJsonSerializer it turned out that +0000, +0100, -0100, +0200 and -0200 all produced the same local time. I think on deserialisation the timezone just indicates "local" for DateTime
+        [DataRow("en-GB", "/Date(1185682317056-0100)/",     true,   "2007-07-29 05:11:57.056 Local")]       // See above
+        [DataRow("en-GB", "/Date(1185682317056+0200)/",     true,   "2007-07-29 05:11:57.056 Local")]       // See above
+        [DataRow("en-GB", "/Date(1185682317056)/",          true,   "2007-07-29 04:11:57.056 Utc")]
         public void TryParse_Behaves_Correctly(string culture, string text, bool expectedResult, string expectedValueText)
         {
             using(new CultureSwap(culture)) {
