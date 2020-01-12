@@ -353,14 +353,24 @@ namespace Test.AWhewell.Owin.Host.HttpListener
         }
 
         [TestMethod]
-        public void GetContext_Ignores_HttpListenerExceptions_Thrown_During_Processing()
+        public void GetContext_Ignores_Aggregate_Exceptions_Containing_A_Single_HttpListenerException_Thrown_During_Processing()
         {
             _Pipeline.Setup(r => r.ProcessRequest(It.IsAny<IDictionary<string, object>>()))
-                .Callback(() => throw new HttpListenerException());
+                .Callback(() => throw new AggregateException(new HttpListenerException()));
 
             InitialiseAndStart();
 
             // If we get here without an exception bubbled up then we're good.
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(AggregateException))]
+        public void GetContext_Does_Not_Ignore_Other_Aggregate_Exceptions_Thrown_During_Processing()
+        {
+            _Pipeline.Setup(r => r.ProcessRequest(It.IsAny<IDictionary<string, object>>()))
+                .Callback(() => throw new AggregateException(new InvalidOperationException()));
+
+            InitialiseAndStart();
         }
 
         [TestMethod]
