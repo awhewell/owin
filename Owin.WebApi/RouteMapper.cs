@@ -205,7 +205,11 @@ namespace AWhewell.Owin.WebApi
 
             var buildFromBody = false;
             switch(context.RequestHttpMethod) {
-                case HttpMethod.Post: buildFromBody = true; break;
+                case HttpMethod.Patch:
+                case HttpMethod.Post:
+                case HttpMethod.Put:
+                    buildFromBody = true;
+                    break;
             }
 
             if(!buildFromBody) {

@@ -692,15 +692,20 @@ namespace Test.AWhewell.Owin.WebApi
 
         public class FormBodyModelController : Controller
         {
-            [HttpPost, Route("x1")] public int StringModelFunc(StringModel model) { return 0; }
+            [HttpPatch, Route("x1")]    public int PatchStringModel(StringModel model) { return 0; }
+            [HttpPost, Route("x1")]     public int PostStringModel(StringModel model) { return 0; }
+            [HttpPut,  Route("x2")]     public int PutStringModel(StringModel model)  { return 0; }
         }
 
         [TestMethod]
-        public void BuildRouteParameters_Can_Build_Model_From_Form_Body()
+        [DataRow("PATCH",   nameof(FormBodyModelController.PatchStringModel))]
+        [DataRow("POST",    nameof(FormBodyModelController.PostStringModel))]
+        [DataRow("PUT",     nameof(FormBodyModelController.PutStringModel))]
+        public void BuildRouteParameters_Can_Build_Model_From_Form_Body(string httpMethod, string routeName)
         {
-            var route = Route_Tests.CreateRoute(typeof(FormBodyModelController), nameof(FormBodyModelController.StringModelFunc));
+            var route = Route_Tests.CreateRoute(typeof(FormBodyModelController), routeName);
             _RouteMapper.Initialise(new Route[] { route });
-            _Environment.RequestMethod = "POST";
+            _Environment.RequestMethod = httpMethod;
             _Environment.SetRequestPath(route.PathParts[0].Part);
             _Environment.SetRequestBody("StringValue=Ab", contentType: "application/x-www-form-urlencoded");
 
@@ -715,7 +720,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void BuildRouteParameters_Rejects_Attempt_To_Build_From_Form_Body_With_Bad_Encoding()
         {
-            var route = Route_Tests.CreateRoute(typeof(FormBodyModelController), nameof(FormBodyModelController.StringModelFunc));
+            var route = Route_Tests.CreateRoute(typeof(FormBodyModelController), nameof(FormBodyModelController.PostStringModel));
             _RouteMapper.Initialise(new Route[] { route });
             _Environment.RequestMethod = "POST";
             _Environment.SetRequestPath(route.PathParts[0].Part);
@@ -730,7 +735,7 @@ namespace Test.AWhewell.Owin.WebApi
         public void BuildRouteParameters_Uses_Full_TypeParserResolver_When_Building_Model_From_Form_Body()
         {
             var resolver = new TypeParserResolver(new ModelBuilder_Tests.String_Reverse_Parser());
-            var route = Route_Tests.CreateRoute(typeof(FormBodyModelController), nameof(FormBodyModelController.StringModelFunc), parserResolver: resolver);
+            var route = Route_Tests.CreateRoute(typeof(FormBodyModelController), nameof(FormBodyModelController.PostStringModel), parserResolver: resolver);
             _RouteMapper.Initialise(new Route[] { route });
             _Environment.RequestMethod = "POST";
             _Environment.SetRequestPath(route.PathParts[0].Part);
@@ -750,7 +755,7 @@ namespace Test.AWhewell.Owin.WebApi
         public void BuildRouteParameters_Uses_Case_Sensitivity_Flag_When_Building_Model_From_Form_Body(bool caseSensitiveKeys)
         {
             _RouteMapper.AreFormNamesCaseSensitive = caseSensitiveKeys;
-            var route = Route_Tests.CreateRoute(typeof(FormBodyModelController), nameof(FormBodyModelController.StringModelFunc));
+            var route = Route_Tests.CreateRoute(typeof(FormBodyModelController), nameof(FormBodyModelController.PostStringModel));
             _RouteMapper.Initialise(new Route[] { route });
             _Environment.RequestMethod = "POST";
             _Environment.SetRequestPath(route.PathParts[0].Part);
