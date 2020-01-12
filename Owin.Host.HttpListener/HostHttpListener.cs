@@ -258,7 +258,12 @@ namespace AWhewell.Owin.Host.HttpListener
             if(IsRequestValid(root, pathQuery)) {
                 var cancellationToken = new CancellationToken();
                 var environment = OwinEnvironmentFromContext(context, cancellationToken, root, pathQuery);
-                _Pipeline.ProcessRequest(environment).Wait();
+
+                try {
+                    _Pipeline.ProcessRequest(environment).Wait();
+                } catch(HttpListenerException) {
+                    ;   // These can happen when the connection is reset by the client while the stream is being written
+                }
             }
         }
 

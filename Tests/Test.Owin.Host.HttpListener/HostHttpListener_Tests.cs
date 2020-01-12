@@ -353,6 +353,17 @@ namespace Test.AWhewell.Owin.Host.HttpListener
         }
 
         [TestMethod]
+        public void GetContext_Ignores_HttpListenerExceptions_Thrown_During_Processing()
+        {
+            _Pipeline.Setup(r => r.ProcessRequest(It.IsAny<IDictionary<string, object>>()))
+                .Callback(() => throw new HttpListenerException());
+
+            InitialiseAndStart();
+
+            // If we get here without an exception bubbled up then we're good.
+        }
+
+        [TestMethod]
         [DataRow("/Root", "/NotRoot", false)]   // Request URL does not start with root
         [DataRow("/Root", "/root",    true)]    // Match should not be case sensitive
         [DataRow("/a",    "/ab",      false)]   // Request URL cannot start with a segment that is root plus more characters
