@@ -115,7 +115,10 @@ namespace Test.AWhewell.Owin.Host.HttpListener
                 verifyResponseConfigured(_HttpListener.MockContext.MockResponse);
 
                 // Check that the environment headers dictionary shows the correct value as well
-                Assert.AreEqual(validValue, GetNativeHeaderValue(headerKey));
+                Assertions.AreEqual(new string[] { validValue }, headers[headerKey]);
+
+                // But the underlying response headers must not have been set, it will trigger an error
+                Assert.IsNull(GetNativeHeaderValue(headerKey));
             }
         }
 

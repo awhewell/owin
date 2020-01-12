@@ -21,7 +21,8 @@ namespace AWhewell.Owin.Host.HttpListener
     /// </summary>
     class HeadersWrapper_Response : HeadersWrapper
     {
-        private IHttpListenerResponse _Response;
+        private IHttpListenerResponse       _Response;
+        private OwinDictionary<string[]>    _RestrictedHeaderValues = new HeadersDictionary();
 
         /// <summary>
         /// Creates a new object.
@@ -35,12 +36,29 @@ namespace AWhewell.Owin.Host.HttpListener
 
         public override string[] this[string key]
         {
-            get => base[key];
+            get {
+                switch((key ?? "").ToLower()) {
+                    case "content-length":
+                    case "keep-alive":
+                    case "transfer-encoding":
+                    case "www-authenticate":
+                        return _RestrictedHeaderValues[key];
+                    default:
+                        return base[key];
+                }
+            }
             set {
                 switch((key ?? "").ToLower()) {
-                    case "content-length":      _Response.ContentLength64 = Parser.ParseInt64(FirstElement(value)) ?? 0L; break;
-                    case "keep-alive":          _Response.KeepAlive =       Parser.ParseBool(FirstElement(value)) ?? true; break;
+                    case "content-length":
+                        _RestrictedHeaderValues[key] = value;
+                        _Response.ContentLength64 = Parser.ParseInt64(FirstElement(value)) ?? 0L;
+                        break;
+                    case "keep-alive":
+                        _RestrictedHeaderValues[key] = value;
+                        _Response.KeepAlive = Parser.ParseBool(FirstElement(value)) ?? true;
+                        break;
                     case "transfer-encoding":
+                        _RestrictedHeaderValues[key] = value;
                         if(
                             (value ?? new string[0])
                             .Any(r => (r ?? "").Trim().ToLower() == "chunked")
@@ -48,9 +66,14 @@ namespace AWhewell.Owin.Host.HttpListener
                             _Response.SendChunked = true;
                         }
                         break;
-                    case "www-authenticate":    _Response.AddHeader("WWW-Authenticate", FirstElement(value) ?? ""); break;
+                    case "www-authenticate":
+                        _RestrictedHeaderValues[key] = value;
+                        _Response.AddHeader("WWW-Authenticate", FirstElement(value) ?? "");
+                        break;
+                    default:
+                        base[key] = value;
+                        break;
                 }
-                base[key] = value;
             }
         }
     }
