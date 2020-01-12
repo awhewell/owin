@@ -37,8 +37,7 @@ namespace AWhewell.Owin.Host.HttpListener
         {
             get => base[key];
             set {
-                var normalisedKey = (key ?? "").ToLower();
-                switch(normalisedKey) {
+                switch((key ?? "").ToLower()) {
                     case "content-length":      _Response.ContentLength64 = Parser.ParseInt64(FirstElement(value)) ?? 0L; break;
                     case "keep-alive":          _Response.KeepAlive =       Parser.ParseBool(FirstElement(value)) ?? true; break;
                     case "transfer-encoding":
@@ -50,8 +49,8 @@ namespace AWhewell.Owin.Host.HttpListener
                         }
                         break;
                     case "www-authenticate":    _Response.AddHeader("WWW-Authenticate", FirstElement(value) ?? ""); break;
-                    default:                    base[key] = value; break;
                 }
+                base[key] = value;
             }
         }
     }

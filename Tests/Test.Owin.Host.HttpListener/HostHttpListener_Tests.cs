@@ -767,19 +767,6 @@ namespace Test.AWhewell.Owin.Host.HttpListener
         }
 
         [TestMethod]
-        public void GetContext_Environment_WWW_Authenticate_Header_Set_Translated_To_Response_Call()
-        {
-            _ProcessRequestAction = (env) => {
-                var responseDictionary = (IDictionary<string, string[]>)_PipelineEnvironment[EnvironmentKey.ResponseHeaders];
-                responseDictionary["WWW-Authenticate"] = new string[] { "Basic Realm=\"My Realm\", charset=\"UTF-7\"" };
-            };
-
-            InitialiseAndStart();
-
-            _HttpListener.MockContext.MockResponse.Verify(r => r.AddHeader("WWW-Authenticate", "Basic Realm=\"My Realm\", charset=\"UTF-7\""), Times.Once());
-        }
-
-        [TestMethod]
         public void GetContext_Environment_ResponseStatusCode_Applied_In_Real_Time()
         {
             _ProcessRequestAction = (env) => {

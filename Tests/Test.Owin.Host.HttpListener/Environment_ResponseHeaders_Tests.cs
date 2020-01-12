@@ -85,42 +85,37 @@ namespace Test.AWhewell.Owin.Host.HttpListener
         private void RestrictedHeaderAssignmentTest(string headerKey, string validValue, Action<MockHttpListenerResponse> verifyResponseConfigured)
         {
             headerKey = headerKey.ToLower();
-            RestrictedHeaderAssignmentTest_CheckAction(headerKey, validValue, (h,v) => h[headerKey] = v,                                        verifyResponseConfigured);
-            RestrictedHeaderAssignmentTest_CheckAction(headerKey, validValue, (h,v) => h.Add(headerKey, v),                                     verifyResponseConfigured);
-            RestrictedHeaderAssignmentTest_CheckAction(headerKey, validValue, (h,v) => h.Add(new KeyValuePair<string, string[]>(headerKey, v)), verifyResponseConfigured);
+            RestrictedHeaderAssignmentTest_CheckAction(headerKey, validValue, (h,k,v) => h[k] = v,                                        verifyResponseConfigured);
+            RestrictedHeaderAssignmentTest_CheckAction(headerKey, validValue, (h,k,v) => h.Add(k, v),                                     verifyResponseConfigured);
+            RestrictedHeaderAssignmentTest_CheckAction(headerKey, validValue, (h,k,v) => h.Add(new KeyValuePair<string, string[]>(k, v)), verifyResponseConfigured);
 
             headerKey = headerKey.ToUpper();
-            RestrictedHeaderAssignmentTest_CheckAction(headerKey, validValue, (h,v) => h[headerKey] = v,                                        verifyResponseConfigured);
-            RestrictedHeaderAssignmentTest_CheckAction(headerKey, validValue, (h,v) => h.Add(headerKey, v),                                     verifyResponseConfigured);
-            RestrictedHeaderAssignmentTest_CheckAction(headerKey, validValue, (h,v) => h.Add(new KeyValuePair<string, string[]>(headerKey, v)), verifyResponseConfigured);
+            RestrictedHeaderAssignmentTest_CheckAction(headerKey, validValue, (h,k,v) => h[k] = v,                                        verifyResponseConfigured);
+            RestrictedHeaderAssignmentTest_CheckAction(headerKey, validValue, (h,k,v) => h.Add(k, v),                                     verifyResponseConfigured);
+            RestrictedHeaderAssignmentTest_CheckAction(headerKey, validValue, (h,k,v) => h.Add(new KeyValuePair<string, string[]>(k, v)), verifyResponseConfigured);
         }
 
-        private void RestrictedHeaderAssignmentTest_CheckAction(string headerKey, string validValue, Action<IDictionary<string, string[]>, string[]> dictionaryAssign, Action<MockHttpListenerResponse> verifyResponseConfigured, bool caseSensitive = false)
+        private void RestrictedHeaderAssignmentTest_CheckAction(string headerKey, string validValue, Action<IDictionary<string, string[]>, string, string[]> dictionaryAssign, Action<MockHttpListenerResponse> verifyResponseConfigured, bool caseSensitive = false)
         {
-            if(!validValue.Any(r => Char.IsLetter(r))) {
-                caseSensitive = true;
-            }
-
             foreach(var useUpperCase in new bool?[] { null, true, false }) {
                 TestCleanup();
                 TestInitialise();
 
                 var headers = GetEnvironmentDictionary();
 
-                var caseAdjustedValue = validValue;
+                var caseAdjustedHeaderKey = headerKey;
                 switch(useUpperCase) {
-                    case true:  caseAdjustedValue = caseAdjustedValue.ToUpper(); break;
-                    case false: caseAdjustedValue = caseAdjustedValue.ToLower(); break;
+                    case true:  caseAdjustedHeaderKey = caseAdjustedHeaderKey.ToUpper(); break;
+                    case false: caseAdjustedHeaderKey = caseAdjustedHeaderKey.ToLower(); break;
                 }
 
-                dictionaryAssign(headers, new string[] { caseAdjustedValue });
+                dictionaryAssign(headers, caseAdjustedHeaderKey, new string[] { validValue });
 
-                Assert.IsNull(GetNativeHeaderValue(headerKey));
+                // Check that the response has been set up correctly by the assignment...
                 verifyResponseConfigured(_HttpListener.MockContext.MockResponse);
 
-                if(caseSensitive) {
-                    break;
-                }
+                // Check that the environment headers dictionary shows the correct value as well
+                Assert.AreEqual(validValue, GetNativeHeaderValue(headerKey));
             }
         }
 
@@ -183,7 +178,19 @@ namespace Test.AWhewell.Owin.Host.HttpListener
             };
 
             _HttpListener.MockContext.MockResponse.VerifySet(r => r.SendChunked = true);
-            Assert.IsNull(GetNativeHeaderValue("Transfer-Encoding"));
+        }
+
+        [TestMethod]
+        public void WWW_Authenticate_Header_Writes_To_Response()
+        {
+            RestrictedHeaderAssignmentTest(
+                "WWW-Authenticate",
+                "Basic Realm=\"My Realm\"",
+                response => response.Verify(r => r.AddHeader(
+                    It.Is<string>(r => String.Equals(r, "WWW-Authenticate", StringComparison.OrdinalIgnoreCase)),
+                    "Basic Realm=\"My Realm\""
+                ), Times.Once())
+            );
         }
     }
 }
