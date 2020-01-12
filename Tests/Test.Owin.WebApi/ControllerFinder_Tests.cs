@@ -30,7 +30,7 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         private IClassFactory           _Snapshot;
-        private Mock<IAppDomainWrapper> _AppDomainWrapper;
+        private Mock<ITypeFinder> _AppDomainWrapper;
         private List<Type>              _AllTypes;
         private IControllerFinder       _ControllerFinder;
 
@@ -39,7 +39,7 @@ namespace Test.AWhewell.Owin.WebApi
         {
             _Snapshot = Factory.TakeSnapshot();
 
-            _AppDomainWrapper = MockHelper.FactoryImplementation<IAppDomainWrapper>();
+            _AppDomainWrapper = MockHelper.FactoryImplementation<ITypeFinder>();
             _AllTypes = new List<Type>();
             _AppDomainWrapper.Setup(r => r.GetAllTypes()).Returns(_AllTypes);
 

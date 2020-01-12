@@ -14,12 +14,9 @@ using System.Collections.Generic;
 namespace AWhewell.Owin.Interface.WebApi
 {
     /// <summary>
-    /// A wrapper around AppDomain that the library uses instead of talking directly to AppDomain.
+    /// The interface for an object that can find all types loaded by the running program.
     /// </summary>
-    /// <remarks>
-    /// Use of the wrapper makes it easier to test the library.
-    /// </remarks>
-    public interface IAppDomainWrapper
+    public interface ITypeFinder
     {
         /// <summary>
         /// Returns a collection of every type loaded by the running program.

@@ -39,7 +39,7 @@ namespace AWhewell.Owin.WebApi
         /// </summary>
         public IEnumerable<ControllerType> DiscoverControllers()
         {
-            var appDomainWrapper = Factory.Resolve<IAppDomainWrapper>();
+            var appDomainWrapper = Factory.Resolve<ITypeFinder>();
             return appDomainWrapper
                 .GetAllTypes()
                 .Where(type =>

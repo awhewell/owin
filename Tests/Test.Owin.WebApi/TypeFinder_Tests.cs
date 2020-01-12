@@ -1,4 +1,4 @@
-// Copyright © 2019 onwards, Andrew Whewell
+﻿// Copyright © 2020 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -11,24 +11,46 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using AWhewell.Owin.Interface.WebApi;
+using InterfaceFactory;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace AWhewell.Owin.WebApi
+namespace Test.AWhewell.Owin.WebApi
 {
-    /// <summary>
-    /// See interface docs.
-    /// </summary>
-    class AppDomainWrapper : IAppDomainWrapper
+    [TestClass]
+    public class TypeFinder_Tests
     {
-        /// <summary>
-        /// See interface docs.
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerable<Type> GetAllTypes() => AppDomain
-            .CurrentDomain
-            .GetAssemblies()
-            .SelectMany(r =>
-                r.GetTypes()
-            );
+        [TestMethod]
+        public void TypeFinder_Can_Find_Types()
+        {
+            var typeFinder = Factory.Resolve<ITypeFinder>();
+
+            var types = typeFinder.GetAllTypes().ToArray();
+
+            Assert.IsTrue(types.Contains(typeof(AssemblyInitialise)));
+            Assert.IsTrue(types.Contains(typeof(String)));
+            Assert.IsTrue(types.Contains(typeof(TestClassAttribute)));
+            Assert.IsTrue(types.Contains(typeof(TypeFinder_Tests)));
+        }
+
+        [TestMethod]
+        public void TypeFinder_Second_Call_Returns_Same_Values_As_First()
+        {
+            // It can take low-order hundreds of milliseconds to return all types. This
+            // doesn't affect real-world use where searches for web API controllers are
+            // seldom made but it hammers unit tests.
+            //
+            // To that end the type finder implementation is at liberty to cache results
+            // for a short period of time. This just checks that two calls made quickly
+            // after each other contain the same types.
+
+            var typeFinder = Factory.Resolve<ITypeFinder>();
+
+            var results1 = typeFinder.GetAllTypes().ToArray();
+            var results2 = typeFinder.GetAllTypes().ToArray();
+
+            Assertions.AreContentsSameUnordered(results1, results2);
+        }
     }
 }

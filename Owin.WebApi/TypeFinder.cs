@@ -8,32 +8,33 @@
 //
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using InterfaceFactory;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using AWhewell.Owin.Interface.WebApi;
 
 namespace AWhewell.Owin.WebApi
 {
     /// <summary>
-    /// Registers implementations of interfaces with the interface factory.
+    /// See interface docs.
     /// </summary>
-    public static class Implementations
+    class TypeFinder : ITypeFinder
     {
         /// <summary>
-        /// Registers implementations.
+        /// See interface docs.
         /// </summary>
-        /// <param name="factory"></param>
-        public static void Register(IClassFactory factory)
-        {
-            factory.Register<AWhewell.Owin.Interface.WebApi.IControllerFinder, ControllerFinder>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IModelBuilder, ModelBuilder>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IRouteCaller, RouteCaller>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IRouteFinder, RouteFinder>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IRouteMapper, RouteMapper>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IRouteFilter, RouteFilter>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.ITypeFinder, TypeFinder>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IWebApiMiddleware, WebApiMiddleware>();
-            factory.Register<AWhewell.Owin.Interface.WebApi.IWebApiResponder, WebApiResponder>();
-
-            factory.Register<AWhewell.Owin.Interface.WebApi.IJsonSerialiser, JsonNetWrapper.JsonSerialiser>();
-        }
+        /// <returns></returns>
+        public IEnumerable<Type> GetAllTypes() => AppDomain
+            .CurrentDomain
+            .GetAssemblies()
+            .SelectMany(r => {
+                try {
+                    return r.GetTypes();
+                } catch(ReflectionTypeLoadException) {
+                    // This gets triggered during unit testing in VS2019, it can't load Microsoft.IntelliTrace.Core v16
+                    return new Type[0];
+                }
+            });
     }
 }

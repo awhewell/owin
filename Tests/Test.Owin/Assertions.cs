@@ -44,5 +44,41 @@ namespace Test.AWhewell.Owin
                 }
             }
         }
+
+        /// <summary>
+        /// Asserts that the two lists have the same contents by reference. The contents do not have to be in
+        /// the same order in each list.
+        /// </summary>
+        /// <param name="lhs"></param>
+        /// <param name="rhs"></param>
+        public static void AreContentsSameUnordered<T>(IList<T> lhs, IList<T> rhs)
+        {
+            if(lhs != null || rhs != null) {
+                Assert.IsNotNull(lhs);
+                Assert.IsNotNull(rhs);
+                Assert.AreEqual(lhs.Count, rhs.Count);
+
+                var notInLhs = new LinkedList<T>();
+                for(var i = 0;i < rhs.Count;++i) {
+                    notInLhs.AddLast(rhs[i]);
+                }
+
+                for(var i = 0;i < lhs.Count;++i) {
+                    var lhsValue = lhs[i];
+                    var found = false;
+
+                    for(var node = notInLhs.First;!found && node != null;node = node.Next) {
+                        if(Object.ReferenceEquals(lhsValue, node.Value)) {
+                            found = true;
+                            notInLhs.Remove(node);
+                        }
+                    }
+
+                    Assert.IsTrue(found, $"Could not find LHS value {lhsValue} in RHS collection");
+                }
+
+                Assert.AreEqual(0, notInLhs.Count, $"The RHS collection has {notInLhs.Count} item(s) that are not in LHS");
+            }
+        }
     }
 }
