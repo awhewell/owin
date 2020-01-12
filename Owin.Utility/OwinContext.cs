@@ -310,6 +310,19 @@ namespace AWhewell.Owin.Utility
         }
 
         /// <summary>
+        /// Returns the URL (starting from the site root - i.e. without scheme, host or port) that the request was made to.
+        /// </summary>
+        public string RequestUrlFromRoot
+        {
+            get => OwinPath.ConstructUrlFromRoot(
+                RequestPathBase,
+                RequestPath,
+                RequestQueryString
+            );
+        }
+
+
+        /// <summary>
         /// Gets or sets the response stream. Attempts to overwrite a non-null / non-Stream.Null stream with a
         /// new stream will throw an exception.
         /// </summary>

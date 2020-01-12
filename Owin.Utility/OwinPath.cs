@@ -35,14 +35,36 @@ namespace AWhewell.Owin.Utility
             result.Append(String.IsNullOrEmpty(scheme) ? "http" : scheme);
             result.Append("://");
             result.Append(String.IsNullOrEmpty(host) ? "127.0.0.1" : host);     // note that OWIN host headers can include the port
-            result.Append(pathBase);
-            result.Append(path);
 
-            if(!String.IsNullOrEmpty(queryString)) {
-                result.Append($"?{queryString}");       // note that OWIN presents query strings in their percent encoded form
-            }
+            ConstructUrlFromRoot(result, pathBase, path, queryString);
 
             return result.ToString();
+        }
+
+        /// <summary>
+        /// Rebuilds a request URL starting from the path base (aka root).
+        /// </summary>
+        /// <param name="pathBase"></param>
+        /// <param name="path"></param>
+        /// <param name="queryString"></param>
+        /// <returns></returns>
+        public static string ConstructUrlFromRoot(string pathBase, string path, string queryString)
+        {
+            var result = new StringBuilder();
+
+            ConstructUrlFromRoot(result, pathBase, path, queryString);
+
+            return result.ToString();
+        }
+
+        private static void ConstructUrlFromRoot(StringBuilder buffer, string pathBase, string path, string queryString)
+        {
+            buffer.Append(pathBase);
+            buffer.Append(path);
+
+            if(!String.IsNullOrEmpty(queryString)) {
+                buffer.Append($"?{queryString}");       // note that OWIN presents query strings in their percent encoded form
+            }
         }
 
         /// <summary>

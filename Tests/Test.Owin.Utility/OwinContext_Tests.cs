@@ -932,5 +932,35 @@ namespace Test.AWhewell.Owin.Utility
 
             Assert.AreEqual(expected, _Context.RequestUrl);
         }
+
+        [TestMethod]
+        [DataRow("http",    "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "name=value",               "/VirtualRadar/poobah.html?name=value")]
+        [DataRow("http",    "1.2.3.4",      "",                 "/poobah.html", "name=value",               "/poobah.html?name=value")]
+        [DataRow("http",    "1.2.3.4",      "",                 "/",            "name=value",               "/?name=value")]
+        [DataRow("http",    "1.2.3.4",      "",                 "/",            "",                         "/")]
+        [DataRow("http",    "1.2.3.4",      "",                 "/",            null,                       "/")]
+        [DataRow("http",    "1.2.3.4",      "/Root",            "",             null,                       "/Root")]
+        [DataRow("http",    "1.2.3.4",      "/Root",            "/",            null,                       "/Root/")]
+        [DataRow(null,      "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "name=value",               "/VirtualRadar/poobah.html?name=value")]
+        [DataRow("",        "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "name=value",               "/VirtualRadar/poobah.html?name=value")]
+        [DataRow("https",   "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "name=value",               "/VirtualRadar/poobah.html?name=value")]
+        [DataRow("http",    null,           "/VirtualRadar",    "/poobah.html", "name=value",               "/VirtualRadar/poobah.html?name=value")]
+        [DataRow("http",    "",             "/VirtualRadar",    "/poobah.html", "name=value",               "/VirtualRadar/poobah.html?name=value")]
+        [DataRow("http",    "1.2.3.4:80",   "/VirtualRadar",    "/poobah.html", "name=value",               "/VirtualRadar/poobah.html?name=value")]
+        [DataRow("http",    "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "name=percent%2Dencoded",   "/VirtualRadar/poobah.html?name=percent%2Dencoded")]
+        [DataRow("http",    "1.2.3.4",      "/VirtualRadar",    "/poobah.html", null,                       "/VirtualRadar/poobah.html")]
+        [DataRow("http",    "1.2.3.4",      "/VirtualRadar",    "/poobah.html", "",                         "/VirtualRadar/poobah.html")]
+        public void RequestUrlFromRoot_Returns_Url_Starting_With_Root(string scheme, string host, string pathBase, string path, string queryString, string expected)
+        {
+            var env = UseEnvironmentWithRequiredFields();
+
+            env.Environment[EnvironmentKey.RequestScheme] =         scheme;
+            env.RequestHeaders["Host"] =                            host;
+            env.Environment[EnvironmentKey.RequestPathBase] =       pathBase;
+            env.Environment[EnvironmentKey.RequestPath] =           path;
+            env.Environment[EnvironmentKey.RequestQueryString] =    queryString;
+
+            Assert.AreEqual(expected, _Context.RequestUrlFromRoot);
+        }
     }
 }

@@ -47,6 +47,30 @@ namespace Test.AWhewell.Owin.Utility
         }
 
         [TestMethod]
+        [DataRow("/VirtualRadar",    "/poobah.html", "name=value",               "/VirtualRadar/poobah.html?name=value")]
+        [DataRow("",                 "/poobah.html", "name=value",               "/poobah.html?name=value")]
+        [DataRow("",                 "/",            "name=value",               "/?name=value")]
+        [DataRow("",                 "/",            "",                         "/")]
+        [DataRow("",                 "/",            null,                       "/")]
+        [DataRow("/Root",            "",             null,                       "/Root")]
+        [DataRow("/Root",            "/",            null,                       "/Root/")]
+        [DataRow("/VirtualRadar",    "/poobah.html", "name=value",               "/VirtualRadar/poobah.html?name=value")]
+        [DataRow("/VirtualRadar",    "/poobah.html", "name=value",               "/VirtualRadar/poobah.html?name=value")]
+        [DataRow("/VirtualRadar",    "/poobah.html", "name=value",               "/VirtualRadar/poobah.html?name=value")]
+        [DataRow("/VirtualRadar",    "/poobah.html", "name=value",               "/VirtualRadar/poobah.html?name=value")]
+        [DataRow("/VirtualRadar",    "/poobah.html", "name=value",               "/VirtualRadar/poobah.html?name=value")]
+        [DataRow("/VirtualRadar",    "/poobah.html", "name=value",               "/VirtualRadar/poobah.html?name=value")]
+        [DataRow("/VirtualRadar",    "/poobah.html", "name=percent%2Dencoded",   "/VirtualRadar/poobah.html?name=percent%2Dencoded")]
+        [DataRow("/VirtualRadar",    "/poobah.html", null,                       "/VirtualRadar/poobah.html")]
+        [DataRow("/VirtualRadar",    "/poobah.html", "",                         "/VirtualRadar/poobah.html")]
+        public void ConstructUrlFromRoot_Returns_Correct_Values(string pathBase, string path, string queryString, string expected)
+        {
+            var actual = OwinPath.ConstructUrlFromRoot(pathBase, path, queryString);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
         [DataRow(new string[] { },              null)]
         [DataRow(new string[] { },              "")]
         [DataRow(new string[] { },              "/")]
