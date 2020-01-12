@@ -49,6 +49,7 @@ namespace AWhewell.Owin.Host.HttpListener
                             _Response.SendChunked = true;
                         }
                         break;
+                    case "www-authenticate":    _Response.AddHeader("WWW-Authenticate", FirstElement(value) ?? ""); break;
                     default:                    base[key] = value; break;
                 }
             }
