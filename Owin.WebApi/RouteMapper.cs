@@ -175,60 +175,9 @@ namespace AWhewell.Owin.WebApi
                     var filledParameter = false;
 
                     if(methodParameter.IsObject) {
-                        var buildFromBody = false;
-                        switch(context.RequestHttpMethod) {
-                            case HttpMethod.Post:   buildFromBody = true; break;
-                        }
-                        if(buildFromBody) {
-                            try {
-                                var mediaType = context.RequestHeadersDictionary?.ContentTypeValue.MediaType ?? "";
-                                switch(Parser.ParseMediaType(mediaType)) {
-                                    case MediaType.UrlEncodedForm:
-                                        parameterValue = _ModelBuilder.BuildModel(
-                                            methodParameter.ParameterType,
-                                            methodParameter.TypeParserResolver,
-                                            context.RequestBodyForm(AreFormNamesCaseSensitive)
-                                        );
-                                        filledParameter = true;
-                                        break;
-                                    case MediaType.Json:
-                                        parameterValue = _ModelBuilder.BuildModelFromJson(
-                                            methodParameter.ParameterType,
-                                            methodParameter.TypeParserResolver,
-                                            context.RequestBodyText()
-                                        );
-                                        filledParameter = true;
-                                        break;
-                                    default:
-                                        if(mediaType == "") {
-                                            goto case MediaType.Json;
-                                        }
-                                        break;
-                                }
-                            } catch(UnknownCharsetException ex) {
-                                failedValidationMessage = ex.Message;
-                                filledParameter = false;
-                            }
-                        } else {
-                            parameterValue = _ModelBuilder.BuildModel(
-                                methodParameter.ParameterType,
-                                methodParameter.TypeParserResolver,
-                                context.RequestQueryStringDictionary(AreQueryStringNamesCaseSensitive)
-                            );
-                            filledParameter = true;
-                        }
+                        filledParameter = BuildObjectParameter(context, methodParameter, ref failedValidationMessage, ref parameterValue);
                     } else {
-                        filledParameter = UseInjectedValueForParameter(ref parameterValue, ref failedValidationMessage, methodParameter, route, context);
-
-                        if(!filledParameter && failedValidationMessage == null) {
-                            filledParameter = ExtractParameterFromRequestPathParts(ref parameterValue, ref failedValidationMessage, methodParameter, route, pathParts);
-                        }
-                        if(!filledParameter && failedValidationMessage == null) {
-                            filledParameter = ExtractParameterFromQueryString(ref parameterValue, methodParameter, context);
-                        }
-                        if(!filledParameter && failedValidationMessage == null) {
-                            filledParameter = ExtractParameterFromRequestBody(ref parameterValue, methodParameter, context);
-                        }
+                        filledParameter = BuildValueParameter(context, methodParameter, route, pathParts, ref failedValidationMessage, ref parameterValue);
                     }
 
                     if(!filledParameter && failedValidationMessage == null && methodParameter.IsOptional) {
@@ -248,6 +197,73 @@ namespace AWhewell.Owin.WebApi
                 failedValidationMessage == null ? null : new string[] { failedValidationMessage },
                 resultParameters
             );
+        }
+
+        private bool BuildObjectParameter(OwinContext context, MethodParameter methodParameter, ref string failedValidationMessage, ref object parameterValue)
+        {
+            var filledParameter = false;
+
+            var buildFromBody = false;
+            switch(context.RequestHttpMethod) {
+                case HttpMethod.Post: buildFromBody = true; break;
+            }
+
+            if(!buildFromBody) {
+                parameterValue = _ModelBuilder.BuildModel(
+                    methodParameter.ParameterType,
+                    methodParameter.TypeParserResolver,
+                    context.RequestQueryStringDictionary(AreQueryStringNamesCaseSensitive)
+                );
+                filledParameter = true;
+            } else {
+                try {
+                    var mediaType = context.RequestHeadersDictionary?.ContentTypeValue.MediaType ?? "";
+                    switch(Parser.ParseMediaType(mediaType)) {
+                        case MediaType.UrlEncodedForm:
+                            parameterValue = _ModelBuilder.BuildModel(
+                                methodParameter.ParameterType,
+                                methodParameter.TypeParserResolver,
+                                context.RequestBodyForm(AreFormNamesCaseSensitive)
+                            );
+                            filledParameter = true;
+                            break;
+                        case MediaType.Json:
+                            parameterValue = _ModelBuilder.BuildModelFromJson(
+                                methodParameter.ParameterType,
+                                methodParameter.TypeParserResolver,
+                                context.RequestBodyText()
+                            );
+                            filledParameter = true;
+                            break;
+                        default:
+                            if(mediaType == "") {
+                                goto case MediaType.Json;
+                            }
+                            break;
+                    }
+                } catch(UnknownCharsetException ex) {
+                    failedValidationMessage = ex.Message;
+                    filledParameter = false;
+                }
+            }
+
+            return filledParameter;
+        }
+
+        private bool BuildValueParameter(OwinContext context, MethodParameter methodParameter, Route route, string[] pathParts, ref string failedValidationMessage, ref object parameterValue)
+        {
+            var filledParameter = UseInjectedValueForParameter(ref parameterValue, ref failedValidationMessage, methodParameter, route, context);
+            if(!filledParameter && failedValidationMessage == null) {
+                filledParameter = ExtractParameterFromRequestPathParts(ref parameterValue, ref failedValidationMessage, methodParameter, route, pathParts);
+            }
+            if(!filledParameter && failedValidationMessage == null) {
+                filledParameter = ExtractParameterFromQueryString(ref parameterValue, methodParameter, context);
+            }
+            if(!filledParameter && failedValidationMessage == null) {
+                filledParameter = ExtractParameterFromRequestBody(ref parameterValue, methodParameter, context);
+            }
+
+            return filledParameter;
         }
 
         private bool UseInjectedValueForParameter(ref object parameterValue, ref string failedValidationMessage, MethodParameter methodParameter, Route route, OwinContext context)
