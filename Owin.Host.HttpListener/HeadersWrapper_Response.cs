@@ -8,6 +8,8 @@
 //
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OF THE SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using AWhewell.Owin.Interface.Host.HttpListener.HttpListenerWrapper;
@@ -16,49 +18,45 @@ using AWhewell.Owin.Utility;
 namespace AWhewell.Owin.Host.HttpListener
 {
     /// <summary>
-    /// Extends <see cref="HeadersWrapper"/> to intercept attempts to set restricted headers
-    /// and set the appropriate reponse properties / call response functions instead.
+    /// A header dictionary that intercepts attempts to set HttpListenerResponse restricted header
+    /// values and makes the appropriate response calls instead.
     /// </summary>
-    class HeadersWrapper_Response : HeadersWrapper
+    class HeadersWrapper_Response : ObservableDictionary<string, string[]>
     {
-        private IHttpListenerResponse       _Response;
-        private OwinDictionary<string[]>    _RestrictedHeaderValues = new HeadersDictionary();
+        private IHttpListenerResponse _Response;
+        private bool _DoingInitialCopy;
 
         /// <summary>
         /// Creates a new object.
         /// </summary>
         /// <param name="response"></param>
         /// <param name="collection"></param>
-        public HeadersWrapper_Response(IHttpListenerResponse response, WebHeaderCollection collection) : base(collection)
+        public HeadersWrapper_Response(IHttpListenerResponse response) : base(StringComparer.OrdinalIgnoreCase)
         {
             _Response = response;
+
+            _DoingInitialCopy = true;
+            try {
+                foreach(var key in response.Headers.AllKeys) {
+                    var value = response.Headers[key];
+                    base[key] = HeadersDictionary.SplitRawHeaderValue(value).ToArray();
+                }
+            } finally {
+                _DoingInitialCopy = false;
+            }
         }
 
-        public override string[] this[string key]
+        protected override void OnAssigned(string key, string[] value)
         {
-            get {
+            if(!_DoingInitialCopy) {
                 switch((key ?? "").ToLower()) {
                     case "content-length":
-                    case "keep-alive":
-                    case "transfer-encoding":
-                    case "www-authenticate":
-                        return _RestrictedHeaderValues[key];
-                    default:
-                        return base[key];
-                }
-            }
-            set {
-                switch((key ?? "").ToLower()) {
-                    case "content-length":
-                        _RestrictedHeaderValues[key] = value;
-                        _Response.ContentLength64 = Parser.ParseInt64(FirstElement(value)) ?? 0L;
+                        _Response.ContentLength64 = Parser.ParseInt64(HeadersDictionary.JoinCookedHeaderValues(value)) ?? 0L;
                         break;
                     case "keep-alive":
-                        _RestrictedHeaderValues[key] = value;
-                        _Response.KeepAlive = Parser.ParseBool(FirstElement(value)) ?? true;
+                        _Response.KeepAlive = Parser.ParseBool(HeadersDictionary.JoinCookedHeaderValues(value)) ?? true;
                         break;
                     case "transfer-encoding":
-                        _RestrictedHeaderValues[key] = value;
                         if(
                             (value ?? new string[0])
                             .Any(r => (r ?? "").Trim().ToLower() == "chunked")
@@ -67,14 +65,23 @@ namespace AWhewell.Owin.Host.HttpListener
                         }
                         break;
                     case "www-authenticate":
-                        _RestrictedHeaderValues[key] = value;
-                        _Response.AddHeader("WWW-Authenticate", FirstElement(value) ?? "");
+                        _Response.AddHeader("WWW-Authenticate", HeadersDictionary.JoinCookedHeaderValues(value));
                         break;
                     default:
-                        base[key] = value;
+                        _Response.Headers[key] = HeadersDictionary.JoinCookedHeaderValues(value);
                         break;
                 }
             }
+        }
+
+        protected override void OnRemoved(string key)
+        {
+            ;
+        }
+
+        protected override void OnReset()
+        {
+            _Response.Headers.Clear();
         }
     }
 }

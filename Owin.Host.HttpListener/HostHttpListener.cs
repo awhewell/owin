@@ -314,7 +314,7 @@ namespace AWhewell.Owin.Host.HttpListener
             result.CallCancelled =          cancellationToken;
             result.RequestMethod =          request.HttpMethod;
             result.RequestBody =            !request.HasEntityBody ? Stream.Null : request.InputStream;
-            result.RequestHeaders =         new HeadersWrapper(request.Headers);
+            result.RequestHeaders =         new HeadersWrapper_Request(request.Headers);
             result.RequestPathBase =        root == "/" ? "" : root;
             result.RequestPath =            root == "/" ? path : path.Substring(root.Length);
             result.RequestQueryString =     query;
@@ -322,7 +322,7 @@ namespace AWhewell.Owin.Host.HttpListener
             result.RequestScheme =          request.Url.Scheme;
 
             result.ResponseBody =           response.OutputStream;
-            result.ResponseHeaders =        new HeadersWrapper_Response(response, response.Headers);
+            result.ResponseHeaders =        new HeadersWrapper_Response(response);
 
             result.ServerIsLocal =          request.IsLocal;
             result.ServerLocalIpAddress =   request.LocalEndPoint?.Address?.ToString();

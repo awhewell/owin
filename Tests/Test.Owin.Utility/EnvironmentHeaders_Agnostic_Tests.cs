@@ -68,11 +68,23 @@ namespace Test.AWhewell.Owin.Utility
         }
 
         [TestMethod]
-        public void Indexed_Get_Returns_Null_If_Key_Is_Unknown()
+        public void Indexed_Get_Can_Either_Return_Null_Or_Throw_KeyNotFound()
         {
+            // Environment headers can behave either way... code should not assume that owin.ResponseHeaders
+            // or owin.RequestHeaders will return null on an indexed fetch of an unknown key
+
             var headers = GetEnvironmentDictionary();
 
-            Assert.IsNull(headers["x"]);
+            var threwException = false;
+            var returnedNull = false;
+
+            try {
+                returnedNull = headers["x"] == null;
+            } catch(KeyNotFoundException) {
+                threwException = true;
+            }
+
+            Assert.IsTrue(threwException || returnedNull);
         }
 
         [TestMethod]
@@ -365,6 +377,11 @@ namespace Test.AWhewell.Owin.Utility
             SetNativeHeaderValue(key, value);
             var headers = GetEnvironmentDictionary();
 
+            // Note that ordinary dictionaries are comparing the array reference. We should be able to
+            // work when using the same array that is returned from an indexed fetch, but we do not have
+            // to work when using arbitrary search arrays.
+            searchValue = headers.ContainsKey(searchKey) && headers[searchKey].SequenceEqual(searchValue) ? headers[searchKey] : searchValue;
+
             var searchKvp = new KeyValuePair<string, string[]>(searchKey, searchValue);
             var actual = headers.Contains(searchKvp);
 
@@ -579,7 +596,9 @@ namespace Test.AWhewell.Owin.Utility
             SetNativeHeaderValue("a", "1");
             var headers = GetEnvironmentDictionary();
 
-            var removed = headers.Remove(new KeyValuePair<string, string[]>("a", new string[] { "1" }));
+            var valueReference = headers["a"];
+
+            var removed = headers.Remove(new KeyValuePair<string, string[]>("a", valueReference));
 
             Assert.IsTrue(removed);
             Assert.AreEqual(0, headers.Count);
@@ -620,6 +639,12 @@ namespace Test.AWhewell.Owin.Utility
         {
             SetNativeHeaderValue(_Key, headerValue);
             var headers = GetEnvironmentDictionary();
+
+            // As noted in Contains(KeyValuePair) above, searches for KVP in a vanilla dictionary are
+            // comparing the array value by reference. There is no obligation for the environment
+            // header to work with arbitrary arrays, we need to translate the kvpValue to a known-good
+            // reference.
+            kvpValue = headers.ContainsKey(_Key) && headers[_Key].SequenceEqual(kvpValue) ? headers[_Key] : kvpValue;
 
             var removed = headers.Remove(new KeyValuePair<string, string[]>(_Key, kvpValue));
 

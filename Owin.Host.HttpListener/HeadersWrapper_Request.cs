@@ -23,7 +23,7 @@ namespace AWhewell.Owin.Host.HttpListener
     /// <remarks>
     /// The HttpListener
     /// </remarks>
-    class HeadersWrapper : IDictionary<string, string[]>
+    class HeadersWrapper_Request : IDictionary<string, string[]>
     {
         /// <summary>
         /// The wrapped headers collection.
@@ -34,7 +34,7 @@ namespace AWhewell.Owin.Host.HttpListener
         /// Creates a new object.
         /// </summary>
         /// <param name="collection"></param>
-        public HeadersWrapper(WebHeaderCollection collection)
+        public HeadersWrapper_Request(WebHeaderCollection collection)
         {
             _Collection = collection;
         }
@@ -238,16 +238,6 @@ namespace AWhewell.Owin.Host.HttpListener
 
             value = this[key];
             return ContainsKey(key);
-        }
-
-        /// <summary>
-        /// Returns the first element in the array.
-        /// </summary>
-        /// <param name="array"></param>
-        /// <returns></returns>
-        protected static string FirstElement(string[] array)
-        {
-            return array == null || array.Length == 0 ? null : array[0];
         }
     }
 }
