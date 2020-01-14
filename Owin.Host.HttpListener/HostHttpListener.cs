@@ -234,7 +234,11 @@ namespace AWhewell.Owin.Host.HttpListener
                 }
 
                 if(context != null) {
-                    ProcessRequest(context);
+                    try {
+                        ProcessRequest(context);
+                    } catch(Exception ex) {
+                        _Pipeline.LogException(ex);
+                    }
 
                     try {
                         context.Response.Close();

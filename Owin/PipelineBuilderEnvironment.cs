@@ -32,13 +32,19 @@ namespace AWhewell.Owin
         /// <summary>
         /// See interface docs.
         /// </summary>
-        public IEnumerable<Func<AppFunc, AppFunc>> MiddlewareChain => _MiddlewareChain;
+        public IReadOnlyList<Func<AppFunc, AppFunc>> MiddlewareChain => _MiddlewareChain;
 
         private readonly List<Func<AppFunc, AppFunc>> _StreamManipulatorChain = new List<Func<AppFunc, AppFunc>>();
         /// <summary>
         /// See interface docs.
         /// </summary>
-        public IEnumerable<Func<AppFunc, AppFunc>> StreamManipulatorChain => _StreamManipulatorChain;
+        public IReadOnlyList<Func<AppFunc, AppFunc>> StreamManipulatorChain => _StreamManipulatorChain;
+
+        private readonly List<IExceptionLogger> _ExceptionLoggers = new List<IExceptionLogger>();
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        public IReadOnlyList<IExceptionLogger> ExceptionLoggers => _ExceptionLoggers;
 
         /// <summary>
         /// See interface docs.
@@ -62,6 +68,18 @@ namespace AWhewell.Owin
                 throw new ArgumentNullException(nameof(middleware));
             }
             _StreamManipulatorChain.Add(middleware);
+        }
+
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        /// <param name="exceptionLogger"></param>
+        public void UseExceptionLogger(IExceptionLogger exceptionLogger)
+        {
+            if(exceptionLogger == null) {
+                throw new ArgumentNullException(nameof(exceptionLogger));
+            }
+            _ExceptionLoggers.Add(exceptionLogger);
         }
     }
 }

@@ -1,4 +1,4 @@
-// Copyright © 2019 onwards, Andrew Whewell
+﻿// Copyright © 2020 onwards, Andrew Whewell
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -11,49 +11,19 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace AWhewell.Owin.Interface
 {
-    using AppFunc = Func<IDictionary<string, object>, Task>;
-
     /// <summary>
-    /// Describes a pipeline that can process web requests.
+    /// The interface that objects that log exceptions thrown during the execution of a pipeline have to
+    /// implement.
     /// </summary>
-    public interface IPipeline
+    public interface IExceptionLogger
     {
         /// <summary>
-        /// Gets an array of objects that can log exceptions.
-        /// </summary>
-        IReadOnlyList<IExceptionLogger> ExceptionLoggers { get; }
-
-        /// <summary>
-        /// True if the pipeline contains stream manipulators, i.e. middleware functions
-        /// that always run after normal middleware has finished.
-        /// </summary>
-        bool HasStreamManipulators { get; }
-
-        /// <summary>
-        /// Builds the pipeline. This can only be called once.
-        /// </summary>
-        /// <param name="buildEnvironment"></param>
-        void Construct(IPipelineBuilderEnvironment buildEnvironment);
-
-        /// <summary>
-        /// Processes a request. Note that exceptions thrown within the pipeline are not logged, they are
-        /// allowed to bubble up out of the function.
-        /// </summary>
-        /// <param name="environment"></param>
-        Task ProcessRequest(IDictionary<string, object> environment);
-
-        /// <summary>
-        /// Logs an exception.
+        /// Called with the details of an exception that needs logging.
         /// </summary>
         /// <param name="ex"></param>
-        /// <remarks>
-        /// Each logger is guaranteed to be called even if previous loggers themselves threw exceptions.
-        /// Exceptions thrown by a logger do not bubble out of this method.
-        /// </remarks>
         void LogException(Exception ex);
     }
 }

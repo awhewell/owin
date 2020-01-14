@@ -360,7 +360,7 @@ namespace Test.AWhewell.Owin.Host.HttpListener
 
             InitialiseAndStart();
 
-            // If we get here without an exception bubbled up then we're good.
+            _Pipeline.Verify(r => r.LogException(It.IsAny<Exception>()), Times.Never());
         }
 
         [TestMethod]
@@ -371,17 +371,19 @@ namespace Test.AWhewell.Owin.Host.HttpListener
 
             InitialiseAndStart();
 
-            // If we get here without an exception bubbled up then we're good.
+            _Pipeline.Verify(r => r.LogException(It.IsAny<Exception>()), Times.Never());
         }
 
         [TestMethod]
-        [ExpectedException(typeof(AggregateException))]
         public void GetContext_Does_Not_Ignore_Other_Aggregate_Exceptions_Thrown_During_Processing()
         {
+            var exception = new AggregateException(new ObjectDisposedException(nameof(FileStream)));
             _Pipeline.Setup(r => r.ProcessRequest(It.IsAny<IDictionary<string, object>>()))
-                .Callback(() => throw new AggregateException(new ObjectDisposedException(nameof(FileStream))));
+                .Callback(() => throw exception);
 
             InitialiseAndStart();
+
+            _Pipeline.Verify(r => r.LogException(exception), Times.Once());
         }
 
         [TestMethod]
@@ -432,6 +434,17 @@ namespace Test.AWhewell.Owin.Host.HttpListener
             InitialiseAndStart();
 
             _Pipeline.Verify(r => r.ProcessRequest(It.IsAny<OwinDictionary<object>>()), Times.Never());
+        }
+
+        [TestMethod]
+        public void GetContext_Logs_Unexpected_Exceptions()
+        {
+            var exception = new InvalidOperationException();
+            _Pipeline.Setup(r => r.ProcessRequest(It.IsAny<IDictionary<string, object>>())).Callback(() => throw exception);
+
+            InitialiseAndStart();
+
+            _Pipeline.Verify(r => r.LogException(exception), Times.Once());
         }
 
         [TestMethod]

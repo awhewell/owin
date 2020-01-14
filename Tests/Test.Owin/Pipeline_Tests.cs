@@ -29,6 +29,7 @@ namespace Test.AWhewell.Owin
         private IClassFactory                       _Snapshot;
         private IPipeline                           _Pipeline;
         private Mock<IPipelineBuilderEnvironment>   _BuilderEnvironment;
+        private List<IExceptionLogger>              _ExceptionLoggers;
         private List<Func<AppFunc, AppFunc>>        _MiddlewareChain;
         private List<Func<AppFunc, AppFunc>>        _StreamManipulatorChain;
         private Dictionary<string, object>          _Environment;
@@ -40,9 +41,11 @@ namespace Test.AWhewell.Owin
 
             _MiddlewareChain = new List<Func<AppFunc, AppFunc>>();
             _StreamManipulatorChain = new List<Func<AppFunc, AppFunc>>();
+            _ExceptionLoggers = new List<IExceptionLogger>();
             _BuilderEnvironment = MockHelper.FactoryImplementation<IPipelineBuilderEnvironment>();
             _BuilderEnvironment.Setup(r => r.MiddlewareChain).Returns(_MiddlewareChain);
             _BuilderEnvironment.Setup(r => r.StreamManipulatorChain).Returns(_StreamManipulatorChain);
+            _BuilderEnvironment.Setup(r => r.ExceptionLoggers).Returns(_ExceptionLoggers);
 
             _Environment = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
@@ -53,6 +56,14 @@ namespace Test.AWhewell.Owin
         public void TestCleanup()
         {
             Factory.RestoreSnapshot(_Snapshot);
+        }
+
+        private MockExceptionLogger SetupExceptionLogger()
+        {
+            var result = new MockExceptionLogger();
+            _ExceptionLoggers.Add(result);
+
+            return result;
         }
 
         [TestMethod]
@@ -84,6 +95,17 @@ namespace Test.AWhewell.Owin
         }
 
         [TestMethod]
+        public void Construct_Builds_ExceptionLoggers_Property()
+        {
+            var exceptionLogger = SetupExceptionLogger();
+
+            _Pipeline.Construct(_BuilderEnvironment.Object);
+
+            Assert.AreEqual(1, _Pipeline.ExceptionLoggers.Count);
+            Assert.AreSame(exceptionLogger, _Pipeline.ExceptionLoggers[0]);
+        }
+
+        [TestMethod]
         public void HasStreamManipulators_Is_Clear_Before_Construct_Is_Called()
         {
             Assert.AreEqual(false, _Pipeline.HasStreamManipulators);
@@ -105,6 +127,90 @@ namespace Test.AWhewell.Owin
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
             Assert.AreEqual(false, _Pipeline.HasStreamManipulators);
+        }
+
+        [TestMethod]
+        public void LogException_Passes_Exception_To_Logger()
+        {
+            var logger = SetupExceptionLogger();
+            _Pipeline.Construct(_BuilderEnvironment.Object);
+
+            var ex = new InvalidOperationException();
+            _Pipeline.LogException(ex);
+
+            Assert.AreEqual(1, logger.CallCount);
+            Assert.AreSame(ex, logger.LastExceptionLogged);
+        }
+
+        [TestMethod]
+        public void LogException_Passes_Exception_To_Many_Loggers()
+        {
+            var logger1 = SetupExceptionLogger();
+            var logger2 = SetupExceptionLogger();
+            _Pipeline.Construct(_BuilderEnvironment.Object);
+
+            var ex = new InvalidOperationException();
+            _Pipeline.LogException(ex);
+
+            Assert.AreEqual(1, logger1.CallCount);
+            Assert.AreEqual(1, logger2.CallCount);
+        }
+
+        [TestMethod]
+        public void LogException_Swallows_Exceptions_In_Logger()
+        {
+            var logger1 = SetupExceptionLogger();
+            var logger2 = SetupExceptionLogger();
+            _Pipeline.Construct(_BuilderEnvironment.Object);
+
+            foreach(bool throwInLogger1 in new bool[] { true, false }) {
+                logger1.Reset();
+                logger2.Reset();
+
+                if(throwInLogger1) {
+                    logger1.LogExceptionCallback = ex => throw new InvalidOperationException();
+                    logger2.LogExceptionCallback = null;
+                } else {
+                    logger1.LogExceptionCallback = null;
+                    logger2.LogExceptionCallback = ex => throw new InvalidOperationException();
+                }
+
+                var ex = new NotImplementedException();
+                _Pipeline.LogException(ex);
+
+                if(throwInLogger1) {
+                    Assert.AreEqual(1, logger2.CallCount);
+                } else {
+                    Assert.AreEqual(1, logger1.CallCount);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void LogException_Does_Nothing_If_No_Loggers_Registered()
+        {
+            _Pipeline.Construct(_BuilderEnvironment.Object);
+            _Pipeline.LogException(new InvalidOperationException());
+        }
+
+        [TestMethod]
+        public void LogException_Does_Nothing_If_Construct_Never_Called()
+        {
+            var logger = SetupExceptionLogger();
+            _Pipeline.LogException(new InvalidOperationException());
+
+            Assert.AreEqual(0, logger.CallCount);
+        }
+
+        [TestMethod]
+        public void LogException_Does_Nothing_If_Passed_Null()
+        {
+            var logger = SetupExceptionLogger();
+            _Pipeline.Construct(_BuilderEnvironment.Object);
+
+            _Pipeline.LogException(null);
+
+            Assert.AreEqual(0, logger.CallCount);
         }
 
         [TestMethod]
@@ -404,6 +510,30 @@ namespace Test.AWhewell.Owin
                 Assert.AreEqual(1,   responseHeaders["Content-Length"].Length);
                 Assert.AreEqual("3", responseHeaders["Content-Length"][0]);
             }
+        }
+
+        [TestMethod]
+        public void ProcessRequest_Does_Not_Log_Exceptions()
+        {
+            var logger = SetupExceptionLogger();
+
+            var middleware = new MockMiddleware();
+            var exception = new InvalidOperationException();
+            middleware.Action = () => throw exception;
+            _MiddlewareChain.Add(middleware.CreateAppFunc);
+
+            _Pipeline.Construct(_BuilderEnvironment.Object);
+
+            var seenException = false;
+            try {
+                _Pipeline.ProcessRequest(_Environment).Wait();
+            } catch(AggregateException ex) {
+                Assert.AreEqual(1, ex.InnerExceptions.Count);
+                seenException = Object.ReferenceEquals(ex.InnerException, exception);
+            }
+
+            Assert.AreEqual(0, logger.CallCount);
+            Assert.IsTrue(seenException);
         }
     }
 }

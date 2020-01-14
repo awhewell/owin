@@ -32,12 +32,17 @@ namespace AWhewell.Owin.Interface
         /// <summary>
         /// Gets a read-only collection of all standard middleware in the order in which they were added.
         /// </summary>
-        IEnumerable<Func<AppFunc, AppFunc>> MiddlewareChain { get; }
+        IReadOnlyList<Func<AppFunc, AppFunc>> MiddlewareChain { get; }
 
         /// <summary>
         /// Gets a read-only collection of all stream manipulator middleware in the order in which they were added.
         /// </summary>
-        IEnumerable<Func<AppFunc, AppFunc>> StreamManipulatorChain { get; }
+        IReadOnlyList<Func<AppFunc, AppFunc>> StreamManipulatorChain { get; }
+
+        /// <summary>
+        /// Gets a read-only collection of all exception loggers in the order that they were added.
+        /// </summary>
+        IReadOnlyList<IExceptionLogger> ExceptionLoggers { get; }
 
         /// <summary>
         /// Adds standard OWIN middleware to the pipeline that is being constructed.
@@ -84,5 +89,11 @@ namespace AWhewell.Owin.Interface
         /// </para>
         /// </remarks>
         void UseStreamManipulator(Func<AppFunc, AppFunc> middleware);
+
+        /// <summary>
+        /// Registers an exception logger.
+        /// </summary>
+        /// <param name="exceptionLogger"></param>
+        void UseExceptionLogger(IExceptionLogger exceptionLogger);
     }
 }

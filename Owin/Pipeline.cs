@@ -33,6 +33,12 @@ namespace AWhewell.Owin
         // An array of stream manipulator functions. Unlike middleware these do not chain on to each other.
         private AppFunc[] _StreamManipulatorChain;
 
+        private IExceptionLogger[] _ExceptionLoggers;
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        public IReadOnlyList<IExceptionLogger> ExceptionLoggers => _ExceptionLoggers;
+
         /// <summary>
         /// See interface docs.
         /// </summary>
@@ -50,6 +56,8 @@ namespace AWhewell.Owin
             if(_MiddlewareChain != null) {
                 throw new InvalidOperationException($"You cannot call {nameof(Construct)} twice");
             }
+
+            _ExceptionLoggers = buildEnvironment.ExceptionLoggers.ToArray();
 
             _MiddlewareChain = ChainTerminatorAppFunc;
             foreach(var chainLink in buildEnvironment.MiddlewareChain.Reverse()) {
@@ -134,6 +142,23 @@ namespace AWhewell.Owin
                 environment[EnvironmentKey.ResponseStatusCode] = (int)HttpStatusCode.NotFound;
             }
             return Task.FromResult(0);
+        }
+
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        /// <param name="ex"></param>
+        public void LogException(Exception ex)
+        {
+            if(ex != null && _ExceptionLoggers != null) {
+                foreach(var logger in _ExceptionLoggers) {
+                    try {
+                        logger.LogException(ex);
+                    } catch {
+                        ; // Exceptions within the log exception methods are documented as swallowed
+                    }
+                }
+            }
         }
     }
 }

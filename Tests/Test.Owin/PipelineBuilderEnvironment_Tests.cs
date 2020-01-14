@@ -126,5 +126,28 @@ namespace Test.AWhewell.Owin
             Assert.AreEqual(1, manipulatorsChain.Length);
             Assert.AreSame(link_2, manipulatorsChain[0]);
         }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void UseExceptionLogger_Throws_If_Passed_Null()
+        {
+            _Environment.UseExceptionLogger(null);
+        }
+
+        [TestMethod]
+        public void UseExceptionLogger_Records_Exception_Logger()
+        {
+            Assert.AreEqual(0, _Environment.ExceptionLoggers.Count);
+
+            var logger1 = new MockExceptionLogger();
+            _Environment.UseExceptionLogger(logger1);
+            Assert.AreEqual(1, _Environment.ExceptionLoggers.Count);
+            Assert.AreSame(logger1, _Environment.ExceptionLoggers[0]);
+
+            var logger2 = new MockExceptionLogger();
+            _Environment.UseExceptionLogger(logger2);
+            Assert.AreEqual(2, _Environment.ExceptionLoggers.Count);
+            Assert.IsTrue(_Environment.ExceptionLoggers.Contains(logger2));
+        }
     }
 }
