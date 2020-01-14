@@ -262,8 +262,15 @@ namespace AWhewell.Owin.Host.HttpListener
                 try {
                     _Pipeline.ProcessRequest(environment).Wait();
                 } catch(AggregateException agEx) {
-                    if(agEx.InnerExceptions.Count == 1 && agEx.InnerException is HttpListenerException) {
-                        ;   // These can happen when the connection is reset by the client while the stream is being written
+                    if(agEx.InnerExceptions.Count != 1) {
+                        throw;
+                    }
+
+                    // These can happen when the connection is reset by the client while the stream is being written
+                    if(agEx.InnerException is HttpListenerException) {
+                        ;
+                    } else if(agEx.InnerException is ObjectDisposedException objDispEx && objDispEx.ObjectName == nameof(HttpListenerResponse)) {
+                        ;
                     } else {
                         throw;
                     }
