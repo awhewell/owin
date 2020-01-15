@@ -10,6 +10,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 
 namespace AWhewell.Owin.Interface.Host.HttpListener.HttpListenerWrapper
@@ -34,6 +35,11 @@ namespace AWhewell.Owin.Interface.Host.HttpListener.HttpListenerWrapper
         /// Gets a collection of URL prefixes that the listener will listen to.
         /// </summary>
         ICollection<string> Prefixes { get; }
+
+        /// <summary>
+        ///  Gets or sets the scheme used to authenticate clients. The default value is System.Net.AuthenticationSchemes.Anonymous.
+        /// </summary>
+        AuthenticationSchemes AuthenticationSchemes { get; set; }
 
         /// <summary>
         /// Starts listening for requests.

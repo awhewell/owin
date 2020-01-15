@@ -46,6 +46,7 @@ namespace Test.AWhewell.Owin.Host.HttpListener
                     BeginContextAction?.Invoke();
                     if(BeginContextTriggersCallback) {
                         BeginContextTriggersCallback = false;
+                        MockAsyncResult.SetupGet(r => r.AsyncState).Returns(() => state);
                         callback(MockAsyncResult.Object);
                     }
                 });

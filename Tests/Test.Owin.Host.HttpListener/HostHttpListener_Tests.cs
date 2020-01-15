@@ -118,12 +118,6 @@ namespace Test.AWhewell.Owin.Host.HttpListener
         }
 
         [TestMethod]
-        public void Ctor_Disables_Write_Exceptions()
-        {
-            Assert.AreEqual(true, _HttpListener.Object.IgnoreWriteExceptions);
-        }
-
-        [TestMethod]
         public void Initialise_Creates_Pipeline()
         {
             Initialise();
@@ -232,12 +226,23 @@ namespace Test.AWhewell.Owin.Host.HttpListener
         }
 
         [TestMethod]
+        public void Start_Sets_Appropriate_Options()
+        {
+            Initialise();
+
+            _Host.Start();
+
+            Assert.AreEqual(AuthenticationSchemes.Anonymous | AuthenticationSchemes.Basic, _HttpListener.Object.AuthenticationSchemes);
+            Assert.AreEqual(true, _HttpListener.Object.IgnoreWriteExceptions);
+        }
+
+        [TestMethod]
         public void Start_Calls_BeginGetContext()
         {
             _HttpListener.BeginContextTriggersCallback = false;
             InitialiseAndStart();
 
-            _HttpListener.Verify(r => r.BeginGetContext(It.IsAny<AsyncCallback>(), It.IsAny<object>()), Times.Once());
+            _HttpListener.Verify(r => r.BeginGetContext(It.IsAny<AsyncCallback>(), _HttpListener.Object), Times.Once());
         }
 
         [TestMethod]
@@ -295,7 +300,7 @@ namespace Test.AWhewell.Owin.Host.HttpListener
 
             // The first call is the initial BeginGetContext from the Start() call
             // The second call is the second BeginGetContext in the callback
-            _HttpListener.Verify(r => r.BeginGetContext(It.IsAny<AsyncCallback>(), It.IsAny<object>()), Times.Exactly(2));
+            _HttpListener.Verify(r => r.BeginGetContext(It.IsAny<AsyncCallback>(), _HttpListener.Object), Times.Exactly(2));
         }
 
         [TestMethod]

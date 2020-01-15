@@ -107,7 +107,6 @@ namespace AWhewell.Owin.Host.HttpListener
         public HostHttpListener()
         {
             _HttpListener = Factory.Resolve<IHttpListener>();
-            _HttpListener.IgnoreWriteExceptions = true;
             SetPrefix();
         }
 
@@ -172,8 +171,10 @@ namespace AWhewell.Owin.Host.HttpListener
             }
 
             if(!IsListening) {
+                _HttpListener.AuthenticationSchemes = AuthenticationSchemes.Anonymous | AuthenticationSchemes.Basic;
+                _HttpListener.IgnoreWriteExceptions = true;
                 _HttpListener.Start();
-                _HttpListener.BeginGetContext(ContextReceived, null);
+                _HttpListener.BeginGetContext(ContextReceived, _HttpListener);
             }
         }
 
@@ -211,7 +212,7 @@ namespace AWhewell.Owin.Host.HttpListener
         /// <param name="asyncResult"></param>
         private void ContextReceived(IAsyncResult asyncResult)
         {
-            var listener = _HttpListener;
+            var listener = (IHttpListener)asyncResult.AsyncState;
             if(listener?.IsListening ?? false) {
                 var fetchNextContext = true;
 
@@ -227,7 +228,7 @@ namespace AWhewell.Owin.Host.HttpListener
 
                 if(fetchNextContext) {
                     try {
-                        _HttpListener?.BeginGetContext(ContextReceived, null);
+                        _HttpListener?.BeginGetContext(ContextReceived, _HttpListener);
                     } catch {
                         context = null;
                     }

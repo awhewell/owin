@@ -10,6 +10,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net;
 using AWhewell.Owin.Interface.Host.HttpListener.HttpListenerWrapper;
 
 namespace AWhewell.Owin.Host.HttpListener.HttpListenerWrapper
@@ -39,6 +40,15 @@ namespace AWhewell.Owin.Host.HttpListener.HttpListenerWrapper
         /// See interface docs.
         /// </summary>
         public bool IsListening => _HttpListener.IsListening;
+
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        public AuthenticationSchemes AuthenticationSchemes
+        {
+            get => _HttpListener.AuthenticationSchemes;
+            set => _HttpListener.AuthenticationSchemes = value;
+        }
 
         /// <summary>
         /// Creates a new object.
