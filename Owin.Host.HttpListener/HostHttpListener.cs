@@ -242,15 +242,11 @@ namespace AWhewell.Owin.Host.HttpListener
                     }
 
                     try {
-                        context.Response.Close();
-                    } catch {
-                        ; // This will get hit a lot, the close call will fail if clients close connections etc.
-                    }
-
-                    try {
+                        // Do not call Close before Dispose. It will close random connections on Mono and it is redundant on .NET framework.
+                        // Calling Close instead of Dispose will leave connections hanging open on Mono.
                         context.Response.Dispose();
                     } catch {
-                        ;
+                        ; // This will get hit a lot, the close call will fail if clients close connections etc.
                     }
                 }
             }

@@ -818,26 +818,11 @@ namespace Test.AWhewell.Owin.Host.HttpListener
         }
 
         [TestMethod]
-        public void GetContext_Response_Closed_After_Pipeline_Processed()
+        public void GetContext_Response_Not_Closed_After_Pipeline_Processed()
         {
             InitialiseAndStart();
 
-            _HttpListener.MockContext.MockResponse.Verify(r => r.Close(), Times.Once());
-        }
-
-        [TestMethod]
-        public void GetContext_Response_Close_Exceptions_Are_Ignored()
-        {
-            // There are LOTS of reasons why close throws, chief among them being that the client disconnects mid-send.
-            // We don't want to see any of them.
-
-            _HttpListener.MockContext.MockResponse
-                .Setup(r => r.Close())
-                .Callback(() => throw new IOException());
-
-            InitialiseAndStart();
-
-            _HttpListener.MockContext.MockResponse.Verify(r => r.Close(), Times.Once());
+            _HttpListener.MockContext.MockResponse.Verify(r => r.Close(), Times.Never());
         }
 
         [TestMethod]
