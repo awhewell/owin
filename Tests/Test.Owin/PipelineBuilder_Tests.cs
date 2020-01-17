@@ -45,31 +45,31 @@ namespace Test.AWhewell.Owin
         [ExpectedException(typeof(ArgumentNullException))]
         public void RegisterMiddlewareBuilder_Throws_If_Passed_Null()
         {
-            _PipelineBuilder.RegisterMiddlewareBuilder(null, 0);
+            _PipelineBuilder.RegisterCallback(null, 0);
         }
 
         [TestMethod]
-        public void RegisterMiddlewareBuilder_Returns_Handle()
+        public void RegisterCallback_Returns_Handle()
         {
             var callback = new MockPipelineCallback();
-            Assert.IsNotNull(_PipelineBuilder.RegisterMiddlewareBuilder(callback.Callback, 0));
+            Assert.IsNotNull(_PipelineBuilder.RegisterCallback(callback.Callback, 0));
         }
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void DeregisterMiddlewareBuilder_Throws_If_Passed_Null()
+        public void DeregisterCallback_Throws_If_Passed_Null()
         {
-            _PipelineBuilder.DeregisterMiddlewareBuilder(null);
+            _PipelineBuilder.DeregisterCallback(null);
         }
 
         [TestMethod]
-        public void DeregisterMiddlewareBuilder_Does_Nothing_If_Passed_Same_Handle_Twice()
+        public void DeregisterCallback_Does_Nothing_If_Passed_Same_Handle_Twice()
         {
             var callback = new MockPipelineCallback();
-            var handle = _PipelineBuilder.RegisterMiddlewareBuilder(callback.Callback, 0);
+            var handle = _PipelineBuilder.RegisterCallback(callback.Callback, 0);
 
-            _PipelineBuilder.DeregisterMiddlewareBuilder(handle);
-            _PipelineBuilder.DeregisterMiddlewareBuilder(handle);
+            _PipelineBuilder.DeregisterCallback(handle);
+            _PipelineBuilder.DeregisterCallback(handle);
         }
 
         [TestMethod]
@@ -83,7 +83,7 @@ namespace Test.AWhewell.Owin
         public void CreatePipeline_Calls_Registered_Callback()
         {
             var callback = new MockPipelineCallback();
-            _PipelineBuilder.RegisterMiddlewareBuilder(callback.Callback, 0);
+            _PipelineBuilder.RegisterCallback(callback.Callback, 0);
 
             _PipelineBuilder.CreatePipeline(_Environment.Object);
 
@@ -105,7 +105,7 @@ namespace Test.AWhewell.Owin
         {
             var callback = new MockPipelineCallback();
             callback.Action = (env) => _Pipeline.Verify(r => r.Construct(_Environment.Object), Times.Never);
-            _PipelineBuilder.RegisterMiddlewareBuilder(callback.Callback, 0);
+            _PipelineBuilder.RegisterCallback(callback.Callback, 0);
 
             _PipelineBuilder.CreatePipeline(_Environment.Object);
 
@@ -124,8 +124,8 @@ namespace Test.AWhewell.Owin
         public void CreatePipeline_Does_Not_Call_Callbacks_That_Have_Been_Removed()
         {
             var callback = new MockPipelineCallback();
-            var handle = _PipelineBuilder.RegisterMiddlewareBuilder(callback.Callback, 0);
-            _PipelineBuilder.DeregisterMiddlewareBuilder(handle);
+            var handle = _PipelineBuilder.RegisterCallback(callback.Callback, 0);
+            _PipelineBuilder.DeregisterCallback(handle);
 
             _PipelineBuilder.CreatePipeline(_Environment.Object);
 
@@ -139,9 +139,9 @@ namespace Test.AWhewell.Owin
             var callback_2 = new MockPipelineCallback();
             var callback_3 = new MockPipelineCallback();
 
-            _PipelineBuilder.RegisterMiddlewareBuilder(callback_2.Callback, 0);
-            _PipelineBuilder.RegisterMiddlewareBuilder(callback_3.Callback,  1);
-            _PipelineBuilder.RegisterMiddlewareBuilder(callback_1.Callback,  -1);
+            _PipelineBuilder.RegisterCallback(callback_2.Callback, 0);
+            _PipelineBuilder.RegisterCallback(callback_3.Callback,  1);
+            _PipelineBuilder.RegisterCallback(callback_1.Callback,  -1);
 
             callback_1.Action = r => {
                 Assert.AreEqual(0, callback_2.CallCount, "2nd callback called before 1st");

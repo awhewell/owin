@@ -60,7 +60,7 @@ namespace AWhewell.Owin
             _ExceptionLoggers = buildEnvironment.ExceptionLoggers.ToArray();
 
             _MiddlewareChain = ChainTerminatorAppFunc;
-            foreach(var chainLink in buildEnvironment.MiddlewareChain.Reverse()) {
+            foreach(var chainLink in buildEnvironment.MiddlewareBuilders.Reverse()) {
                 _MiddlewareChain = chainLink.Invoke(_MiddlewareChain);
             }
 

@@ -43,33 +43,33 @@ namespace Test.AWhewell.Owin
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void UseMiddleware_Throws_If_Passed_Null()
+        public void UseMiddlewareBuilder_Throws_If_Passed_Null()
         {
-            _Environment.UseMiddleware(null);
+            _Environment.UseMiddlewareBuilder(null);
         }
 
         [TestMethod]
-        public void UseMiddleware_Adds_AppFunc_To_Middlewares_Collection()
+        public void UseMiddlewareBuilder_Adds_AppFunc_To_Middlewares_Collection()
         {
             var link = (Func<AppFunc, AppFunc>)AppFuncChainLink_1;
 
-            _Environment.UseMiddleware(link);
+            _Environment.UseMiddlewareBuilder(link);
 
-            var chain = _Environment.MiddlewareChain.ToArray();
+            var chain = _Environment.MiddlewareBuilders.ToArray();
             Assert.AreEqual(1, chain.Length);
             Assert.AreSame(link, chain[0]);
         }
 
         [TestMethod]
-        public void UseMiddleware_Has_Cumulative_Effect()
+        public void UseMiddlewareBuilder_Has_Cumulative_Effect()
         {
             var link_1 = (Func<AppFunc, AppFunc>)AppFuncChainLink_1;
             var link_2 = (Func<AppFunc, AppFunc>)AppFuncChainLink_2;
 
-            _Environment.UseMiddleware(link_1);
-            _Environment.UseMiddleware(link_2);
+            _Environment.UseMiddlewareBuilder(link_1);
+            _Environment.UseMiddlewareBuilder(link_2);
 
-            var chain = _Environment.MiddlewareChain.ToArray();
+            var chain = _Environment.MiddlewareBuilders.ToArray();
             Assert.AreEqual(2, chain.Length);
             Assert.AreSame(link_1, chain[0]);
             Assert.AreSame(link_2, chain[1]);
@@ -77,17 +77,17 @@ namespace Test.AWhewell.Owin
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void UseStreamManipulator_Throws_If_Passed_Null()
+        public void UseStreamManipulatorBuilder_Throws_If_Passed_Null()
         {
-            _Environment.UseStreamManipulator(null);
+            _Environment.UseStreamManipulatorBuilder(null);
         }
 
         [TestMethod]
-        public void UseStreamManipulator_Adds_AppFunc_To_Manipulators_Collection()
+        public void UseStreamManipulatorBuilder_Adds_AppFunc_To_Manipulators_Collection()
         {
             var link = (Func<AppFunc, AppFunc>)AppFuncChainLink_1;
 
-            _Environment.UseStreamManipulator(link);
+            _Environment.UseStreamManipulatorBuilder(link);
 
             var chain = _Environment.StreamManipulatorChain.ToArray();
             Assert.AreEqual(1, chain.Length);
@@ -95,13 +95,13 @@ namespace Test.AWhewell.Owin
         }
 
         [TestMethod]
-        public void UseStreamManipulator_Has_Cumulative_Effect()
+        public void UseStreamManipulatorBuilder_Has_Cumulative_Effect()
         {
             var link_1 = (Func<AppFunc, AppFunc>)AppFuncChainLink_1;
             var link_2 = (Func<AppFunc, AppFunc>)AppFuncChainLink_2;
 
-            _Environment.UseStreamManipulator(link_1);
-            _Environment.UseStreamManipulator(link_2);
+            _Environment.UseStreamManipulatorBuilder(link_1);
+            _Environment.UseStreamManipulatorBuilder(link_2);
 
             var chain = _Environment.StreamManipulatorChain.ToArray();
             Assert.AreEqual(2, chain.Length);
@@ -110,15 +110,15 @@ namespace Test.AWhewell.Owin
         }
 
         [TestMethod]
-        public void Middleware_And_Manipulators_Are_Isolated_From_Each_Other()
+        public void MiddlewareBuilders_And_StreamManipulatorBuilders_Are_Isolated_From_Each_Other()
         {
             var link_1 = (Func<AppFunc, AppFunc>)AppFuncChainLink_1;
             var link_2 = (Func<AppFunc, AppFunc>)AppFuncChainLink_2;
 
-            _Environment.UseMiddleware(link_1);
-            _Environment.UseStreamManipulator(link_2);
+            _Environment.UseMiddlewareBuilder(link_1);
+            _Environment.UseStreamManipulatorBuilder(link_2);
 
-            var middlewareChain = _Environment.MiddlewareChain.ToArray();
+            var middlewareChain = _Environment.MiddlewareBuilders.ToArray();
             Assert.AreEqual(1, middlewareChain.Length);
             Assert.AreSame(link_1, middlewareChain[0]);
 

@@ -30,65 +30,44 @@ namespace AWhewell.Owin.Interface
         OwinDictionary<object> Properties { get; }
 
         /// <summary>
-        /// Gets a read-only collection of all standard middleware in the order in which they were added.
+        /// Gets a read-only collection of all middleware builders added via <see cref="UseMiddlewareBuilder"/> thus far.
         /// </summary>
-        IReadOnlyList<Func<AppFunc, AppFunc>> MiddlewareChain { get; }
+        IReadOnlyList<Func<AppFunc, AppFunc>> MiddlewareBuilders { get; }
 
         /// <summary>
-        /// Gets a read-only collection of all stream manipulator middleware in the order in which they were added.
+        /// Gets a read-only collection of all stream manipulator middleware builders added via <see cref="UseStreamManipulatorBuilder"/> thus far.
         /// </summary>
         IReadOnlyList<Func<AppFunc, AppFunc>> StreamManipulatorChain { get; }
 
         /// <summary>
-        /// Gets a read-only collection of all exception loggers in the order that they were added.
+        /// Gets a read-only collection of all exception loggers added via <see cref="UseExceptionLogger"/> thus far.
         /// </summary>
         IReadOnlyList<IExceptionLogger> ExceptionLoggers { get; }
 
         /// <summary>
-        /// Adds standard OWIN middleware to the pipeline that is being constructed.
+        /// Registers a function that will be called to create a middleware AppFunc. Middleware AppFuncs are expected
+        /// to chain to the next AppFunc if the request passes through the middleware, or not call the next AppFunc
+        /// if the request is to stop being processed.
         /// </summary>
-        /// <param name="middleware"></param>
-        /// <remarks><para>
-        /// OWIN middleware is a function that is passed a reference to the next OWIN middleware
-        /// in the chain and returns an AppFunc that either invokes the next middleware to continue processing
-        /// or returns without invoking the next middleware to stop processing the request.
-        /// </para><para>
-        /// If earlier middleware stops the processing early by not chaining onto the next peice
-        /// of middleware then none of the middleware following it in the chain will be called.
-        /// </para><para>
-        /// The function you add here is only called once to create a pipeline. The AppFunc returned
-        /// by this function will be called for every request that is sent through the pipeline.
-        /// </para>
-        /// </remarks>
-        void UseMiddleware(Func<AppFunc, AppFunc> middleware);
+        /// <param name="appFuncBuilder"></param>
+        void UseMiddlewareBuilder(Func<AppFunc, AppFunc> appFuncBuilder);
 
         /// <summary>
-        /// Adds stream manipulator middleware to the pipeline that is being constructed.
+        /// Registers a function that will be called to create a stream manipulator AppFunc. Stream
+        /// manipulators are always called even if a middleware AppFunc stopped the pipeline early. Stream
+        /// manipulators do not have to call the next AppFunc. A stream manipulator cannot stop any other
+        /// stream manipulator from being called.
         /// </summary>
-        /// <param name="middleware"></param>
-        /// <remarks><para>
-        /// Stream manipulators are standard OWIN middleware with two caveats.
-        /// </para><para>
-        /// First, while they are passed a reference to the next AppFunc in a chain they are not
-        /// expected to call it. Calling it has no ill effect but they cannot break the chain by not
-        /// calling it. Instead all stream manipulators are always called and no stream manipulator
-        /// can stop that from happening.
-        /// </para><para>
-        /// Second, they are always executed after the standard OWIN middleware chain has finished
-        /// processing. They will be executed even if the standard OWIN middleware chain was halted
-        /// early.
-        /// </para><para>
-        /// The position of the response stream in the environment is always at the end of the
-        /// stream when the manipulator is first called. Each manipulator is expected to ensure
-        /// that the position is at the end of the stream content before returning.
-        /// </para><para>
-        /// To support manipulation of the response stream with hosts that use forward-only response
-        /// streams the pipeline replaces the host response stream with a memory stream when stream
-        /// manipulators are used. It will copy the content of the memory stream to the host stream
-        /// once all stream manipulators have been called.
+        /// <param name="appFuncBuilder"></param>
+        /// <remarks>
+        /// <para>
+        /// To support manipulation of the response stream with hosts that use forward-only response streams
+        /// the pipeline replaces the host response stream with a memory stream when stream manipulators are
+        /// used. The pipeline will copy the content of the memory stream to the host response stream once all
+        /// stream manipulators have been called.
         /// </para>
         /// </remarks>
-        void UseStreamManipulator(Func<AppFunc, AppFunc> middleware);
+        void UseStreamManipulatorBuilder(Func<AppFunc, AppFunc> appFuncBuilder);
 
         /// <summary>
         /// Registers an exception logger.

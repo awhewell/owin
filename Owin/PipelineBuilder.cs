@@ -32,7 +32,7 @@ namespace AWhewell.Owin
         /// <param name="callback"></param>
         /// <param name="priority"></param>
         /// <returns></returns>
-        public IMiddlewareBuilderCallbackHandle RegisterMiddlewareBuilder(Action<IPipelineBuilderEnvironment> callback, int priority)
+        public IPipelineBuilderCallbackHandle RegisterCallback(Action<IPipelineBuilderEnvironment> callback, int priority)
         {
             if(callback == null) {
                 throw new ArgumentNullException(nameof(callback));
@@ -48,7 +48,7 @@ namespace AWhewell.Owin
         /// See interface docs.
         /// </summary>
         /// <param name="handle"></param>
-        public void DeregisterMiddlewareBuilder(IMiddlewareBuilderCallbackHandle handle)
+        public void DeregisterCallback(IPipelineBuilderCallbackHandle handle)
         {
             if(handle == null) {
                 throw new ArgumentNullException(nameof(handle));

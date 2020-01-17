@@ -18,9 +18,9 @@ namespace Test.AWhewell.Owin
 
     public class MockMiddleware
     {
-        public int CreateAppFuncCallCount { get; private set; }
+        public int AppFuncBuilderCallCount { get; private set; }
 
-        public bool ChainToNextMiddleware { get; set; } = true;
+        public bool ChainToNextAppFunc { get; set; } = true;
 
         public List<IDictionary<string, object>> Environments { get; } = new List<IDictionary<string, object>>();
 
@@ -34,9 +34,9 @@ namespace Test.AWhewell.Owin
 
         public Action Action { get; set; }
 
-        public AppFunc CreateAppFunc(AppFunc next)
+        public AppFunc AppFuncBuilder(AppFunc next)
         {
-            ++CreateAppFuncCallCount;
+            ++AppFuncBuilderCallCount;
 
             return async(IDictionary<string, object> environment) => {
                 Environments.Add(environment);
@@ -44,20 +44,20 @@ namespace Test.AWhewell.Owin
 
                 Action?.Invoke();
 
-                if(ChainToNextMiddleware) {
-                    next.Invoke(environment).Wait();
+                if(ChainToNextAppFunc) {
+                    next(environment).Wait();
                 }
             };
         }
 
-        public static Task Stub(IDictionary<string, object> environment)
+        public static Task StubAppFunc(IDictionary<string, object> environment)
         {
             return Task.FromResult(0);
         }
 
         public static void Call(AppFunc middleware, IDictionary<string, object> environment)
         {
-            middleware.Invoke(environment).Wait();
+            middleware(environment).Wait();
         }
     }
 }

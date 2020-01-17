@@ -32,7 +32,7 @@ namespace AWhewell.Owin
         /// <summary>
         /// See interface docs.
         /// </summary>
-        public IReadOnlyList<Func<AppFunc, AppFunc>> MiddlewareChain => _MiddlewareChain;
+        public IReadOnlyList<Func<AppFunc, AppFunc>> MiddlewareBuilders => _MiddlewareChain;
 
         private readonly List<Func<AppFunc, AppFunc>> _StreamManipulatorChain = new List<Func<AppFunc, AppFunc>>();
         /// <summary>
@@ -50,7 +50,7 @@ namespace AWhewell.Owin
         /// See interface docs.
         /// </summary>
         /// <param name="middleware"></param>
-        public void UseMiddleware(Func<AppFunc, AppFunc> middleware)
+        public void UseMiddlewareBuilder(Func<AppFunc, AppFunc> middleware)
         {
             if(middleware == null) {
                 throw new ArgumentNullException(nameof(middleware));
@@ -62,7 +62,7 @@ namespace AWhewell.Owin
         /// See interface docs.
         /// </summary>
         /// <param name="middleware"></param>
-        public void UseStreamManipulator(Func<AppFunc, AppFunc> middleware)
+        public void UseStreamManipulatorBuilder(Func<AppFunc, AppFunc> middleware)
         {
             if(middleware == null) {
                 throw new ArgumentNullException(nameof(middleware));

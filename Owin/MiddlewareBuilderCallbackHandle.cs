@@ -18,7 +18,7 @@ namespace AWhewell.Owin
     /// <summary>
     /// Describes a callback registered by the <see cref="PipelineBuilder"/>.
     /// </summary>
-    class MiddlewareBuilderCallbackHandle : IMiddlewareBuilderCallbackHandle
+    class MiddlewareBuilderCallbackHandle : IPipelineBuilderCallbackHandle
     {
         /// <summary>
         /// Gets or sets the callback that will create middleware for us.

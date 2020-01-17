@@ -10,13 +10,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace AWhewell.Owin.Interface
 {
-    using AppFunc = Func<IDictionary<string, object>, Task>;
-
     /// <summary>
     /// Describes a pipeline that can process web requests.
     /// </summary>
