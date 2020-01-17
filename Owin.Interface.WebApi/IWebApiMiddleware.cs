@@ -70,6 +70,6 @@ namespace AWhewell.Owin.Interface.WebApi
         /// </summary>
         /// <param name="next"></param>
         /// <returns></returns>
-        AppFunc CreateMiddleware(AppFunc next);
+        AppFunc AppFuncBuilder(AppFunc next);
     }
 }

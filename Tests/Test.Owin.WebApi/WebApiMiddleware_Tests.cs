@@ -10,16 +10,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+using System.Net;
+using AWhewell.Owin.Interface.WebApi;
+using AWhewell.Owin.Utility.Formatters;
+using AWhewell.Owin.Utility.Parsers;
 using InterfaceFactory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using AWhewell.Owin.Interface;
-using AWhewell.Owin.Interface.WebApi;
-using AWhewell.Owin.Utility.Parsers;
-using AWhewell.Owin.Utility.Formatters;
-using System.Net;
 
 namespace Test.AWhewell.Owin.WebApi
 {
@@ -98,7 +95,7 @@ namespace Test.AWhewell.Owin.WebApi
             Factory.RestoreSnapshot(_Snapshot);
         }
 
-        private void CallMiddleware() => _Pipeline.CallMiddleware(_WebApi.CreateMiddleware, _Environment.Environment);
+        private void CallMiddleware() => _Pipeline.CallMiddleware(_WebApi.AppFuncBuilder, _Environment.Environment);
 
         [TestMethod]
         public void Ctor_Initialises_Default_Parsers()
@@ -114,10 +111,10 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        public void CreateMiddleware_Populates_ControllerManager_With_Default_Parsers()
+        public void AppFuncBuilder_Populates_ControllerManager_With_Default_Parsers()
         {
             _WebApi.DefaultParsers.Add(new DateTime_Local_Parser());
-            _WebApi.CreateMiddleware(null);
+            _WebApi.AppFuncBuilder(null);
 
             var defaultTypeParserResolver = _ControllerFinder.Object.DefaultTypeParserResolver;
             Assert.IsNotNull(defaultTypeParserResolver);
@@ -128,10 +125,10 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        public void CreateMiddleware_Populates_ControllerManager_With_Default_Formatters()
+        public void AppFuncBuilder_Populates_ControllerManager_With_Default_Formatters()
         {
             _WebApi.DefaultFormatters.Add(new DateTime_Iso8601_Formatter());
-            _WebApi.CreateMiddleware(null);
+            _WebApi.AppFuncBuilder(null);
 
             var defaultTypeFormatterResolver = _ControllerFinder.Object.DefaultTypeFormatterResolver;
             Assert.IsNotNull(defaultTypeFormatterResolver);
@@ -142,25 +139,25 @@ namespace Test.AWhewell.Owin.WebApi
         }
 
         [TestMethod]
-        public void CreateMiddleware_Finds_Controller_Types()
+        public void AppFuncBuilder_Finds_Controller_Types()
         {
-            _WebApi.CreateMiddleware(null);
+            _WebApi.AppFuncBuilder(null);
 
             _ControllerFinder.Verify(r => r.DiscoverControllers(), Times.Once());
         }
 
         [TestMethod]
-        public void CreateMiddleware_Finds_Routes()
+        public void AppFuncBuilder_Finds_Routes()
         {
-            _WebApi.CreateMiddleware(null);
+            _WebApi.AppFuncBuilder(null);
 
             _RouteFinder.Verify(r => r.DiscoverRoutes(_ControllerTypes), Times.Once());
         }
 
         [TestMethod]
-        public void CreateMiddleware_Initialises_Route_Mapper()
+        public void AppFuncBuilder_Initialises_Route_Mapper()
         {
-            _WebApi.CreateMiddleware(null);
+            _WebApi.AppFuncBuilder(null);
 
             _RouteMapper.Verify(r => r.Initialise(_Routes), Times.Once());
         }
@@ -170,7 +167,7 @@ namespace Test.AWhewell.Owin.WebApi
         [DataRow(false, true)]
         [DataRow(true,  false)]
         [DataRow(true,  true)]
-        public void CreateMiddleware_Sets_Properties_On_Route_Mapper_Before_Initialisation(bool queryStringCaseSensitive, bool formBodyCaseSensitive)
+        public void AppFuncBuilder_Sets_Properties_On_Route_Mapper_Before_Initialisation(bool queryStringCaseSensitive, bool formBodyCaseSensitive)
         {
             bool? actualQueryStringCaseSensitive = null;
             bool? actualFormBodyCaseSensitive = null;
@@ -182,7 +179,7 @@ namespace Test.AWhewell.Owin.WebApi
             _WebApi.AreFormNamesCaseSensitive =         formBodyCaseSensitive;
             _WebApi.AreQueryStringNamesCaseSensitive =  queryStringCaseSensitive;
 
-            _WebApi.CreateMiddleware(null);
+            _WebApi.AppFuncBuilder(null);
 
             Assert.AreEqual(queryStringCaseSensitive, actualQueryStringCaseSensitive);
             Assert.AreEqual(formBodyCaseSensitive,    actualFormBodyCaseSensitive);
@@ -191,7 +188,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void Middleware_Finds_Route_From_Request()
         {
-            var middleware = _WebApi.CreateMiddleware(MockMiddleware.StubAppFunc);
+            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
 
             MockMiddleware.Call(middleware, _Environment.Environment);
 
@@ -201,7 +198,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void Middleware_Calls_Route_Filter_With_Found_Route()
         {
-            var middleware = _WebApi.CreateMiddleware(MockMiddleware.StubAppFunc);
+            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
 
             MockMiddleware.Call(middleware, _Environment.Environment);
 
@@ -211,7 +208,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void Middleware_Gets_Parameters_For_Route()
         {
-            var middleware = _WebApi.CreateMiddleware(MockMiddleware.StubAppFunc);
+            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
 
             MockMiddleware.Call(middleware, _Environment.Environment);
 
@@ -222,7 +219,7 @@ namespace Test.AWhewell.Owin.WebApi
         public void Middleware_Does_Not_Build_Route_Parameters_If_Route_Not_Found()
         {
             _FoundRoute = null;
-            var middleware = _WebApi.CreateMiddleware(MockMiddleware.StubAppFunc);
+            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
 
             MockMiddleware.Call(middleware, _Environment.Environment);
 
@@ -233,7 +230,7 @@ namespace Test.AWhewell.Owin.WebApi
         public void Middleware_Does_Not_Build_Route_Parameters_If_Route_Fails_Filter()
         {
             _RouteFilter_CanCallRoute = false;
-            var middleware = _WebApi.CreateMiddleware(MockMiddleware.StubAppFunc);
+            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
 
             MockMiddleware.Call(middleware, _Environment.Environment);
 
@@ -244,7 +241,7 @@ namespace Test.AWhewell.Owin.WebApi
         public void Middleware_Returns_Status_400_If_Parameters_Could_Not_Be_Built()
         {
             _RouteParameters = new RouteParameters(new string[] { "Some error message" }, new object[0]);
-            var middleware = _WebApi.CreateMiddleware(MockMiddleware.StubAppFunc);
+            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
 
             MockMiddleware.Call(middleware, _Environment.Environment);
 
@@ -255,7 +252,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void Middleware_Calls_Route_If_Parameters_Could_Be_Built()
         {
-            var middleware = _WebApi.CreateMiddleware(MockMiddleware.StubAppFunc);
+            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
 
             MockMiddleware.Call(middleware, _Environment.Environment);
 
@@ -270,7 +267,7 @@ namespace Test.AWhewell.Owin.WebApi
                 .Callback(() =>
                     filterEnvironmentRoute = _Environment.Environment[WebApiEnvironmentKey.Route]
                  );
-            var middleware = _WebApi.CreateMiddleware(MockMiddleware.StubAppFunc);
+            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
 
             MockMiddleware.Call(middleware, _Environment.Environment);
 
@@ -282,7 +279,7 @@ namespace Test.AWhewell.Owin.WebApi
         public void Middleware_Uses_WebApiResponder_To_Return_Route_Result()
         {
             _RouteOutcome = new object();
-            var middleware = _WebApi.CreateMiddleware(MockMiddleware.StubAppFunc);
+            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
 
             MockMiddleware.Call(middleware, _Environment.Environment);
 
@@ -292,7 +289,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void Middleware_Defaults_To_Status_200()
         {
-            var middleware = _WebApi.CreateMiddleware(MockMiddleware.StubAppFunc);
+            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
 
             MockMiddleware.Call(middleware, _Environment.Environment);
 
@@ -304,7 +301,7 @@ namespace Test.AWhewell.Owin.WebApi
         {
             _RouteOutcome = null;
             _FoundRoute = Route_Tests.CreateRoute<Controller>(nameof(Controller.VoidMethod));
-            var middleware = _WebApi.CreateMiddleware(MockMiddleware.StubAppFunc);
+            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
 
             MockMiddleware.Call(middleware, _Environment.Environment);
 
@@ -324,7 +321,7 @@ namespace Test.AWhewell.Owin.WebApi
                     ? nameof(Controller.HasNullStatusCode)
                     : nameof(Controller.DoesNotHaveNullStatusCode)
             );
-            var middleware = _WebApi.CreateMiddleware(MockMiddleware.StubAppFunc);
+            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
 
             MockMiddleware.Call(middleware, _Environment.Environment);
 

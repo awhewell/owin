@@ -50,7 +50,7 @@ namespace AWhewell.Owin.WebApi
         /// </summary>
         /// <param name="next"></param>
         /// <returns></returns>
-        public AppFunc CreateMiddleware(AppFunc next)
+        public AppFunc AppFuncBuilder(AppFunc next)
         {
             var controllerFinder = Factory.Resolve<IControllerFinder>();
             controllerFinder.DefaultTypeParserResolver =    TypeParserResolverCache.Find(DefaultParsers.ToArray());
