@@ -16,9 +16,10 @@ namespace AWhewell.Owin.Interface
     public static class ApplicationStartupKey
     {
         // Standard keys
-        public const string Version = "owin.Version";       // [Required] A string indicating the OWIN version.
+        public const string Version =           "owin.Version";             // [Required] A string indicating the OWIN version.
 
         // Implementation specific keys
-        public const string HostType = "server.HostType";   // The implementation of the host - Owin.Host.HttpListener
+        public const string HostType =          "server.HostType";          // The implementation of the host - Owin.Host.HttpListener
+        public const string HostFinalCallback = "server.HostFinalCallback"; // An optional Action (no parameters) that is called after the builder callbacks have finished. Intended as mechanism for host to apply overrides to builder environment before pipeline creation.
     }
 }

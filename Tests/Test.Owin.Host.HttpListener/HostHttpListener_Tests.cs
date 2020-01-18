@@ -44,6 +44,8 @@ namespace Test.AWhewell.Owin.Host.HttpListener
 
             _PipelineBuilder = MockHelper.FactoryImplementation<IPipelineBuilder>();
             _PipelineBuilderEnvironment = MockHelper.FactoryImplementation<IPipelineBuilderEnvironment>();
+            _PipelineBuilderEnvironment.Object.PipelineLogsExceptions = true;       // default for real implementation
+            _PipelineBuilderEnvironment.Object.PipelineSwallowsExceptions = true;   // default for real implementation
             _Pipeline = MockHelper.FactoryImplementation<IPipeline>();
             _ProcessRequestAction = null;
             _PipelineEnvironment = null;
@@ -133,6 +135,18 @@ namespace Test.AWhewell.Owin.Host.HttpListener
             var properties = _PipelineBuilderEnvironment.Object.Properties;
             Assert.AreEqual(Constants.Version,                  properties[ApplicationStartupKey.Version]);
             Assert.AreEqual("AWhewell.Owin.Host.HttpListener",  properties[ApplicationStartupKey.HostType]);
+        }
+
+        [TestMethod]
+        public void Initialise_Sets_PipelineBuilderEnvironment_Properties_Using_HostFinalCallback()
+        {
+            Initialise();
+
+            var hostFinalCallback = (Action)_PipelineBuilderEnvironment.Object.Properties[ApplicationStartupKey.HostFinalCallback];
+            hostFinalCallback();
+
+            Assert.AreEqual(false, _PipelineBuilderEnvironment.Object.PipelineLogsExceptions);
+            Assert.AreEqual(false, _PipelineBuilderEnvironment.Object.PipelineSwallowsExceptions);
         }
 
         [TestMethod]

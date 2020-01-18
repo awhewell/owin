@@ -75,6 +75,9 @@ namespace AWhewell.Owin
                 callback.Callback(environment);
             }
 
+            var hostFinalCallback = environment.Properties[ApplicationStartupKey.HostFinalCallback] as Action;
+            hostFinalCallback?.Invoke();
+
             var result = Factory.Resolve<IPipeline>();
             result.Construct(environment);
 

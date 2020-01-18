@@ -93,11 +93,28 @@ namespace Test.AWhewell.Owin
         }
 
         [TestMethod]
-        public void Sets_Mandatory_Keys_In_Properties()
+        public void CreatePipeline_Sets_Mandatory_Keys_In_Properties()
         {
             _PipelineBuilder.CreatePipeline(_Environment.Object);
 
             Assert.AreEqual(Constants.Version, _Environment.Object.Properties["owin.Version"]);
+        }
+
+        [TestMethod]
+        public void CreatePipeline_Calls_Optional_HostFinalCallback_Action_After_Calling_Registered_Callbacks()
+        {
+            var hostFinalCallbackCalled = false;
+            var callback = new MockPipelineCallback();
+            _PipelineBuilder.RegisterCallback(callback.Callback, 0);
+            Action hostFinalCallback = () => {
+                Assert.AreEqual(1, callback.CallCount);
+                hostFinalCallbackCalled = true;
+            };
+            _Environment.Object.Properties[ApplicationStartupKey.HostFinalCallback] = hostFinalCallback;
+
+            _PipelineBuilder.CreatePipeline(_Environment.Object);
+
+            Assert.IsTrue(hostFinalCallbackCalled);
         }
 
         [TestMethod]
