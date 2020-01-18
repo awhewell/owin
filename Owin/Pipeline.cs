@@ -28,10 +28,10 @@ namespace AWhewell.Owin
     class Pipeline : IPipeline
     {
         // A reference to the first function in a chain of middleware functions.
-        private AppFunc _MiddlewareChain;
+        private AppFunc _MiddlewareApplicationDelegate;
 
         // An array of stream manipulator functions. Unlike middleware these do not chain on to each other.
-        private AppFunc[] _StreamManipulatorChain;
+        private AppFunc[] _StreamManipulators;
 
         private IExceptionLogger[] _ExceptionLoggers;
         /// <summary>
@@ -42,7 +42,7 @@ namespace AWhewell.Owin
         /// <summary>
         /// See interface docs.
         /// </summary>
-        public bool HasStreamManipulators => _StreamManipulatorChain?.Length > 0;
+        public bool HasStreamManipulators => _StreamManipulators?.Length > 0;
 
         /// <summary>
         /// See interface docs.
@@ -53,22 +53,22 @@ namespace AWhewell.Owin
             if(buildEnvironment == null) {
                 throw new ArgumentNullException(nameof(buildEnvironment));
             }
-            if(_MiddlewareChain != null) {
+            if(_MiddlewareApplicationDelegate != null) {
                 throw new InvalidOperationException($"You cannot call {nameof(Construct)} twice");
             }
 
             _ExceptionLoggers = buildEnvironment.ExceptionLoggers.ToArray();
 
-            _MiddlewareChain = ChainTerminatorAppFunc;
-            foreach(var chainLink in buildEnvironment.MiddlewareBuilders.Reverse()) {
-                _MiddlewareChain = chainLink.Invoke(_MiddlewareChain);
+            _MiddlewareApplicationDelegate = ChainTerminatorAppFunc;
+            foreach(var appFuncBuilder in buildEnvironment.MiddlewareBuilders.Reverse()) {
+                _MiddlewareApplicationDelegate = appFuncBuilder(_MiddlewareApplicationDelegate);
             }
 
             var streamManipulators = new List<AppFunc>();
-            foreach(var chainLink in buildEnvironment.StreamManipulatorBuilders) {
-                streamManipulators.Add(chainLink.Invoke(ChainTerminatorAppFunc));
+            foreach(var appFuncBuilder in buildEnvironment.StreamManipulatorBuilders) {
+                streamManipulators.Add(appFuncBuilder(ChainTerminatorAppFunc));
             }
-            _StreamManipulatorChain = streamManipulators.ToArray();
+            _StreamManipulators = streamManipulators.ToArray();
         }
 
         /// <summary>
@@ -80,12 +80,12 @@ namespace AWhewell.Owin
             if(environment == null) {
                 throw new ArgumentNullException(nameof(environment));
             }
-            if(_MiddlewareChain == null) {
+            if(_MiddlewareApplicationDelegate == null) {
                 throw new InvalidOperationException($"You cannot call {nameof(ProcessRequest)} before calling {nameof(Construct)}");
             }
 
             if(!HasStreamManipulators) {
-                await _MiddlewareChain(environment);
+                await _MiddlewareApplicationDelegate(environment);
             } else {
                 environment.TryGetValue(EnvironmentKey.ResponseBody, out var originalResponseBodyObj);
                 var originalResponseBody = originalResponseBodyObj as Stream;
@@ -95,9 +95,9 @@ namespace AWhewell.Owin
                 }
 
                 try {
-                    await _MiddlewareChain(environment);
+                    await _MiddlewareApplicationDelegate(environment);
 
-                    foreach(var streamManipulatorAppFunc in _StreamManipulatorChain) {
+                    foreach(var streamManipulatorAppFunc in _StreamManipulators) {
                         await streamManipulatorAppFunc(environment);
                     }
                 } finally {
