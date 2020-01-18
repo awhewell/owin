@@ -24,7 +24,7 @@ namespace AWhewell.Owin
         /// <summary>
         /// The list of callbacks that will construct a pipeline for us.
         /// </summary>
-        private List<MiddlewareBuilderCallbackHandle> _Callbacks = new List<MiddlewareBuilderCallbackHandle>();
+        private List<PipelineBuilderCallbackHandle> _Callbacks = new List<PipelineBuilderCallbackHandle>();
 
         /// <summary>
         /// See interface docs.
@@ -38,7 +38,7 @@ namespace AWhewell.Owin
                 throw new ArgumentNullException(nameof(callback));
             }
 
-            var result = new MiddlewareBuilderCallbackHandle(callback, priority);
+            var result = new PipelineBuilderCallbackHandle(callback, priority);
             _Callbacks.Add(result);
 
             return result;
@@ -47,15 +47,15 @@ namespace AWhewell.Owin
         /// <summary>
         /// See interface docs.
         /// </summary>
-        /// <param name="handle"></param>
-        public void DeregisterCallback(IPipelineBuilderCallbackHandle handle)
+        /// <param name="callbackHandle"></param>
+        public void DeregisterCallback(IPipelineBuilderCallbackHandle callbackHandle)
         {
-            if(handle == null) {
-                throw new ArgumentNullException(nameof(handle));
+            if(callbackHandle == null) {
+                throw new ArgumentNullException(nameof(callbackHandle));
             }
 
-            if(handle is MiddlewareBuilderCallbackHandle removeCallback) {
-                _Callbacks.Remove(removeCallback);
+            if(callbackHandle is PipelineBuilderCallbackHandle pipelineBuilderCallbackHandle) {
+                _Callbacks.Remove(pipelineBuilderCallbackHandle);
             }
         }
 

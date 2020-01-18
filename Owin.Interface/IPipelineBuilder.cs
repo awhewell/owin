@@ -29,8 +29,8 @@ namespace AWhewell.Owin.Interface
         /// <summary>
         /// Deregisters a callback that was previously registered with <see cref="RegisterCallback"/>.
         /// </summary>
-        /// <param name="handle"></param>
-        void DeregisterCallback(IPipelineBuilderCallbackHandle handle);
+        /// <param name="callbackHandle"></param>
+        void DeregisterCallback(IPipelineBuilderCallbackHandle callbackHandle);
 
         /// <summary>
         /// Creates a new pipeline by invoking the registered callbacks in order of priority and giving them
