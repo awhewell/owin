@@ -37,9 +37,9 @@ namespace Test.AWhewell.Owin
         /// Calls the middleware passed across. Sets or clears <see cref="NextMiddlewareCalled"/> if the
         /// middleware calls the next function in the chain.
         /// </summary>
-        /// <param name="appFunc"></param>
+        /// <param name="appFuncBuilder"></param>
         /// <param name="environment"></param>
-        public void CallMiddleware(Func<AppFunc, AppFunc> middlewareEntryPoint, IDictionary<string, object> environment)
+        public void BuildAndCallMiddleware(Func<AppFunc, AppFunc> appFuncBuilder, IDictionary<string, object> environment)
         {
             NextMiddlewareCalled = false;
 
@@ -49,19 +49,19 @@ namespace Test.AWhewell.Owin
                 return Task.FromResult(0);
             };
 
-            AppFunc testMiddleware = middlewareEntryPoint(nextMiddleware);
-            testMiddleware.Invoke(environment);
+            AppFunc testMiddleware = appFuncBuilder(nextMiddleware);
+            testMiddleware(environment);
         }
 
         /// <summary>
         /// Calls the middleware passed across. Sets or clears <see cref="NextMiddlewareCalled"/> if the
         /// middleware calls the next function in the chain.
         /// </summary>
-        /// <param name="middlewareEntryPoint"></param>
+        /// <param name="appFuncBuilder"></param>
         /// <param name="environment"></param>
-        public void CallMiddleware(Func<AppFunc, AppFunc> middlewareEntryPoint, MockOwinEnvironment environment)
+        public void BuildAndCallMiddleware(Func<AppFunc, AppFunc> appFuncBuilder, MockOwinEnvironment environment)
         {
-            CallMiddleware(middlewareEntryPoint, environment.Environment);
+            BuildAndCallMiddleware(appFuncBuilder, environment.Environment);
         }
     }
 }

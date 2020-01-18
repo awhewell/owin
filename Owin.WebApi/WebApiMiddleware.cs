@@ -72,7 +72,9 @@ namespace AWhewell.Owin.WebApi
             return async(IDictionary<string, object> environment) =>
             {
                 var route = routeMapper.FindRouteForRequest(environment);
-                if(route != null) {
+                if(route == null) {
+                    await next(environment);
+                } else {
                     environment[WebApiEnvironmentKey.Route] = route;
                     if(routeFilter.CanCallRoute(route, environment)) {
                         var parameters = routeMapper.BuildRouteParameters(route, environment);
@@ -94,8 +96,6 @@ namespace AWhewell.Owin.WebApi
                         }
                     }
                 }
-
-                await next(environment);
             };
         }
     }

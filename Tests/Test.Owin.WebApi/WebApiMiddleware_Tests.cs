@@ -95,19 +95,12 @@ namespace Test.AWhewell.Owin.WebApi
             Factory.RestoreSnapshot(_Snapshot);
         }
 
-        private void CallMiddleware() => _Pipeline.CallMiddleware(_WebApi.AppFuncBuilder, _Environment.Environment);
+        private void CallMiddleware() => _Pipeline.BuildAndCallMiddleware(_WebApi.AppFuncBuilder, _Environment.Environment);
 
         [TestMethod]
         public void Ctor_Initialises_Default_Parsers()
         {
             Assert.AreEqual(0, _WebApi.DefaultParsers.Count);
-        }
-
-        [TestMethod]
-        public void Middleware_Calls_Next_Delegate()
-        {
-            CallMiddleware();
-            Assert.IsTrue(_Pipeline.NextMiddlewareCalled);
         }
 
         [TestMethod]
@@ -188,19 +181,33 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void Middleware_Finds_Route_From_Request()
         {
-            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
-
-            MockMiddleware.Call(middleware, _Environment.Environment);
+            _Pipeline.BuildAndCallMiddleware(_WebApi.AppFuncBuilder, _Environment.Environment);
 
             _RouteMapper.Verify(r => r.FindRouteForRequest(_Environment.Environment), Times.Once());
         }
 
         [TestMethod]
+        public void Middleware_Chains_To_Next_Middleware_If_Route_Not_Found()
+        {
+            _RouteMapper.Setup(r => r.FindRouteForRequest(_Environment.Environment)).Returns(() => null);
+
+            _Pipeline.BuildAndCallMiddleware(_WebApi.AppFuncBuilder, _Environment.Environment);
+
+            Assert.IsTrue(_Pipeline.NextMiddlewareCalled);
+        }
+
+        [TestMethod]
+        public void Middleware_Does_Not_Chain_To_Next_Middleware_If_Route_Found()
+        {
+            _Pipeline.BuildAndCallMiddleware(_WebApi.AppFuncBuilder, _Environment.Environment);
+
+            Assert.IsFalse(_Pipeline.NextMiddlewareCalled);
+        }
+
+        [TestMethod]
         public void Middleware_Calls_Route_Filter_With_Found_Route()
         {
-            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
-
-            MockMiddleware.Call(middleware, _Environment.Environment);
+            _Pipeline.BuildAndCallMiddleware(_WebApi.AppFuncBuilder, _Environment.Environment);
 
             _RouteFilter.Verify(r => r.CanCallRoute(_FoundRoute, _Environment.Environment), Times.Once());
         }
@@ -208,9 +215,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void Middleware_Gets_Parameters_For_Route()
         {
-            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
-
-            MockMiddleware.Call(middleware, _Environment.Environment);
+            _Pipeline.BuildAndCallMiddleware(_WebApi.AppFuncBuilder, _Environment.Environment);
 
             _RouteMapper.Verify(r => r.BuildRouteParameters(_FoundRoute, _Environment.Environment), Times.Once());
         }
@@ -219,9 +224,8 @@ namespace Test.AWhewell.Owin.WebApi
         public void Middleware_Does_Not_Build_Route_Parameters_If_Route_Not_Found()
         {
             _FoundRoute = null;
-            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
 
-            MockMiddleware.Call(middleware, _Environment.Environment);
+            _Pipeline.BuildAndCallMiddleware(_WebApi.AppFuncBuilder, _Environment.Environment);
 
             _RouteMapper.Verify(r => r.BuildRouteParameters(_FoundRoute, _Environment.Environment), Times.Never());
         }
@@ -230,9 +234,8 @@ namespace Test.AWhewell.Owin.WebApi
         public void Middleware_Does_Not_Build_Route_Parameters_If_Route_Fails_Filter()
         {
             _RouteFilter_CanCallRoute = false;
-            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
 
-            MockMiddleware.Call(middleware, _Environment.Environment);
+            _Pipeline.BuildAndCallMiddleware(_WebApi.AppFuncBuilder, _Environment.Environment);
 
             _RouteMapper.Verify(r => r.BuildRouteParameters(_FoundRoute, _Environment.Environment), Times.Never());
         }
@@ -241,9 +244,8 @@ namespace Test.AWhewell.Owin.WebApi
         public void Middleware_Returns_Status_400_If_Parameters_Could_Not_Be_Built()
         {
             _RouteParameters = new RouteParameters(new string[] { "Some error message" }, new object[0]);
-            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
 
-            MockMiddleware.Call(middleware, _Environment.Environment);
+            _Pipeline.BuildAndCallMiddleware(_WebApi.AppFuncBuilder, _Environment.Environment);
 
             Assert.AreEqual(400, _Environment.ResponseStatusCode);
             _RouteCaller.Verify(r => r.CallRoute(It.IsAny<IDictionary<string, object>>(), It.IsAny<Route>(), It.IsAny<RouteParameters>()), Times.Never());
@@ -252,9 +254,7 @@ namespace Test.AWhewell.Owin.WebApi
         [TestMethod]
         public void Middleware_Calls_Route_If_Parameters_Could_Be_Built()
         {
-            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
-
-            MockMiddleware.Call(middleware, _Environment.Environment);
+            _Pipeline.BuildAndCallMiddleware(_WebApi.AppFuncBuilder, _Environment.Environment);
 
             _RouteCaller.Verify(r => r.CallRoute(_Environment.Environment, _FoundRoute, _RouteParameters), Times.Once());
         }
@@ -267,9 +267,8 @@ namespace Test.AWhewell.Owin.WebApi
                 .Callback(() =>
                     filterEnvironmentRoute = _Environment.Environment[WebApiEnvironmentKey.Route]
                  );
-            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
 
-            MockMiddleware.Call(middleware, _Environment.Environment);
+            _Pipeline.BuildAndCallMiddleware(_WebApi.AppFuncBuilder, _Environment.Environment);
 
             Assert.AreSame(_FoundRoute, _Environment.Environment[WebApiEnvironmentKey.Route]);
             Assert.AreSame(_FoundRoute, filterEnvironmentRoute);
@@ -279,9 +278,8 @@ namespace Test.AWhewell.Owin.WebApi
         public void Middleware_Uses_WebApiResponder_To_Return_Route_Result()
         {
             _RouteOutcome = new object();
-            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
 
-            MockMiddleware.Call(middleware, _Environment.Environment);
+            _Pipeline.BuildAndCallMiddleware(_WebApi.AppFuncBuilder, _Environment.Environment);
 
             _Responder.Verify(r => r.ReturnJsonObject(_Environment.Environment, _RouteOutcome), Times.Once());
         }
@@ -301,9 +299,8 @@ namespace Test.AWhewell.Owin.WebApi
         {
             _RouteOutcome = null;
             _FoundRoute = Route_Tests.CreateRoute<Controller>(nameof(Controller.VoidMethod));
-            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
 
-            MockMiddleware.Call(middleware, _Environment.Environment);
+            _Pipeline.BuildAndCallMiddleware(_WebApi.AppFuncBuilder, _Environment.Environment);
 
             _Responder.Verify(r => r.ReturnJsonObject(_Environment.Environment, _RouteOutcome), Times.Never());
         }
@@ -321,9 +318,8 @@ namespace Test.AWhewell.Owin.WebApi
                     ? nameof(Controller.HasNullStatusCode)
                     : nameof(Controller.DoesNotHaveNullStatusCode)
             );
-            var middleware = _WebApi.AppFuncBuilder(MockMiddleware.StubAppFunc);
 
-            MockMiddleware.Call(middleware, _Environment.Environment);
+            _Pipeline.BuildAndCallMiddleware(_WebApi.AppFuncBuilder, _Environment.Environment);
 
             if(expectResponderCall) {
                 _Responder.Verify(r => r.ReturnJsonObject(_Environment.Environment, _RouteOutcome), Times.Once());
