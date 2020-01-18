@@ -89,7 +89,7 @@ namespace Test.AWhewell.Owin
 
             _Environment.UseStreamManipulatorBuilder(link);
 
-            var chain = _Environment.StreamManipulatorChain.ToArray();
+            var chain = _Environment.StreamManipulatorBuilders.ToArray();
             Assert.AreEqual(1, chain.Length);
             Assert.AreSame(link, chain[0]);
         }
@@ -103,7 +103,7 @@ namespace Test.AWhewell.Owin
             _Environment.UseStreamManipulatorBuilder(link_1);
             _Environment.UseStreamManipulatorBuilder(link_2);
 
-            var chain = _Environment.StreamManipulatorChain.ToArray();
+            var chain = _Environment.StreamManipulatorBuilders.ToArray();
             Assert.AreEqual(2, chain.Length);
             Assert.AreSame(link_1, chain[0]);
             Assert.AreSame(link_2, chain[1]);
@@ -122,7 +122,7 @@ namespace Test.AWhewell.Owin
             Assert.AreEqual(1, middlewareChain.Length);
             Assert.AreSame(link_1, middlewareChain[0]);
 
-            var manipulatorsChain = _Environment.StreamManipulatorChain.ToArray();
+            var manipulatorsChain = _Environment.StreamManipulatorBuilders.ToArray();
             Assert.AreEqual(1, manipulatorsChain.Length);
             Assert.AreSame(link_2, manipulatorsChain[0]);
         }

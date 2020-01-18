@@ -65,7 +65,7 @@ namespace AWhewell.Owin
             }
 
             var streamManipulators = new List<AppFunc>();
-            foreach(var chainLink in buildEnvironment.StreamManipulatorChain) {
+            foreach(var chainLink in buildEnvironment.StreamManipulatorBuilders) {
                 streamManipulators.Add(chainLink.Invoke(ChainTerminatorAppFunc));
             }
             _StreamManipulatorChain = streamManipulators.ToArray();

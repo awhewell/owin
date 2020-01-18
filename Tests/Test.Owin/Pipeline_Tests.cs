@@ -31,7 +31,7 @@ namespace Test.AWhewell.Owin
         private Mock<IPipelineBuilderEnvironment>   _BuilderEnvironment;
         private List<IExceptionLogger>              _ExceptionLoggers;
         private List<Func<AppFunc, AppFunc>>        _MiddlewareBuilders;
-        private List<Func<AppFunc, AppFunc>>        _StreamManipulatorChain;
+        private List<Func<AppFunc, AppFunc>>        _StreamManipulatorBuilders;
         private Dictionary<string, object>          _Environment;
 
         [TestInitialize]
@@ -40,11 +40,11 @@ namespace Test.AWhewell.Owin
             _Snapshot = Factory.TakeSnapshot();
 
             _MiddlewareBuilders = new List<Func<AppFunc, AppFunc>>();
-            _StreamManipulatorChain = new List<Func<AppFunc, AppFunc>>();
+            _StreamManipulatorBuilders = new List<Func<AppFunc, AppFunc>>();
             _ExceptionLoggers = new List<IExceptionLogger>();
             _BuilderEnvironment = MockHelper.FactoryImplementation<IPipelineBuilderEnvironment>();
             _BuilderEnvironment.Setup(r => r.MiddlewareBuilders).Returns(_MiddlewareBuilders);
-            _BuilderEnvironment.Setup(r => r.StreamManipulatorChain).Returns(_StreamManipulatorChain);
+            _BuilderEnvironment.Setup(r => r.StreamManipulatorBuilders).Returns(_StreamManipulatorBuilders);
             _BuilderEnvironment.Setup(r => r.ExceptionLoggers).Returns(_ExceptionLoggers);
 
             _Environment = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
@@ -114,7 +114,7 @@ namespace Test.AWhewell.Owin
         [TestMethod]
         public void HasStreamManipulators_Is_Set_When_Stream_Manipulator_Builders_Are_Added()
         {
-            _StreamManipulatorChain.Add(new MockMiddleware().AppFuncBuilder);
+            _StreamManipulatorBuilders.Add(new MockMiddleware().AppFuncBuilder);
 
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
@@ -330,7 +330,7 @@ namespace Test.AWhewell.Owin
         public void ProcessRequest_Calls_Stream_Manipulators()
         {
             var middleware = new MockMiddleware();
-            _StreamManipulatorChain.Add(middleware.AppFuncBuilder);
+            _StreamManipulatorBuilders.Add(middleware.AppFuncBuilder);
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
             _Pipeline.ProcessRequest(_Environment).Wait();
@@ -351,7 +351,7 @@ namespace Test.AWhewell.Owin
             streamManipulator.Action = () => Assert.AreEqual(1, middleware.AppFuncCallCount);
 
             _MiddlewareBuilders.Add(middleware.AppFuncBuilder);
-            _StreamManipulatorChain.Add(streamManipulator.AppFuncBuilder);
+            _StreamManipulatorBuilders.Add(streamManipulator.AppFuncBuilder);
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
             _Pipeline.ProcessRequest(_Environment).Wait();
@@ -366,8 +366,8 @@ namespace Test.AWhewell.Owin
             var middleware_1 = new MockMiddleware() { ChainToNextAppFunc = false, };
             var middleware_2 = new MockMiddleware();
 
-            _StreamManipulatorChain.Add(middleware_1.AppFuncBuilder);
-            _StreamManipulatorChain.Add(middleware_2.AppFuncBuilder);
+            _StreamManipulatorBuilders.Add(middleware_1.AppFuncBuilder);
+            _StreamManipulatorBuilders.Add(middleware_2.AppFuncBuilder);
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
             _Pipeline.ProcessRequest(_Environment).Wait();
@@ -385,7 +385,7 @@ namespace Test.AWhewell.Owin
 
             _MiddlewareBuilders.Add(middleware_1.AppFuncBuilder);
             _MiddlewareBuilders.Add(middleware_2.AppFuncBuilder);
-            _StreamManipulatorChain.Add(streamManipulator.AppFuncBuilder);
+            _StreamManipulatorBuilders.Add(streamManipulator.AppFuncBuilder);
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
             _Pipeline.ProcessRequest(_Environment).Wait();
@@ -410,7 +410,7 @@ namespace Test.AWhewell.Owin
                     pipelineStream.WriteByte(99);
                 };
 
-                _StreamManipulatorChain.Add(middleware.AppFuncBuilder);
+                _StreamManipulatorBuilders.Add(middleware.AppFuncBuilder);
                 _Pipeline.Construct(_BuilderEnvironment.Object);
 
                 _Pipeline.ProcessRequest(_Environment).Wait();
@@ -434,7 +434,7 @@ namespace Test.AWhewell.Owin
                 Assert.IsTrue(pipelineStream == Stream.Null);
             };
 
-            _StreamManipulatorChain.Add(middleware.AppFuncBuilder);
+            _StreamManipulatorBuilders.Add(middleware.AppFuncBuilder);
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
             _Pipeline.ProcessRequest(_Environment).Wait();
@@ -475,7 +475,7 @@ namespace Test.AWhewell.Owin
                     --pipelineStream.Position;
                 };
 
-                _StreamManipulatorChain.Add(middleware.AppFuncBuilder);
+                _StreamManipulatorBuilders.Add(middleware.AppFuncBuilder);
                 _Pipeline.Construct(_BuilderEnvironment.Object);
 
                 _Pipeline.ProcessRequest(_Environment).Wait();
@@ -502,7 +502,7 @@ namespace Test.AWhewell.Owin
                     --pipelineStream.Position;
                 };
 
-                _StreamManipulatorChain.Add(middleware.AppFuncBuilder);
+                _StreamManipulatorBuilders.Add(middleware.AppFuncBuilder);
                 _Pipeline.Construct(_BuilderEnvironment.Object);
 
                 _Pipeline.ProcessRequest(_Environment).Wait();

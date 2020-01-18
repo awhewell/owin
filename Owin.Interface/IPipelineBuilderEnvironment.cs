@@ -37,7 +37,7 @@ namespace AWhewell.Owin.Interface
         /// <summary>
         /// Gets a read-only collection of all stream manipulator middleware builders added via <see cref="UseStreamManipulatorBuilder"/> thus far.
         /// </summary>
-        IReadOnlyList<Func<AppFunc, AppFunc>> StreamManipulatorChain { get; }
+        IReadOnlyList<Func<AppFunc, AppFunc>> StreamManipulatorBuilders { get; }
 
         /// <summary>
         /// Gets a read-only collection of all exception loggers added via <see cref="UseExceptionLogger"/> thus far.

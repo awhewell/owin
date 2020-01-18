@@ -28,17 +28,17 @@ namespace AWhewell.Owin
         /// </summary>
         public OwinDictionary<object> Properties => new OwinDictionary<object>();
 
-        private readonly List<Func<AppFunc, AppFunc>> _MiddlewareChain = new List<Func<AppFunc, AppFunc>>();
+        private readonly List<Func<AppFunc, AppFunc>> _MiddlewareBuilders = new List<Func<AppFunc, AppFunc>>();
         /// <summary>
         /// See interface docs.
         /// </summary>
-        public IReadOnlyList<Func<AppFunc, AppFunc>> MiddlewareBuilders => _MiddlewareChain;
+        public IReadOnlyList<Func<AppFunc, AppFunc>> MiddlewareBuilders => _MiddlewareBuilders;
 
-        private readonly List<Func<AppFunc, AppFunc>> _StreamManipulatorChain = new List<Func<AppFunc, AppFunc>>();
+        private readonly List<Func<AppFunc, AppFunc>> _StreamManipulatorBuilders = new List<Func<AppFunc, AppFunc>>();
         /// <summary>
         /// See interface docs.
         /// </summary>
-        public IReadOnlyList<Func<AppFunc, AppFunc>> StreamManipulatorChain => _StreamManipulatorChain;
+        public IReadOnlyList<Func<AppFunc, AppFunc>> StreamManipulatorBuilders => _StreamManipulatorBuilders;
 
         private readonly List<IExceptionLogger> _ExceptionLoggers = new List<IExceptionLogger>();
         /// <summary>
@@ -49,25 +49,25 @@ namespace AWhewell.Owin
         /// <summary>
         /// See interface docs.
         /// </summary>
-        /// <param name="middleware"></param>
-        public void UseMiddlewareBuilder(Func<AppFunc, AppFunc> middleware)
+        /// <param name="appFuncBuilder"></param>
+        public void UseMiddlewareBuilder(Func<AppFunc, AppFunc> appFuncBuilder)
         {
-            if(middleware == null) {
-                throw new ArgumentNullException(nameof(middleware));
+            if(appFuncBuilder == null) {
+                throw new ArgumentNullException(nameof(appFuncBuilder));
             }
-            _MiddlewareChain.Add(middleware);
+            _MiddlewareBuilders.Add(appFuncBuilder);
         }
 
         /// <summary>
         /// See interface docs.
         /// </summary>
-        /// <param name="middleware"></param>
-        public void UseStreamManipulatorBuilder(Func<AppFunc, AppFunc> middleware)
+        /// <param name="appFuncBuilder"></param>
+        public void UseStreamManipulatorBuilder(Func<AppFunc, AppFunc> appFuncBuilder)
         {
-            if(middleware == null) {
-                throw new ArgumentNullException(nameof(middleware));
+            if(appFuncBuilder == null) {
+                throw new ArgumentNullException(nameof(appFuncBuilder));
             }
-            _StreamManipulatorChain.Add(middleware);
+            _StreamManipulatorBuilders.Add(appFuncBuilder);
         }
 
         /// <summary>
