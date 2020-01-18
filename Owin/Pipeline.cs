@@ -33,6 +33,10 @@ namespace AWhewell.Owin
         // An array of stream manipulator functions. Unlike middleware these do not chain on to each other.
         private AppFunc[] _StreamManipulators;
 
+        // Exception logging options copied from pipeline builder
+        private bool _LogExceptions;
+        private bool _SwallowLoggedExceptions;
+
         private IExceptionLogger[] _ExceptionLoggers;
         /// <summary>
         /// See interface docs.
@@ -69,6 +73,9 @@ namespace AWhewell.Owin
                 streamManipulators.Add(appFuncBuilder(ChainTerminatorAppFunc));
             }
             _StreamManipulators = streamManipulators.ToArray();
+
+            _LogExceptions = buildEnvironment.PipelineLogsExceptions && _ExceptionLoggers.Length > 0;
+            _SwallowLoggedExceptions = buildEnvironment.PipelineSwallowsExceptions;
         }
 
         /// <summary>
@@ -84,6 +91,28 @@ namespace AWhewell.Owin
                 throw new InvalidOperationException($"You cannot call {nameof(ProcessRequest)} before calling {nameof(Construct)}");
             }
 
+            if(!_LogExceptions) {
+                await CallApplicationDelegate(environment);
+            } else {
+                try {
+                    await CallApplicationDelegate(environment);
+                } catch(Exception ex) {
+                    LogException(ex);
+                    if(!_SwallowLoggedExceptions) {
+                        throw;
+                    } else {
+                        try {
+                            environment[EnvironmentKey.ResponseStatusCode] = 500;
+                        } catch(Exception swallowThis) {
+                            LogException(swallowThis);
+                        }
+                    }
+                }
+            }
+        }
+
+        private async Task CallApplicationDelegate(IDictionary<string, object> environment)
+        {
             if(!HasStreamManipulators) {
                 await _MiddlewareApplicationDelegate(environment);
 

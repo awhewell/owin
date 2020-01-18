@@ -39,6 +39,8 @@ namespace Test.AWhewell.Owin
         public void Properties_Defaults_To_Known_State()
         {
             Assert.AreEqual(0, _Environment.Properties.Count);
+            Assert.IsTrue(_Environment.PipelineLogsExceptions);
+            Assert.IsTrue(_Environment.PipelineSwallowsExceptions);
         }
 
         [TestMethod]

@@ -547,27 +547,63 @@ namespace Test.AWhewell.Owin
         }
 
         [TestMethod]
-        public void ProcessRequest_Does_Not_Log_Exceptions()
+        [DataRow(false, false,  0,  true,   null)]
+        [DataRow(false, true,   0,  true,   null)]
+        [DataRow(true,  false,  1,  true,   null)]
+        [DataRow(true,  true,   1,  false,  500)]
+        public void ProcessRequest_Deals_With_Exceptions_In_Accordance_With_Builder_Flags(bool exceptionLoggingRequested, bool exceptionSwallowingRequested, int expectedLoggerCallCount, bool expectedSeenException, int? expectedStatusCode)
         {
+            _BuilderEnvironment.Object.PipelineLogsExceptions =     exceptionLoggingRequested;
+            _BuilderEnvironment.Object.PipelineSwallowsExceptions = exceptionSwallowingRequested;
             var logger = SetupExceptionLogger();
-
             var middleware = new MockMiddleware();
             var exception = new InvalidOperationException();
             middleware.Action = () => throw exception;
             _MiddlewareBuilders.Add(middleware.AppFuncBuilder);
-
             _Pipeline.Construct(_BuilderEnvironment.Object);
 
             var seenException = false;
+            int? statusCode = null;
             try {
                 _Pipeline.ProcessRequest(_Environment).Wait();
             } catch(AggregateException ex) {
                 Assert.AreEqual(1, ex.InnerExceptions.Count);
                 seenException = Object.ReferenceEquals(ex.InnerException, exception);
             }
+            if(_Environment.ContainsKey(EnvironmentKey.ResponseStatusCode)) {
+                statusCode = (int)_Environment[EnvironmentKey.ResponseStatusCode];
+            }
 
-            Assert.AreEqual(0, logger.CallCount);
-            Assert.IsTrue(seenException);
+            Assert.AreEqual(expectedLoggerCallCount, logger.CallCount);
+            Assert.AreEqual(expectedSeenException, seenException);
+            Assert.AreEqual(expectedStatusCode, statusCode);
+        }
+
+        [TestMethod]
+        public void ProcessRequest_Log_Exceptions_Has_No_Effect_If_No_Logger_Registered()
+        {
+            _BuilderEnvironment.Object.PipelineLogsExceptions = true;
+            _BuilderEnvironment.Object.PipelineSwallowsExceptions = true;
+            var middleware = new MockMiddleware();
+            var exception = new InvalidOperationException();
+            middleware.Action = () => throw exception;
+            _MiddlewareBuilders.Add(middleware.AppFuncBuilder);
+            _Pipeline.Construct(_BuilderEnvironment.Object);
+
+            var seenException = false;
+            int? statusCode = null;
+            try {
+                _Pipeline.ProcessRequest(_Environment).Wait();
+            } catch(AggregateException ex) {
+                Assert.AreEqual(1, ex.InnerExceptions.Count);
+                seenException = Object.ReferenceEquals(ex.InnerException, exception);
+            }
+            if(_Environment.ContainsKey(EnvironmentKey.ResponseStatusCode)) {
+                statusCode = (int)_Environment[EnvironmentKey.ResponseStatusCode];
+            }
+
+            Assert.AreEqual(true, seenException);
+            Assert.AreEqual(null, statusCode);
         }
     }
 }

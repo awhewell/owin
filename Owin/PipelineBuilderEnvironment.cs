@@ -28,6 +28,17 @@ namespace AWhewell.Owin
         /// </summary>
         public OwinDictionary<object> Properties => new OwinDictionary<object>();
 
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        public bool PipelineLogsExceptions { get; set; } = true;
+
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        public bool PipelineSwallowsExceptions { get; set; } = true;
+
+
         private readonly List<Func<AppFunc, AppFunc>> _MiddlewareBuilders = new List<Func<AppFunc, AppFunc>>();
         /// <summary>
         /// See interface docs.

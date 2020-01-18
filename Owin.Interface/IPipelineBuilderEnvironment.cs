@@ -30,6 +30,29 @@ namespace AWhewell.Owin.Interface
         OwinDictionary<object> Properties { get; }
 
         /// <summary>
+        /// Gets or sets a value indicating that the pipeline will log exceptions in <see
+        /// cref="IPipeline.ProcessRequest"/>. Defaults to true.
+        /// </summary>
+        /// <remarks>
+        /// It is expected that hosts will set or clear this flag depending on whether they want to deal with
+        /// exceptions or not. AppFunc builders should expect that any value they set here will be overridden
+        /// by the host.
+        /// </remarks>
+        bool PipelineLogsExceptions { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating that the pipeline will swallow exceptions and - if possible - set
+        /// a status of 500 after logging exceptions. Defaults to true but only has an effect if <see
+        /// cref="PipelineLogsExceptions"/> is true.
+        /// </summary>
+        /// <remarks>
+        /// It is expected that hosts will set or clear this flag depending on whether they want to deal with
+        /// exceptions or not. AppFunc builders should expect that any value they set here will be overridden
+        /// by the host.
+        /// </remarks>
+        bool PipelineSwallowsExceptions { get; set; }
+
+        /// <summary>
         /// Gets a read-only collection of all middleware builders added via <see cref="UseMiddlewareBuilder"/> thus far.
         /// </summary>
         IReadOnlyList<Func<AppFunc, AppFunc>> MiddlewareBuilders { get; }
