@@ -187,14 +187,14 @@ namespace Test.AWhewell.Owin
         }
 
         [TestMethod]
-        public void LogException_Does_Nothing_If_No_Loggers_Registered()
+        public void LogException_No_Url_Does_Nothing_If_No_Loggers_Registered()
         {
             _Pipeline.Construct(_BuilderEnvironment.Object);
             _Pipeline.LogException(new InvalidOperationException());
         }
 
         [TestMethod]
-        public void LogException_Does_Nothing_If_Construct_Never_Called()
+        public void LogException_No_Url_Does_Nothing_If_Construct_Never_Called()
         {
             var logger = SetupExceptionLogger();
             _Pipeline.LogException(new InvalidOperationException());
@@ -203,7 +203,7 @@ namespace Test.AWhewell.Owin
         }
 
         [TestMethod]
-        public void LogException_Does_Nothing_If_Passed_Null()
+        public void LogException_No_Url_Does_Nothing_If_Passed_Null()
         {
             var logger = SetupExceptionLogger();
             _Pipeline.Construct(_BuilderEnvironment.Object);
@@ -211,6 +211,44 @@ namespace Test.AWhewell.Owin
             _Pipeline.LogException(null);
 
             Assert.AreEqual(0, logger.CallCount);
+        }
+
+        [TestMethod]
+        public void LogException_With_Url_Does_Nothing_If_No_Loggers_Registered()
+        {
+            _Pipeline.Construct(_BuilderEnvironment.Object);
+            _Pipeline.LogException("url", new InvalidOperationException());
+        }
+
+        [TestMethod]
+        public void LogException_With_Url_Does_Nothing_If_Construct_Never_Called()
+        {
+            var logger = SetupExceptionLogger();
+            _Pipeline.LogException("url", new InvalidOperationException());
+
+            Assert.AreEqual(0, logger.CallCount);
+        }
+
+        [TestMethod]
+        public void LogException_With_Url_Does_Nothing_If_Passed_Null_Exception()
+        {
+            var logger = SetupExceptionLogger();
+            _Pipeline.Construct(_BuilderEnvironment.Object);
+
+            _Pipeline.LogException("not null", null);
+
+            Assert.AreEqual(0, logger.CallCount);
+        }
+
+        [TestMethod]
+        public void LogException_With_Url_Logs_Exception_Even_If_Url_Is_Null()
+        {
+            var logger = SetupExceptionLogger();
+            _Pipeline.Construct(_BuilderEnvironment.Object);
+
+            _Pipeline.LogException(null, new InvalidOperationException());
+
+            Assert.AreEqual(1, logger.CallCount);
         }
 
         [TestMethod]
@@ -604,6 +642,28 @@ namespace Test.AWhewell.Owin
 
             Assert.AreEqual(true, seenException);
             Assert.AreEqual(null, statusCode);
+        }
+
+        [TestMethod]
+        public void ProcessRequest_Exception_Logging_Tries_To_Pass_Request_Url_To_Logger()
+        {
+            var logger = SetupExceptionLogger();
+            _BuilderEnvironment.Object.PipelineLogsExceptions = true;
+            _BuilderEnvironment.Object.PipelineSwallowsExceptions = true;
+            var middleware = new MockMiddleware();
+            var exception = new InvalidOperationException();
+            middleware.Action = () => throw exception;
+            _MiddlewareBuilders.Add(middleware.AppFuncBuilder);
+            _Pipeline.Construct(_BuilderEnvironment.Object);
+
+            _Environment[EnvironmentKey.RequestPathBase]    = "/root";
+            _Environment[EnvironmentKey.RequestPath]        = "/path/to/file";
+            _Environment[EnvironmentKey.RequestQueryString] = "a=1&b=c%20d";
+
+            _Pipeline.ProcessRequest(_Environment).Wait();
+
+            Assert.AreEqual(1, logger.RequestUrls.Count);
+            Assert.AreEqual("/root/path/to/file?a=1&b=c%20d", logger.RequestUrls[0]);
         }
     }
 }

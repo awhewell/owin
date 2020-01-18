@@ -26,12 +26,20 @@ namespace Test.AWhewell.Owin
 
         public List<Exception> Exceptions { get; } = new List<Exception>();
 
+        public List<string> RequestUrls { get; } = new List<string>();
+
         public Exception LastExceptionLogged => Exceptions.Count == 0 ? null : Exceptions[Exceptions.Count - 1];
 
         public void LogException(Exception ex)
         {
             Exceptions.Add(ex);
             LogExceptionCallback?.Invoke(ex);
+        }
+
+        public void LogException(string requestUrl, Exception ex)
+        {
+            RequestUrls.Add(requestUrl);
+            LogException(ex);
         }
 
         public void Reset()

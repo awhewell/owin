@@ -244,7 +244,7 @@ namespace AWhewell.Owin.Host.HttpListener
                     try {
                         ProcessRequest(context);
                     } catch(Exception ex) {
-                        _Pipeline.LogException(ex);
+                        _Pipeline.LogException(context?.Request?.RawUrl, ex);
                     }
 
                     try {

@@ -14,6 +14,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using AWhewell.Owin.Interface;
 using AWhewell.Owin.Utility;
@@ -97,7 +98,9 @@ namespace AWhewell.Owin
                 try {
                     await CallApplicationDelegate(environment);
                 } catch(Exception ex) {
-                    LogException(ex);
+                    var url = ExtractUrlFromUncertainEnvironment(environment);
+                    LogException(url, ex);
+
                     if(!_SwallowLoggedExceptions) {
                         throw;
                     } else {
@@ -109,6 +112,21 @@ namespace AWhewell.Owin
                     }
                 }
             }
+        }
+
+        private string ExtractUrlFromUncertainEnvironment(IDictionary<string, object> environment)
+        {
+            var result = String.Empty;
+
+            if(environment != null) {
+                result = OwinPath.ConstructUrlFromRoot(
+                    (environment.ContainsKey(EnvironmentKey.RequestPathBase)    ? environment[EnvironmentKey.RequestPathBase] as string     : null) ?? "",
+                    (environment.ContainsKey(EnvironmentKey.RequestPath)        ? environment[EnvironmentKey.RequestPath] as string         : null) ?? "",
+                    (environment.ContainsKey(EnvironmentKey.RequestQueryString) ? environment[EnvironmentKey.RequestQueryString] as string  : null) ?? ""
+                );
+            }
+
+            return result;
         }
 
         private async Task CallApplicationDelegate(IDictionary<string, object> environment)
@@ -185,12 +203,25 @@ namespace AWhewell.Owin
         /// See interface docs.
         /// </summary>
         /// <param name="ex"></param>
-        public void LogException(Exception ex)
+        public void LogException(Exception ex) => LogExceptionInternal(null, ex);
+
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        /// <param name="requestUrl"></param>
+        /// <param name="ex"></param>
+        public void LogException(string requestUrl, Exception ex) => LogExceptionInternal(requestUrl, ex);
+
+        private void LogExceptionInternal(string requestUrl, Exception ex)
         {
             if(ex != null && _ExceptionLoggers != null) {
                 foreach(var logger in _ExceptionLoggers) {
                     try {
-                        logger.LogException(ex);
+                        if(String.IsNullOrEmpty(requestUrl)) {
+                            logger.LogException(ex);
+                        } else {
+                            logger.LogException(requestUrl, ex);
+                        }
                     } catch {
                         ; // Exceptions within the log exception methods are documented as swallowed
                     }

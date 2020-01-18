@@ -402,7 +402,7 @@ namespace Test.AWhewell.Owin.Host.HttpListener
 
             InitialiseAndStart();
 
-            _Pipeline.Verify(r => r.LogException(exception), Times.Once());
+            _Pipeline.Verify(r => r.LogException(It.IsAny<string>(), exception), Times.Once());
         }
 
         [TestMethod]
@@ -460,10 +460,11 @@ namespace Test.AWhewell.Owin.Host.HttpListener
         {
             var exception = new InvalidOperationException();
             _Pipeline.Setup(r => r.ProcessRequest(It.IsAny<IDictionary<string, object>>())).Callback(() => throw exception);
+            _HttpListener.MockContext.MockRequest.SetUrl("/root/path/file?query=1");
 
             InitialiseAndStart();
 
-            _Pipeline.Verify(r => r.LogException(exception), Times.Once());
+            _Pipeline.Verify(r => r.LogException("/root/path/file?query=1", exception), Times.Once());
         }
 
         [TestMethod]

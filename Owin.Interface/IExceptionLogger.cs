@@ -23,5 +23,12 @@ namespace AWhewell.Owin.Interface
         /// </summary>
         /// <param name="ex"></param>
         void LogException(Exception ex);
+
+        /// <summary>
+        /// Called with the details of an exception that needs logging when the request URL is known.
+        /// </summary>
+        /// <param name="requestUrl"></param>
+        /// <param name="ex"></param>
+        void LogException(string requestUrl, Exception ex);
     }
 }

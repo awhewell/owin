@@ -52,5 +52,16 @@ namespace AWhewell.Owin.Interface
         /// Exceptions thrown by a logger do not bubble out of this method.
         /// </remarks>
         void LogException(Exception ex);
+
+        /// <summary>
+        /// Logs an exception when the request URL is known.
+        /// </summary>
+        /// <param name="requestUrl"></param>
+        /// <param name="ex"></param>
+        /// <remarks>
+        /// Each logger is guaranteed to be called even if previous loggers themselves threw exceptions.
+        /// Exceptions thrown by a logger do not bubble out of this method.
+        /// </remarks>
+        void LogException(string requestUrl, Exception ex);
     }
 }
