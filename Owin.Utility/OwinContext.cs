@@ -291,8 +291,8 @@ namespace AWhewell.Owin.Utility
         /// </summary>
         public IPrincipal RequestPrincipal
         {
-            get => Environment[CustomEnvironmentKey.Principal] as IPrincipal;
-            set => SetIfInitialisingOrNoChange(RequestPrincipal, value, CustomEnvironmentKey.Principal, "There is already a value set for RequestPrincipal");
+            get => Environment[EnvironmentKey.ServerUser] as IPrincipal;
+            set => SetIfInitialisingOrNoChange(RequestPrincipal, value, EnvironmentKey.ServerUser, "There is already a value set for RequestPrincipal");
         }
 
         /// <summary>

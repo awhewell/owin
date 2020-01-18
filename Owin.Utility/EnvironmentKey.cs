@@ -43,6 +43,7 @@ namespace AWhewell.Owin.Utility
         public const string ServerLocalPort =       "server.LocalPort";         // [Optional] The local port that the request was received on, E.G. 80, as a string.
         public const string ServerRemoteIpAddress = "server.RemoteIpAddress";   // [Optional] The IP Address of the remote client, E.G. 192.168.1.1 or ::1, as a string.
         public const string ServerRemotePort =      "server.RemotePort";        // [Optional] The port that the remote client is taking replies on, E.G. 1234, as a string.
+        public const string ServerUser =            "server.User";              // [Optional] The System.Security.Principal.IPrincipal that the request is running under or null if the request is anonymous.
         public const string SslClientCertificate =  "ssl.ClientCertificate";    // [Optional] Client certificate presented to server in HTTPS connections as an X509Certificate.
     }
 }

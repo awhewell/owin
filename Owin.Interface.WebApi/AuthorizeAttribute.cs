@@ -68,7 +68,7 @@ namespace AWhewell.Owin.Interface.WebApi
         /// <returns></returns>
         public bool AllowRequest(IDictionary<string, object> owinEnvironment)
         {
-            var principal = owinEnvironment[CustomEnvironmentKey.Principal] as IPrincipal;
+            var principal = owinEnvironment[EnvironmentKey.ServerUser] as IPrincipal;
             var result = principal?.Identity?.IsAuthenticated ?? false;
             if(result) {
                 if(_Users.Length > 0) {

@@ -281,7 +281,7 @@ namespace Test.AWhewell.Owin
         /// <param name="roles"></param>
         public void SetRequestPrincipal(string userName, string authType, params string[] roles)
         {
-            Environment[CustomEnvironmentKey.Principal] = new GenericPrincipal(
+            Environment[EnvironmentKey.ServerUser] = new GenericPrincipal(
                 new GenericIdentity(userName, authType),
                 roles
             );
@@ -293,7 +293,7 @@ namespace Test.AWhewell.Owin
         /// <param name="principal"></param>
         public void SetRequestPrincipal(IPrincipal principal)
         {
-            Environment[CustomEnvironmentKey.Principal] = principal;
+            Environment[EnvironmentKey.ServerUser] = principal;
         }
 
         /// <summary>

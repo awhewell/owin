@@ -31,7 +31,7 @@ namespace AWhewell.Owin.WebApi
         {
             var result = true;
 
-            var isAnonymous = (owinEnvironment[CustomEnvironmentKey.Principal] as IPrincipal) == null;
+            var isAnonymous = (owinEnvironment[EnvironmentKey.ServerUser] as IPrincipal) == null;
             if(!isAnonymous || !route.HasAllowAnonymousAttribute) {
                 for(var i = 0;result && i < route.AuthorizationFilters.Length;++i) {
                     result = route.AuthorizationFilters[i].AllowRequest(owinEnvironment);

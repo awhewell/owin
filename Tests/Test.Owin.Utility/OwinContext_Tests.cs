@@ -516,7 +516,7 @@ namespace Test.AWhewell.Owin.Utility
             // Can overwrite principal when it's null
             _Context.RequestPrincipal = user;
             Assert.AreSame(user, _Context.RequestPrincipal);
-            Assert.AreSame(user, _Environment[CustomEnvironmentKey.Principal]);
+            Assert.AreSame(user, _Environment[EnvironmentKey.ServerUser]);
 
             // Can overwrite principal when it's the same value
             _Context.RequestPrincipal = user;
