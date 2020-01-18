@@ -86,6 +86,10 @@ namespace AWhewell.Owin
 
             if(!HasStreamManipulators) {
                 await _MiddlewareApplicationDelegate(environment);
+
+                if(!environment.ContainsKey(EnvironmentKey.ResponseStatusCode)) {
+                    environment[EnvironmentKey.ResponseStatusCode] = 200;
+                }
             } else {
                 environment.TryGetValue(EnvironmentKey.ResponseBody, out var originalResponseBodyObj);
                 var originalResponseBody = originalResponseBodyObj as Stream;
@@ -96,6 +100,10 @@ namespace AWhewell.Owin
 
                 try {
                     await _MiddlewareApplicationDelegate(environment);
+
+                    if(!environment.ContainsKey(EnvironmentKey.ResponseStatusCode)) {
+                        environment[EnvironmentKey.ResponseStatusCode] = 200;
+                    }
 
                     foreach(var streamManipulatorAppFunc in _StreamManipulators) {
                         await streamManipulatorAppFunc(environment);

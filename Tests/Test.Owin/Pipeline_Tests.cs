@@ -260,6 +260,40 @@ namespace Test.AWhewell.Owin
         }
 
         [TestMethod]
+        public void ProcessRequest_Sets_Status_200_If_Pipeline_Finishes_Early_Without_Setting_Status_And_Without_Stream_Manipulators()
+        {
+            var middleware = new MockMiddleware {
+                ChainToNextAppFunc = false
+            };
+            _MiddlewareBuilders.Add(middleware.AppFuncBuilder);
+            _Pipeline.Construct(_BuilderEnvironment.Object);
+
+            _Pipeline.ProcessRequest(_Environment).Wait();
+
+            Assert.AreEqual(200, (int)_Environment[EnvironmentKey.ResponseStatusCode]);
+        }
+
+        [TestMethod]
+        public void ProcessRequest_Sets_Status_200_If_Pipeline_Finishes_Early_Without_Setting_Status_And_Before_Calling_Stream_Manipulators()
+        {
+            var middleware = new MockMiddleware {
+                ChainToNextAppFunc = false
+            };
+            _MiddlewareBuilders.Add(middleware.AppFuncBuilder);
+            var streamManipulator = new MockMiddleware {
+                Action = () => {
+                    Assert.IsTrue(_Environment.ContainsKey(EnvironmentKey.ResponseStatusCode));
+                },
+            };
+            _StreamManipulatorBuilders.Add(streamManipulator.AppFuncBuilder);
+            _Pipeline.Construct(_BuilderEnvironment.Object);
+
+            _Pipeline.ProcessRequest(_Environment).Wait();
+
+            Assert.AreEqual(200, (int)_Environment[EnvironmentKey.ResponseStatusCode]);
+        }
+
+        [TestMethod]
         public void ProcessRequest_Calls_Middleware()
         {
             var middleware = new MockMiddleware();
