@@ -42,7 +42,7 @@ of the functions passed to ````UseMiddlewareBuilder```` to produce a chain of ta
 chain will become the OWIN specification's *Application Delegate* and will be called with
 each request that comes in.
 
-````
+```csharp
 public static class Program
 {
     public static void Main()
