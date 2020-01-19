@@ -1,6 +1,20 @@
 # Owin
-An OWIN server for Virtual Radar Server version 3. The server targets
-.NET Framework 4.6.1, Mono and DotNET Core 3+.
+An OWIN server and Web API library for .NET Framework 4.6.1+, Mono and DotNET Core 3+.
+
+## Why?
+
+This project came about because Microsoft's OWIN library only targets .NET Framework and I had
+a need for an OWIN library and Web API framework that targets both .NET Framework and DotNET Core.
+The .NET Framework build also had to be capable of running under Mono.
+
+I considered using Microsoft's OWIN under the .NET Framework / Mono and DotNet Core's web pages
+under DotNET Core. However, I think that would have got messy, especially considering that both
+web API schemes involve base classes for the controllers. Those base classes would be hard to hide
+from things that are using the abstraction.
+
+I did consider using Nancy. However, Nancy does not support weak wildcards when configuring HTTP.SYS
+profiles and there was no appetite to add support for them.
+
 
 ## Packages
 * **AWhewell.Owin**: An OWIN compliant server.
@@ -11,18 +25,48 @@ An OWIN server for Virtual Radar Server version 3. The server targets
 
 ## Interfaces
 
-The packages (with the exception of **Owin.Utility**) use the same class factory that
-Virtual Radar Server uses to break everything up into interfaces and then register and
-obtain implementations of those interfaces.
+With the exception of **Owin.Utility**, which is intended to be agnostic to the OWIN implementation
+that it is used with, the packages make extensive use of interfaces. The program does not
+instantiate classes directly, instead they use a class factory to create instances of interfaces.
 
-See https://github.com/awhewell/interface-factory for more details.
+The OWIN library was written for use with [Virtual Radar Server](https://github.com/vradarserver/vrs)
+so it uses the same class factory that VRS uses. See the repository for more details:
+
+https://github.com/awhewell/interface-factory
+
+#### Initialisation
+
+You need to initialise the Owin library on startup:
+
+````
+using InterfaceFactory;
+...
+AWhewell.Owin.Implementations.Register(Factory.Singleton);
+````
+
+Each package, except Owin.Utility, has its own Implementations class that needs to be initialised with
+````Factory.Singleton````.
+
+#### Creating an instance of an interface
+
+````
+var pipelineBuilder = Factory.Resolve<IPipelineBuilder>();
+pipelineBuilder.RegisterCallback(... etc. ...);
+````
+
+
 
 ## Building the Pipeline
 
 Virtual Radar Server has a plugin architecture. Plugins are loaded at runtime. They must
 be able to add middlware freely to the OWIN pipeline.
 
-To facilitate this the library has a two-step process to create a pipeline:
+One of the issues that VRS faced with the Microsoft OWIN pipeline is that it needed middleware
+to be added in the order that it appeared in the pipeline. That is hard to do with plugins
+
+This library takes a different approach to Microsoft. The intention is to support the registration
+of pipeline middleware in any order. This support involves associating a priority with each bit of
+middleware.
 
 1. At program startup the main program and all plugins register callbacks with `IPipelineBuilder`.
 
@@ -31,14 +75,14 @@ To facilitate this the library has a two-step process to create a pipeline:
    sharing of a single builder instance.
 
    Each callback registered with the builder is assigned a priority. It is up to the program and
-   the plugins to decide on how priorities are assigned.
+   the plugins to decide how priorities are assigned.
 
 2. Whenever a pipeline needs to be built the program should call `CreatePipeline` on the builder,
    passing into it a new instance of an `IPipelineBuilderEnvironment`.
 
    The builder will call each callback in ascending order of priority. Each callback is passed the
-   pipeline builder environment. The environment has a `UseMiddleware` that can be passed a middleware
-   function.
+   pipeline builder environment. The environment has methods on it to register AppFunc builders in
+   a similar fashion to Microsoft's OWIN library. 
 
    The environment also has a `Properties` dictionary that contains information about the server
    environment, as per section 4 (Application Startup) of the OWIN 1.0.0 spec.
@@ -49,27 +93,38 @@ through the pipeline.
 
 ### Middleware vs. Stream Manipulators
 
-The OWIN spec defines middleware, tasks that are chained together to form the processing pipeline
-for a web request.
+The Microsoft OWIN library breaks middleware into discrete functions that are chained together
+to form the processing pipeline for a web request.
 
-The Owin package adds the concept of stream manipulators. Virtual Radar Server has a requirement
-for tasks that modify the response that middleware creates. The `IPipelineBuilderEnvironment`
-object has a method called `UseStreamManipulator` which tasks a AppFunc middleware function.
-Stream manipulators are identical to middleware in all but two aspects:
+The **Owin** package adds the concept of stream manipulators. Virtual Radar Server has a requirement
+for tasks that modify the response that middleware creates - for example, a task that might compress
+the result if the request asked for compression. These tasks differ from normal middleware in that
+they must not be skippable. Normal middleware will not be called if an earlier middleware function
+decided not to call the next middleware in the chain. That can't happen with stream manipulators,
+they are always called regardless of what happened in the middleware chain.
+
+
+The `IPipelineBuilderEnvironment` object has a method called `UseStreamManipulatorBuilder` which
+creates an AppFunc middleware function. Stream manipulators are identical to middleware in all but
+three aspects:
 
 1. They have their own set of priorities and are always called *after* the middleware chain has
    been called.
 
-2. If a stream manipulator is registered then the `IPipeline` object will replace the response
-   stream with a memory stream. It will copy the content of the memory stream back to the original
-   environment stream once all of the stream manipulators have finished running.
+2. The builder is passed a "next" AppFunc, just like a middleware builder. However, this "next"
+   AppFunc is a stub. It does not matter whether the stream manipulator AppFunc calls it or not,
+   it will not influence whether the other stream manipulators get called.
 
-The switching out of the host's response stream with a memory stream lets stream manipulators work
-with hosts that use a forward-only response stream.
+3. If a stream manipulator is registered then the `IPipeline` implementation will replace the response
+   stream with a memory stream. It will copy the content of the memory stream back to the original
+   response stream once all of the stream manipulators have finished running.
+
+   The switching out of the host's response stream with a memory stream lets stream manipulators work
+   with hosts that use a forward-only response stream.
 
 ## Building and Running the Server
 
-The **Owin** package only deals with building the pipeline and processing the pipeline. It declares an
+The **Owin** package only deals with building and processing the pipeline. It declares an
 interface for hosts (`IHost`) but it does not contain an implementation.
 
 As of time of writing there are two implementations of `IHost`:
@@ -87,8 +142,7 @@ sets up the environment properties, calls the builder to create a pipeline and t
 resulting pipeline to process requests.
 
 This means that pipeline instances are tied to a single instance of a host, they are not shared
-between hosts. Hosts are also free to use different pipeline builders and therefore different
-pipelines.
+between hosts.
 
 `IHost` contains methods to start and stop the server.
 
@@ -101,16 +155,16 @@ Microsoft's Web API is not cross platform. VRS needs a web API that runs unchang
 The **Owin.WebApi** package is similar in operation to Microsoft's Web API 2 but with some notable
 differences:
 
-1. Controllers do not have a base class. Rather they must implement `IApiController`. The interface
+1. Controllers do not have a base class. Instead they must implement `IApiController`. The interface
    only has one property - `OwinEnvironment`, which is an environment dictionary. This always gets
    filled before the route method is called.
 
 2. Public methods on a controller are not automatically exposed as endpoints. You must expose every
-   endpoint with the `Route` attribute. At time of writing the route must be fully pathed but you
-   can have parameters embedded in the route.
+   endpoint with the `Route` attribute. This is more cumbersome than Microsoft's approach but it
+   should make it harder to accidentally expose methods.
 
 3. You can tag static methods as routes. The restriction is that the method must accept an OWIN
-   environment dictionary as a parameter.
+   environment dictionary as one of its parameters.
 
 4. You can tag void methods as routes. The route will have to set up the OWIN environment for itself
    if it wants to return anything, although if it doesn't assign a status code then the API will
@@ -119,9 +173,9 @@ differences:
 ### Adding the Web API to a Pipeline
 
 You must register a callback with the `IPipelineBuilder` that the program is using. The callback
-must instantiate `IWebApiMiddleware`. This interface has a method called `CreateMiddleware`, you
+must instantiate `IWebApiMiddleware`. This interface has a method called `AppFuncBuilder`, you
 call that to obtain a standard OWIN **AppFunc** and then pass that to the builder environment
-function `UseMiddleware`.
+function `UseMiddlewareBuilder`.
 
 The `IWebApiMiddleware` has properties that let you configure the web API's behaviour.
 
@@ -129,7 +183,7 @@ The `IWebApiMiddleware` has properties that let you configure the web API's beha
 
 The web API depends on **Owin.Utility** but neither the web API nor the utility package depend on
 the **Owin** package. You should be able to use the web API with any OWIN environment. You just
-need to arrange for a call to `IWebApiMiddleware.CreateMiddleware` and then add it to the OWIN
+need to arrange for a call to `IWebApiMiddleware.AppFuncBuilder` and then add it to the OWIN
 pipeline as you would any other bit of middleware.
 
 ## Utility
@@ -138,13 +192,3 @@ The **Owin.Utility** package is a set of enums and helper classes that are agnos
 OWIN library in use. You should be able to use them with any OWIN environment.
 
 The library does not use the class factory. It has no dependencies on any other package.
-
-Some of the more useful classes it contains are:
-
-* **OwinContext**: wraps an OWIN environment dictionary and exposes values in a type-safe manner.
-* **OwinDictionary**: the base for all dictionaries exposed by the library. Similar to a normal
-  dictionary except (a) it always has string keys and (b) it returns null when you index with a
-  non-existent key, rather than throwing an exception.
-* **EnvironmentKey**: A collection of const strings representing all standard OWIN keys.
-* **CustomEnvironmentKey**: Custom keys that `OwinContext` adds to the environment.
- 
