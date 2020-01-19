@@ -1,17 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
-    <RootNamespace>AWhewell.Owin.Interface.Host.HttpListener</RootNamespace>
-    <AssemblyName>AWhewell.Owin.Interface.Host.HttpListener</AssemblyName>
-  </PropertyGroup>
+    <Import Project="..\copyright.props" />
+    <Import Project="..\version.props" />
 
-  <ItemGroup>
-    <PackageReference Include="AWhewell.InterfaceFactory" Version="4.0.0" />
-  </ItemGroup>
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+        <RootNamespace>AWhewell.Owin.Interface.Host.HttpListener</RootNamespace>
+        <AssemblyName>AWhewell.Owin.Interface.Host.HttpListener</AssemblyName>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Owin.Interface\Owin.Interface.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="AWhewell.InterfaceFactory" Version="4.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Owin.Interface\Owin.Interface.csproj" />
+    </ItemGroup>
 
 </Project>

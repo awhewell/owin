@@ -1,28 +1,28 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <Import Project="..\..\copyright.props" />
+    <Import Project="..\..\version.props" />
 
-    <IsPackable>false</IsPackable>
+    <PropertyGroup>
+        <TargetFramework>netcoreapp3.0</TargetFramework>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>Test.AWhewell.Owin.WebApi</RootNamespace>
+        <AssemblyName>Test.AWhewell.Owin.WebApi</AssemblyName>
+    </PropertyGroup>
 
-    <RootNamespace>Test.AWhewell.Owin.WebApi</RootNamespace>
+    <ItemGroup>
+        <PackageReference Include="AWhewell.InterfaceFactory" Version="4.0.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
+        <PackageReference Include="Moq" Version="4.13.0" />
+        <PackageReference Include="MSTest.TestAdapter" Version="1.4.0" />
+        <PackageReference Include="MSTest.TestFramework" Version="1.4.0" />
+        <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    </ItemGroup>
 
-    <AssemblyName>Test.AWhewell.Owin.WebApi</AssemblyName>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="AWhewell.InterfaceFactory" Version="4.0.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
-    <PackageReference Include="Moq" Version="4.13.0" />
-    <PackageReference Include="MSTest.TestAdapter" Version="1.4.0" />
-    <PackageReference Include="MSTest.TestFramework" Version="1.4.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\Owin.Interface.WebApi\Owin.Interface.WebApi.csproj" />
-    <ProjectReference Include="..\..\Owin.WebApi\Owin.WebApi.csproj" />
-    <ProjectReference Include="..\Test.Owin\Test.Owin.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Owin.Interface.WebApi\Owin.Interface.WebApi.csproj" />
+        <ProjectReference Include="..\..\Owin.WebApi\Owin.WebApi.csproj" />
+        <ProjectReference Include="..\Test.Owin\Test.Owin.csproj" />
+    </ItemGroup>
 
 </Project>

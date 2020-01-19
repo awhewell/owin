@@ -25,14 +25,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Owin.WebApi", "Tests\T
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6976CC4D-7929-4E37-8EE1-91D7B29B3CC6}"
 	ProjectSection(SolutionItems) = preProject
+		copyright.props = copyright.props
 		README.md = README.md
+		version.props = version.props
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Owin.Utility", "Owin.Utility\Owin.Utility.csproj", "{F83E4238-9CBD-4081-95A3-BF7630C6360F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Owin.Utility", "Tests\Test.Owin.Utility\Test.Owin.Utility.csproj", "{B97795A9-8ED8-4A21-B106-2CE87B2C60F0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Owin.Host.Ram", "Owin.Host.Ram\Owin.Host.Ram.csproj", "{486A914B-9D92-4CE8-84FC-6B6469470846}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Owin.Host.Ram", "Owin.Host.Ram\Owin.Host.Ram.csproj", "{486A914B-9D92-4CE8-84FC-6B6469470846}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Owin.Interface.Host.Ram", "Owin.Interface.Host.Ram\Owin.Interface.Host.Ram.csproj", "{FBE782E0-93B7-4BD2-825A-670AB66601F0}"
 EndProject

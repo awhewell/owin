@@ -1,19 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
-    <RootNamespace>AWhewell.Owin.WebApi</RootNamespace>
-    <AssemblyName>AWhewell.Owin.WebApi</AssemblyName>
-  </PropertyGroup>
+    <Import Project="..\copyright.props" />
+    <Import Project="..\version.props" />
 
-  <ItemGroup>
-    <PackageReference Include="AWhewell.InterfaceFactory" Version="4.0.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-  </ItemGroup>
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+        <RootNamespace>AWhewell.Owin.WebApi</RootNamespace>
+        <AssemblyName>AWhewell.Owin.WebApi</AssemblyName>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Owin.Interface.WebApi\Owin.Interface.WebApi.csproj" />
-    <ProjectReference Include="..\Owin.Utility\Owin.Utility.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="AWhewell.InterfaceFactory" Version="4.0.0" />
+        <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Owin.Interface.WebApi\Owin.Interface.WebApi.csproj" />
+        <ProjectReference Include="..\Owin.Utility\Owin.Utility.csproj" />
+    </ItemGroup>
 
 </Project>
