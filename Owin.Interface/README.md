@@ -45,13 +45,26 @@ each request that comes in.
 ````
 public static class Program
 {
-    static IPipelineBuilder _PipelineBuilder;
-
     public static void Main()
     {
         ...
-        _PipelineBuilder = Factory.Resolve<IPipelineBuilder>();
-        _PipelineBuilder.RegisterCallback(AddPipelineSection, 0);
+        var pipelineBuilder = Factory.Resolve<IPipelineBuilder>();
+        pipelineBuilder.RegisterCallback(AddPipelineSection, 0);
+
+        // Use the HttpListener host - you need to use the Host.HttpListener package
+        // for this and reference the AWhewell.Owin.Interface.Host namespace.
+        using(var host = Factory.Resolve<IHostHttpListener>()) {
+            var pipelineBuilderEnvironment = Factory.Resolve<IPipelineBuilderEnvironment>();
+            host.Initialise(pipeline, pipelineBuilderEnvironment);
+
+            // Add host configuration here...
+
+            host.Start();
+
+            // Add code here to wait for an event signalling program shutdown...
+
+            host.Stop();
+        }
     }
 
     static void AddPipelineSection(IPipelineBuilderEnvironment environment)
