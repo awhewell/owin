@@ -3,17 +3,19 @@ An OWIN server and Web API library for .NET Framework 4.6.1+, Mono and DotNET Co
 
 ## Why?
 
-This project came about because Microsoft's OWIN library only targets .NET Framework and I had
+This project came about because Microsoft's OWIN library only targets .NET Framework, and I had
 a need for an OWIN library and Web API framework that targets both .NET Framework and DotNET Core.
-The .NET Framework build also had to be capable of running under Mono.
+The .NET Framework build had to be capable of running under Mono.
 
 I considered using Microsoft's OWIN under the .NET Framework / Mono and DotNet Core's web pages
-under DotNET Core. However, I think that would have got messy, especially considering that both
-web API schemes involve base classes for the controllers. Those base classes would be hard to hide
-from things that are using the abstraction.
+under DotNET Core. The intention was to write an abstraction layer that would hide the implementation
+details from the rest of the program and behind the scenes it would use the appropriate library for
+the platform that was being built. However I think that would have got messy, especially considering
+that both web API schemes involve base classes for the controllers. Those base classes would be hard
+to hide from things that are using the abstraction.
 
 I did consider using Nancy. However, Nancy does not support weak wildcards when configuring HTTP.SYS
-profiles and there was no appetite to add support for them.
+profiles and there was no appetite to add support for them. I needed weak wildcard support.
 
 
 ## Packages
@@ -27,7 +29,7 @@ profiles and there was no appetite to add support for them.
 
 With the exception of **Owin.Utility**, which is intended to be agnostic to the OWIN implementation
 that it is used with, the packages make extensive use of interfaces. The program does not
-instantiate classes directly, instead they use a class factory to create instances of interfaces.
+instantiate classes directly, instead it uses a class factory to create instances of interfaces.
 
 The OWIN library was written for use with [Virtual Radar Server](https://github.com/vradarserver/vrs)
 so it uses the same class factory that VRS uses. See the repository for more details:
@@ -44,8 +46,8 @@ using InterfaceFactory;
 AWhewell.Owin.Implementations.Register(Factory.Singleton);
 ````
 
-Each package, except Owin.Utility, has its own Implementations class that needs to be initialised with
-````Factory.Singleton````.
+Each package, except Owin.Utility, has its own ````Implementations```` class that needs to be
+initialised with ````Factory.Singleton````.
 
 #### Creating an instance of an interface
 
@@ -59,14 +61,14 @@ pipelineBuilder.RegisterCallback(... etc. ...);
 ## Building the Pipeline
 
 Virtual Radar Server has a plugin architecture. Plugins are loaded at runtime. They must
-be able to add middlware freely to the OWIN pipeline.
+be able to add middleware freely to the OWIN pipeline.
 
 One of the issues that VRS faced with the Microsoft OWIN pipeline is that it needed middleware
-to be added in the order that it appeared in the pipeline. That is hard to do with plugins
+to be added in the same order that it appears in the pipeline. That is hard to arrange when some
+of the middleware is spread across plugins that are not known about until runtime.
 
-This library takes a different approach to Microsoft. The intention is to support the registration
-of pipeline middleware in any order. This support involves associating a priority with each bit of
-middleware.
+The intention with this library is to support the registration of pipeline middleware in any order.
+This support involves associating a priority with each bit of middleware.
 
 1. At program startup the main program and all plugins register callbacks with `IPipelineBuilder`.
 
