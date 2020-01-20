@@ -140,6 +140,12 @@ namespace AWhewell.Owin.Utility
         }
 
         /// <summary>
+        /// Gets the AWhewell.Owin request ID or null if environment being wrapped has not gone
+        /// through an AWhewell.Owin pipeline.
+        /// </summary>
+        public long? RequestID => Environment[CustomEnvironmentKey.RequestID] as long?;
+
+        /// <summary>
         /// Gets the <see cref="RequestMethod"/> parsed into an <see cref="HttpMethod"/>.
         /// </summary>
         public HttpMethod RequestHttpMethod => Parser.ParseHttpMethod(RequestMethod);

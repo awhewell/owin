@@ -875,6 +875,16 @@ namespace Test.AWhewell.Owin.Utility
         }
 
         [TestMethod]
+        public void RequestID_Returns_AWhewell_Owin_Request_ID_Or_Null()
+        {
+            var env = UseEnvironmentWithRequiredFields();
+            Assert.IsNull(_Context.RequestID);
+
+            env.Environment[CustomEnvironmentKey.RequestID] = 21L;
+            Assert.AreEqual(21L, _Context.RequestID);
+        }
+
+        [TestMethod]
         [DataRow("192.168.0.1", null,                   null,           "192.168.0.1",  false)]     // Without an X-Forwarded-For header all requests from the LAN are considered to be local or LAN
         [DataRow("192.168.0.1", "1.2.3.4",              "192.168.0.1",  "1.2.3.4",      true)]      // X-Forwarded-For headers from LAN requests are used (remote client)
         [DataRow("192.168.0.1", "192.168.0.2",          "192.168.0.1",  "192.168.0.2",  false)]     // X-Forwarded-For headers from LAN requests are used (LAN client)

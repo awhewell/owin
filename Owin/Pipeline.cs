@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using AWhewell.Owin.Interface;
 using AWhewell.Owin.Utility;
@@ -28,6 +29,9 @@ namespace AWhewell.Owin
     /// </summary>
     class Pipeline : IPipeline
     {
+        // The static that holds the next unique ID that is assigned to all requests across all pipelines
+        private static long _RequestUniqueID = 1L;
+
         // A reference to the first function in a chain of middleware functions.
         private AppFunc _MiddlewareApplicationDelegate;
 
@@ -91,6 +95,8 @@ namespace AWhewell.Owin
             if(_MiddlewareApplicationDelegate == null) {
                 throw new InvalidOperationException($"You cannot call {nameof(ProcessRequest)} before calling {nameof(Construct)}");
             }
+
+            environment[CustomEnvironmentKey.RequestID] = Interlocked.Increment(ref _RequestUniqueID);
 
             if(!_LogExceptions) {
                 await CallApplicationDelegate(environment);

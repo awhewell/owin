@@ -282,7 +282,6 @@ namespace Test.AWhewell.Owin
 
             _Pipeline.ProcessRequest(_Environment).Wait();
 
-            Assert.AreEqual(1, _Environment.Count);
             Assert.AreEqual(404, (int)_Environment[EnvironmentKey.ResponseStatusCode]);
         }
 
@@ -664,6 +663,31 @@ namespace Test.AWhewell.Owin
 
             Assert.AreEqual(1, logger.RequestUrls.Count);
             Assert.AreEqual("/root/path/to/file?a=1&b=c%20d", logger.RequestUrls[0]);
+        }
+
+        [TestMethod]
+        public void ProcessRequest_Adds_Custom_Key_With_Unique_ID_For_Request()
+        {
+            var middleware = new MockMiddleware();
+            _MiddlewareBuilders.Add(middleware.AppFuncBuilder);
+            _Pipeline.Construct(_BuilderEnvironment.Object);
+            _Pipeline.ProcessRequest(_Environment).Wait();
+
+            var id1 = (long)_Environment[CustomEnvironmentKey.RequestID];
+
+            TestCleanup();
+            TestInitialise();
+
+            middleware = new MockMiddleware();
+            _MiddlewareBuilders.Add(middleware.AppFuncBuilder);
+            _Pipeline.Construct(_BuilderEnvironment.Object);
+            _Pipeline.ProcessRequest(_Environment).Wait();
+
+            var id2 = (long)_Environment[CustomEnvironmentKey.RequestID];
+
+            Assert.AreNotEqual(0L, id1);
+            Assert.AreNotEqual(0L, id2);
+            Assert.AreNotEqual(id1, id2);
         }
     }
 }

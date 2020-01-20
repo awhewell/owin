@@ -55,6 +55,11 @@ namespace AWhewell.Owin.Utility
         public const string RequestBodyBytesBasis = "awowin.RequestBodyBytesBasis";
 
         /// <summary>
+        /// Value is a long that uniquely identifies the request across all pipelines.
+        /// </summary>
+        public const string RequestID = "aowin.RequestID";
+
+        /// <summary>
         /// Value is a string array resulting from splitting the RequestPath at slashes after ignoring the initial slash.
         /// </summary>
         public const string RequestPathParts = "awowin.RequestPathParts";
