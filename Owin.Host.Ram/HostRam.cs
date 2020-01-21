@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AWhewell.Owin.Interface;
 using AWhewell.Owin.Interface.Host.Ram;
+using AWhewell.Owin.Utility;
 
 namespace AWhewell.Owin.Host.Ram
 {
@@ -55,6 +56,23 @@ namespace AWhewell.Owin.Host.Ram
         /// See interface docs.
         /// </summary>
         public bool IsListening { get; private set; }
+
+        /// <summary>
+        /// See interface docs.
+        /// </summary>
+        public event EventHandler<RequestProcessedEventArgs> RequestProcessed;
+
+        /// <summary>
+        /// Raises <see cref="RequestProcessed"/>.
+        /// </summary>
+        /// <param name="requestID"></param>
+        protected virtual void OnRequestProcessed(long requestID)
+        {
+            if(RequestProcessed != null) {
+                var args = new RequestProcessedEventArgs(requestID);
+                RequestProcessed?.Invoke(this, args);
+            }
+        }
 
         /// <summary>
         /// See interface docs.
@@ -125,6 +143,13 @@ namespace AWhewell.Owin.Host.Ram
             if(IsListening) {
                 BeforeProcessingRequest?.Invoke(environment);
                 _Pipeline.ProcessRequest(environment).Wait();
+
+                if(environment.TryGetValue(CustomEnvironmentKey.RequestID, out object requestIDBoxed)) {
+                    var requestID = requestIDBoxed as long?;
+                    if(requestID != null) {
+                        OnRequestProcessed(requestID.Value);
+                    }
+                }
             }
         }
     }

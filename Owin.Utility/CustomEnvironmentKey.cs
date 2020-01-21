@@ -55,7 +55,10 @@ namespace AWhewell.Owin.Utility
         public const string RequestBodyBytesBasis = "awowin.RequestBodyBytesBasis";
 
         /// <summary>
-        /// Value is a long that uniquely identifies the request across all pipelines.
+        /// Value is a long that uniquely identifies the request. The pipeline initialises this to a value that is unique
+        /// across all instances of all pipelines but the Owin library makes no assumptions about it and places no meaning
+        /// in its value, other than a null value indicates the request has no ID. Pipelines or hosts can replace it with
+        /// their own ID if convenient.
         /// </summary>
         public const string RequestID = "aowin.RequestID";
 

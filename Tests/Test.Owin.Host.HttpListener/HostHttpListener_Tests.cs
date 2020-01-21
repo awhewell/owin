@@ -859,5 +859,34 @@ namespace Test.AWhewell.Owin.Host.HttpListener
 
             _HttpListener.MockContext.MockResponse.Verify(r => r.Dispose(), Times.Once());
         }
+
+        [TestMethod]
+        public void GetContext_RequestProcessed_Raised_After_Pipeline_Disposed()
+        {
+            _Pipeline.Setup(r => r.ProcessRequest(It.IsAny<IDictionary<string, object>>()))
+                .Callback((IDictionary<string, object> env) => env[CustomEnvironmentKey.RequestID] = 123L);
+            var eventRecorder = new EventRecorder<RequestProcessedEventArgs>();
+            eventRecorder.EventRaised += (sender, args) => {
+                Assert.AreSame(_Host, eventRecorder.Sender);
+                Assert.AreEqual(123L, args.RequestID);
+                _HttpListener.MockContext.MockResponse.Verify(r => r.Dispose(), Times.Once());
+            };
+            _Host.RequestProcessed += eventRecorder.Handler;
+
+            InitialiseAndStart();
+
+            Assert.AreEqual(1, eventRecorder.CallCount);
+        }
+
+        [TestMethod]
+        public void GetContext_RequestProcessed_Not_Raised_If_No_ID_Is_Established()
+        {
+            var eventRecorder = new EventRecorder<RequestProcessedEventArgs>();
+            _Host.RequestProcessed += eventRecorder.Handler;
+
+            InitialiseAndStart();
+
+            Assert.AreEqual(0, eventRecorder.CallCount);
+        }
     }
 }

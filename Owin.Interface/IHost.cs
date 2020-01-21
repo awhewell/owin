@@ -33,6 +33,17 @@ namespace AWhewell.Owin.Interface
         bool IsListening { get; }
 
         /// <summary>
+        /// Raised after a request has finished passing through the pipeline and the response has been closed.
+        /// </summary>
+        /// <remarks>
+        /// There are some situations where a request needs to result in a restart of the server, e.g. an API
+        /// that configures the server. The application needs to defer the restart until after it is sure that
+        /// a response has been sent for the request that triggered it. This event is intended to be raised
+        /// after a request has been *completely* processed.
+        /// </remarks>
+        event EventHandler<RequestProcessedEventArgs> RequestProcessed;
+
+        /// <summary>
         /// Initialises the host. At a minimum this should build the pipeline.
         /// </summary>
         /// <param name="builder">The builder that can be used to construct the pipeline for the host.</param>

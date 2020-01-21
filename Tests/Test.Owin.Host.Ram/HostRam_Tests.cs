@@ -197,5 +197,39 @@ namespace Test.AWhewell.Owin.Host.Ram
 
             Assert.IsTrue(actionCalled);
         }
+
+        [TestMethod]
+        public void GetContext_RequestProcessed_Raised_If_ID_Is_Established()
+        {
+            var env = new OwinDictionary<object>();
+            _Pipeline.Setup(r => r.ProcessRequest(It.IsAny<IDictionary<string, object>>()))
+                .Callback(() => env[CustomEnvironmentKey.RequestID] = 123L);
+            var eventRecorder = new EventRecorder<RequestProcessedEventArgs>();
+            eventRecorder.EventRaised += (sender, args) => {
+                Assert.AreSame(_Host, eventRecorder.Sender);
+                Assert.AreEqual(123L, args.RequestID);
+            };
+            _Host.RequestProcessed += eventRecorder.Handler;
+
+            _Host.Initialise(_PipelineBuilder.Object, _PipelineBuilderEnvironment.Object);
+            _Host.Start();
+            _Host.ProcessRequest(env);
+
+            Assert.AreEqual(1, eventRecorder.CallCount);
+        }
+
+        [TestMethod]
+        public void GetContext_RequestProcessed_Not_Raised_If_No_ID_Is_Established()
+        {
+            var env = new OwinDictionary<object>();
+            var eventRecorder = new EventRecorder<RequestProcessedEventArgs>();
+            _Host.RequestProcessed += eventRecorder.Handler;
+
+            _Host.Initialise(_PipelineBuilder.Object, _PipelineBuilderEnvironment.Object);
+            _Host.Start();
+            _Host.ProcessRequest(env);
+
+            Assert.AreEqual(0, eventRecorder.CallCount);
+        }
     }
 }

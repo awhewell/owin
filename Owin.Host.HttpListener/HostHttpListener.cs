@@ -102,6 +102,23 @@ namespace AWhewell.Owin.Host.HttpListener
         public bool IsListening => _HttpListener.IsListening;
 
         /// <summary>
+        /// See interface docs.
+        /// </summary>
+        public event EventHandler<RequestProcessedEventArgs> RequestProcessed;
+
+        /// <summary>
+        /// Raises <see cref="RequestProcessed"/>.
+        /// </summary>
+        /// <param name="requestID"></param>
+        protected virtual void OnRequestProcessed(long requestID)
+        {
+            if(RequestProcessed != null) {
+                var args = new RequestProcessedEventArgs(requestID);
+                RequestProcessed?.Invoke(this, args);
+            }
+        }
+
+        /// <summary>
         /// Creates a new object.
         /// </summary>
         public HostHttpListener()
@@ -241,8 +258,9 @@ namespace AWhewell.Owin.Host.HttpListener
                 }
 
                 if(context != null) {
+                    long? requestID = null;
                     try {
-                        ProcessRequest(context);
+                        requestID = ProcessRequest(context);
                     } catch(Exception ex) {
                         _Pipeline.LogException(context?.Request?.RawUrl, ex);
                     }
@@ -254,12 +272,21 @@ namespace AWhewell.Owin.Host.HttpListener
                     } catch {
                         ; // This will get hit a lot, the close call will fail if clients close connections etc.
                     }
+
+                    try {
+                        if(requestID != null) {
+                            OnRequestProcessed(requestID.Value);
+                        }
+                    } catch {
+                    }
                 }
             }
         }
 
-        private void ProcessRequest(IHttpListenerContext context)
+        private long? ProcessRequest(IHttpListenerContext context)
         {
+            long? requestID = null;
+
             var root = Root;
             var pathQuery = SplitRawUrlIntoPathAndQuery(context.Request.RawUrl);
             if(IsRequestValid(root, pathQuery)) {
@@ -268,6 +295,7 @@ namespace AWhewell.Owin.Host.HttpListener
 
                 try {
                     _Pipeline.ProcessRequest(environment).Wait();
+                    requestID = environment[CustomEnvironmentKey.RequestID] as long?;
                 } catch(AggregateException agEx) {
                     if(agEx.InnerExceptions.Count != 1) {
                         throw;
@@ -283,6 +311,8 @@ namespace AWhewell.Owin.Host.HttpListener
                     }
                 }
             }
+
+            return requestID;
         }
 
         private Tuple<string, string> SplitRawUrlIntoPathAndQuery(string rawUrl)
