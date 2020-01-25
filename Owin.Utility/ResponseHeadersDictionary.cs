@@ -48,6 +48,15 @@ namespace AWhewell.Owin.Utility
         }
 
         /// <summary>
+        /// Gets or sets the content encoding of the response.
+        /// </summary>
+        public string ContentEncoding
+        {
+            get => base["Content-Encoding"];
+            set => base["Content-Encoding"] = value;
+        }
+
+        /// <summary>
         /// Gets or sets the content type of the response.
         /// </summary>
         public string ContentType

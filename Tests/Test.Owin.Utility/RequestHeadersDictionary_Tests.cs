@@ -31,6 +31,7 @@ namespace Test.AWhewell.Owin.Utility
         }
 
         [TestMethod]
+        [DataRow(nameof(RequestHeadersDictionary.AcceptEncoding),   "Accept-Encoding")]
         [DataRow(nameof(RequestHeadersDictionary.Authorization),    "Authorization")]
         [DataRow(nameof(RequestHeadersDictionary.CacheControl),     "Cache-Control")]
         [DataRow(nameof(RequestHeadersDictionary.ContentType),      "Content-Type")]
@@ -66,6 +67,19 @@ namespace Test.AWhewell.Owin.Utility
             Assert.AreEqual(2, result.Count);
             Assert.AreEqual("Ab", result[0]);
             Assert.AreEqual("Cd", result[1]);
+        }
+
+        [TestMethod]
+        public void AcceptEncodingValues_Parses_AcceptEncoding_Into_QualityValues()
+        {
+            _UnderlyingDictionary["Accept-Encoding"] = new string[] { "deflate", " gzip;q=1.0", " *;q=0.5", };
+
+            var actual = _RequestHeaders.AcceptEncodingValues;
+
+            Assert.AreEqual(3,              actual.Count);
+            Assert.AreEqual("deflate",      actual[0].ToString());
+            Assert.AreEqual("gzip;q=1.0",   actual[1].ToString());
+            Assert.AreEqual("*;q=0.5",      actual[2].ToString());
         }
 
         [TestMethod]

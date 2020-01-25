@@ -274,6 +274,22 @@ namespace Test.AWhewell.Owin
         }
 
         /// <summary>
+        /// Sets up a text response body and content type header.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="mediaType"></param>
+        /// <param name="encoding"></param>
+        public void AddResponseText(string text, string mediaType = "text/plain", Encoding encoding = null)
+        {
+            encoding = encoding ?? Encoding.UTF8;
+            var bytes = encoding.GetBytes(text ?? "");
+
+            _ResponseBodyStream.Write(bytes, 0, bytes.Length);
+            ResponseHeadersDictionary.ContentLength = _ResponseBodyStream.ToArray().Length;
+            ResponseHeadersDictionary.ContentTypeValue = new ContentTypeValue(mediaType, encoding.WebName);
+        }
+
+        /// <summary>
         /// Adds a principal to the request.
         /// </summary>
         /// <param name="userName"></param>

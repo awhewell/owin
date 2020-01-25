@@ -27,6 +27,16 @@ namespace AWhewell.Owin.Utility
         public IList<string> Accept => base.GetValues("Accept") ?? EmptyStringArray;
 
         /// <summary>
+        /// Gets the raw Accept-Encoding of compression schemes that the client can understand.
+        /// </summary>
+        public string AcceptEncoding => base["Accept-Encoding"];
+
+        /// <summary>
+        /// Gets <see cref="AcceptEncoding"/> parsed into a collection of <see cref="QualityValue"/>s.
+        /// </summary>
+        public IList<QualityValue> AcceptEncodingValues => QualityValue.ParseCommaSeparated(AcceptEncoding);
+
+        /// <summary>
         /// Gets the authorization string sent by the browser.
         /// </summary>
         public string Authorization => base["Authorization"];
