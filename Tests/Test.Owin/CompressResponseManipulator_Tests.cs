@@ -54,6 +54,19 @@ namespace Test.AWhewell.Owin
             }
         }
 
+        private byte[] ExpectedDeflateBody(string textBody, Encoding bodyEncoding = null)
+        {
+            var plainTextBytes = ExpectedPlaintextBody(textBody, bodyEncoding);
+
+            using(var compressedStream = new MemoryStream()) {
+                using(var deflateStream = new DeflateStream(compressedStream, CompressionLevel.Optimal)) {
+                    deflateStream.Write(plainTextBytes, 0, plainTextBytes.Length);
+                    deflateStream.Flush();
+                }
+                return compressedStream.ToArray();
+            }
+        }
+
         [TestMethod]
         public void Enabled_Defaults_To_True()
         {
@@ -63,12 +76,14 @@ namespace Test.AWhewell.Owin
         [TestMethod]
         [DataRow(true,  _LongText, "text/plain", "utf-7", null,                            null)]
         [DataRow(true,  _LongText, "text/plain", "utf-7", "gzip",                          "gzip")]
-        [DataRow(true,  _LongText, "text/plain", "utf-7", "deflate",                       null)]
+        [DataRow(true,  _LongText, "text/plain", "utf-7", "deflate",                       "deflate")]
         [DataRow(true,  _LongText, "text/plain", "utf-7", "br",                            null)]
         [DataRow(true,  _LongText, "text/plain", "utf-7", "*",                             null)]
         [DataRow(true,  _LongText, "text/plain", "utf-7", "gzip, deflate",                 "gzip")]
-        [DataRow(true,  _LongText, "text/plain", "utf-7", "deflate, gzip",                 "gzip")]
-        [DataRow(true,  _LongText, "text/plain", "utf-7", "deflate, gzip;q=1.0, *;q=0.5",  "gzip")]
+        [DataRow(true,  _LongText, "text/plain", "utf-7", "deflate, gzip",                 "deflate")]
+        [DataRow(true,  _LongText, "text/plain", "utf-7", "deflate, gzip;q=1.0, *;q=0.5",  "deflate")]
+        [DataRow(true,  _LongText, "text/plain", "utf-7", "deflate;q=0.5, gzip;q=0.55",    "gzip")]
+        [DataRow(true,  _LongText, "text/plain", "utf-7", "deflate;q=0.55, gzip;q=0.5",    "deflate")]
         [DataRow(false, _LongText, "text/plain", "utf-7", "gzip",                          null)]
         public void AppFunc_Compresses_To_GZip_Body_If_Requested(bool enabled, string plaintext, string mimeType, string encodingName, string acceptEncoding, string expectedContentEncoding)
         {
@@ -81,6 +96,7 @@ namespace Test.AWhewell.Owin
             byte[] expectedBody;
             switch(expectedContentEncoding) {
                 case null:      expectedBody = ExpectedPlaintextBody(plaintext, encoding); break;
+                case "deflate": expectedBody = ExpectedDeflateBody(plaintext, encoding); break;
                 case "gzip":    expectedBody = ExpectedGZipBody(plaintext, encoding); break;
                 default:        throw new NotImplementedException();
             }

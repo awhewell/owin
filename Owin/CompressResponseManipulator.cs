@@ -41,10 +41,22 @@ namespace AWhewell.Owin
             return async(IDictionary<string, object> environment) => {
                 if(Enabled) {
                     var context = new OwinContext(environment);
-                    var acceptEncodings = context.RequestHeadersDictionary.AcceptEncodingValues;
 
-                    if(acceptEncodings.Any(r => r.Value == "gzip")) {
-                        CompressUsingGZip(context);
+                    QualityValue useEncoding = null;
+                    foreach(var acceptEncoding in context.RequestHeadersDictionary.AcceptEncodingValues) {
+                        if(acceptEncoding.Value == "gzip" || acceptEncoding.Value == "deflate") {
+                            if(useEncoding == null || (useEncoding?.Quality ?? 1.0) < (acceptEncoding.Quality ?? 1.0)) {
+                                useEncoding = acceptEncoding;
+                            }
+                        }
+                    }
+
+                    if(useEncoding != null) {
+                        switch(useEncoding.Value) {
+                            case "deflate": CompressUsingDeflate(context); break;
+                            case "gzip":    CompressUsingGZip(context); break;
+                            default:        throw new NotImplementedException();
+                        }
                     }
                 }
 
@@ -54,17 +66,36 @@ namespace AWhewell.Owin
 
         private static void CompressUsingGZip(OwinContext context)
         {
+            CompressUsingStreamCompressor(
+                context,
+                (compressedStream) => new GZipStream(compressedStream, CompressionLevel.Optimal, leaveOpen: true),
+                "gzip"
+            );
+        }
+
+        private static void CompressUsingDeflate(OwinContext context)
+        {
+            CompressUsingStreamCompressor(
+                context,
+                (compressedStream) => new DeflateStream(compressedStream, CompressionLevel.Optimal, leaveOpen: true),
+                "deflate"
+            );
+        }
+
+        private static void CompressUsingStreamCompressor<T>(OwinContext context, Func<Stream, T> createStream, string contentEncoding)
+            where T: Stream
+        {
             var responseStream = context.ResponseBody;
 
             using(var compressedStream = new MemoryStream()) {
-                using(var gzipStream = new GZipStream(compressedStream, CompressionLevel.Optimal, leaveOpen: true)) {
+                using(var compressorStream = createStream(compressedStream)) {
                     responseStream.Position = 0;
-                    responseStream.CopyTo(gzipStream);
-                    gzipStream.Flush();
+                    responseStream.CopyTo(compressorStream);
+                    compressorStream.Flush();
                 }
 
                 context.ResponseHeadersDictionary.ContentLength = compressedStream.Position;
-                context.ResponseHeadersDictionary.ContentEncoding = "gzip";
+                context.ResponseHeadersDictionary.ContentEncoding = contentEncoding;
 
                 responseStream.SetLength(0);
                 compressedStream.Position = 0;
