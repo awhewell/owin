@@ -41,16 +41,8 @@ namespace Test.AWhewell.Owin
         /// <param name="environment"></param>
         public void BuildAndCallMiddleware(Func<AppFunc, AppFunc> appFuncBuilder, IDictionary<string, object> environment)
         {
-            NextMiddlewareCalled = false;
-
-            AppFunc nextMiddleware = (IDictionary<string, object> env) => {
-                NextMiddlewareCalled = true;
-                NextMiddlewareCallback?.Invoke(env);
-                return Task.FromResult(0);
-            };
-
-            AppFunc testMiddleware = appFuncBuilder(nextMiddleware);
-            testMiddleware(environment);
+            var testMiddleware = BuildAppFunc(appFuncBuilder);
+            CallAppFunc(testMiddleware, environment);
         }
 
         /// <summary>
@@ -62,6 +54,44 @@ namespace Test.AWhewell.Owin
         public void BuildAndCallMiddleware(Func<AppFunc, AppFunc> appFuncBuilder, MockOwinEnvironment environment)
         {
             BuildAndCallMiddleware(appFuncBuilder, environment.Environment);
+        }
+
+        /// <summary>
+        /// Runs an AppFunc builder, passing a next Task that sets <see cref="NextMiddlewareCalled"/> and
+        /// invokes <see cref="NextMiddlewareCallback"/>.
+        /// </summary>
+        /// <param name="appFuncBuilder"></param>
+        /// <returns></returns>
+        public AppFunc BuildAppFunc(Func<AppFunc, AppFunc> appFuncBuilder)
+        {
+            AppFunc nextMiddleware = (IDictionary<string, object> env) => {
+                NextMiddlewareCalled = true;
+                NextMiddlewareCallback?.Invoke(env);
+                return Task.FromResult(0);
+            };
+
+            return appFuncBuilder(nextMiddleware);
+        }
+
+        /// <summary>
+        /// Resets <see cref="NextMiddlewareCalled"/> and then calls the app func passed across.
+        /// </summary>
+        /// <param name="appFunc"></param>
+        /// <param name="environment"></param>
+        public void CallAppFunc(AppFunc appFunc, IDictionary<string, object> environment)
+        {
+            NextMiddlewareCalled = false;
+            appFunc(environment);
+        }
+
+        /// <summary>
+        /// Resets <see cref="NextMiddlewareCalled"/> and then calls the app func passed across.
+        /// </summary>
+        /// <param name="appFunc"></param>
+        /// <param name="environment"></param>
+        public void CallAppFunc(AppFunc appFunc, MockOwinEnvironment environment)
+        {
+            CallAppFunc(appFunc, environment.Environment);
         }
     }
 }

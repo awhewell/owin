@@ -112,6 +112,26 @@ namespace Test.AWhewell.Owin
         }
 
         [TestMethod]
+        public void Enabled_Can_Switch_Compression_On_And_Off()
+        {
+            var appFunc = _Pipeline.BuildAppFunc(_Manipulator.AppFuncBuilder);
+
+            foreach(var enabled in new bool[] { true, false, true }) {
+                _Environment = new MockOwinEnvironment();
+                _Environment.AddRequiredFields();
+                _Environment.AddResponseText(_LongText);
+                _Environment.RequestHeaders["Accept-Encoding"] = "gzip";
+
+                var expectedBody = enabled ? ExpectedGZipBody(_LongText) : ExpectedPlaintextBody(_LongText);
+
+                _Manipulator.Enabled = enabled;
+                _Pipeline.CallAppFunc(appFunc, _Environment);
+
+                Assertions.AreEqual(expectedBody, _Environment.ResponseBodyBytes);
+            }
+        }
+
+        [TestMethod]
         [DataRow("application/x-7z-compressed",     false)]
         [DataRow("application/x-bzip",              false)]
         [DataRow("application/x-bzip2",             false)]
