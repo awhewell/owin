@@ -110,5 +110,31 @@ namespace Test.AWhewell.Owin
             Assert.AreEqual(expectedBody.Length,        _Environment.ResponseHeadersDictionary.ContentLength);
             Assert.AreEqual(expectedContentEncoding,    _Environment.ResponseHeadersDictionary.ContentEncoding);
         }
+
+        [TestMethod]
+        [DataRow("application/x-7z-compressed",     false)]
+        [DataRow("application/x-bzip",              false)]
+        [DataRow("application/x-bzip2",             false)]
+        [DataRow("application/x-rar-compressed",    false)]
+        [DataRow("application/zip",                 false)]
+        [DataRow("audio/mp4",                       false)]
+        [DataRow("audio/almost-anything",           false)]
+        [DataRow("audio/x-wav",                     true)]
+        [DataRow("image/png",                       false)]
+        [DataRow("image/almost-anything",           false)]
+        [DataRow("image/bmp",                       true)]
+        [DataRow("image/svg+xml",                   true)]
+        [DataRow("video/anything",                  false)]
+        public void AppFunc_Does_Not_Compress_Known_Compressed_Streams(string mimeType, bool expectCompression)
+        {
+            var plainText = _LongText;
+            var expectedBody = expectCompression ? ExpectedGZipBody(plainText) : ExpectedPlaintextBody(plainText);
+            _Environment.AddResponseText(plainText, mimeType, Encoding.UTF8);
+            _Environment.RequestHeaders["Accept-Encoding"] = "gzip";
+
+            _Pipeline.BuildAndCallMiddleware(_Manipulator.AppFuncBuilder, _Environment);
+
+            Assertions.AreEqual(expectedBody, _Environment.ResponseBodyBytes);
+        }
     }
 }

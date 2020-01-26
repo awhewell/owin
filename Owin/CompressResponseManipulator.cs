@@ -12,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Threading.Tasks;
 using AWhewell.Owin.Interface;
 using AWhewell.Owin.Utility;
@@ -40,28 +39,69 @@ namespace AWhewell.Owin
         {
             return async(IDictionary<string, object> environment) => {
                 if(Enabled) {
-                    var context = new OwinContext(environment);
-
-                    QualityValue useEncoding = null;
-                    foreach(var acceptEncoding in context.RequestHeadersDictionary.AcceptEncodingValues) {
-                        if(acceptEncoding.Value == "gzip" || acceptEncoding.Value == "deflate") {
-                            if(useEncoding == null || (useEncoding?.Quality ?? 1.0) < (acceptEncoding.Quality ?? 1.0)) {
-                                useEncoding = acceptEncoding;
+                    var context = OwinContext.Create(environment);
+                    if(!IsCompressedMimeType(context)) {
+                        var useEncoding = DetermineEncoding(context);
+                        if(useEncoding != null) {
+                            switch(useEncoding.Value) {
+                                case "deflate": CompressUsingDeflate(context); break;
+                                case "gzip":    CompressUsingGZip(context); break;
+                                default:        throw new NotImplementedException();
                             }
-                        }
-                    }
-
-                    if(useEncoding != null) {
-                        switch(useEncoding.Value) {
-                            case "deflate": CompressUsingDeflate(context); break;
-                            case "gzip":    CompressUsingGZip(context); break;
-                            default:        throw new NotImplementedException();
                         }
                     }
                 }
 
                 await next(environment);
             };
+        }
+
+        private bool IsCompressedMimeType(OwinContext context)
+        {
+            var mediaType = context.ResponseHeadersDictionary.ContentTypeValue.MediaType;
+
+            var result = mediaType != null;
+            if(result) {
+                result = mediaType.StartsWith("image/")
+                      || mediaType.StartsWith("audio/")
+                      || mediaType.StartsWith("video/");
+                if(result) {
+                    switch(mediaType) {
+                        case "audio/x-wav":
+                        case "image/bmp":
+                        case "image/svg+xml":
+                            result = false;
+                            break;
+                    }
+                } else {
+                    switch(mediaType) {
+                        case "application/x-7z-compressed":
+                        case "application/x-bzip":
+                        case "application/x-bzip2":
+                        case "application/x-rar-compressed":
+                        case "application/zip":
+                            result = true;
+                            break;
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private static QualityValue DetermineEncoding(OwinContext context)
+        {
+            QualityValue result = null;
+
+            foreach(var acceptEncoding in context.RequestHeadersDictionary.AcceptEncodingValues) {
+                if(acceptEncoding.Value == "gzip" || acceptEncoding.Value == "deflate") {
+                    if(result == null || (result?.Quality ?? 1.0) < (acceptEncoding.Quality ?? 1.0)) {
+                        result = acceptEncoding;
+                    }
+                }
+            }
+
+            return result;
         }
 
         private static void CompressUsingGZip(OwinContext context)
