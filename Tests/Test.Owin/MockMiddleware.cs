@@ -38,6 +38,7 @@ namespace Test.AWhewell.Owin
         {
             ++AppFuncBuilderCallCount;
 
+            #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
             return async(IDictionary<string, object> environment) => {
                 Environments.Add(environment);
                 Nexts.Add(next);
