@@ -26,7 +26,7 @@ namespace AWhewell.Owin
         /// <summary>
         /// See interface docs.
         /// </summary>
-        public OwinDictionary<object> Properties => new OwinDictionary<object>();
+        public OwinDictionary<object> Properties { get; } = new OwinDictionary<object>();
 
         /// <summary>
         /// See interface docs.

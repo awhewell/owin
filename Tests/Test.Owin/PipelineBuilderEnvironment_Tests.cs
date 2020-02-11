@@ -44,6 +44,15 @@ namespace Test.AWhewell.Owin
         }
 
         [TestMethod]
+        public void Properties_Can_Have_Values_Assigned_To_It()
+        {
+            _Environment.Properties["key"] = "value";
+
+            Assert.AreEqual(1, _Environment.Properties.Count);
+            Assert.AreEqual("value", _Environment.Properties["key"]);
+        }
+
+        [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
         public void UseMiddlewareBuilder_Throws_If_Passed_Null()
         {
