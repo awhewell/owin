@@ -128,8 +128,8 @@ namespace AWhewell.Owin.Utility
 
         void AddKeyValue(string key, string value)
         {
-            key = key == null ? null : Uri.UnescapeDataString(key);
-            value = value == null ? null : Uri.UnescapeDataString(value);
+            key = key == null ? null : OwinConvert.UrlDecode(key);
+            value = value == null ? null : OwinConvert.UrlDecode(value);
 
             if(key != "") {
                 if(!_KeyValueMap.TryGetValue(key, out var existing)) {

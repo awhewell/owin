@@ -329,7 +329,7 @@ namespace AWhewell.Owin.Host.HttpListener
                     query = rawUrl.Substring(queryIdx + 1);
                 }
 
-                path = Uri.UnescapeDataString(path);
+                path = OwinConvert.UrlDecode(path);
             }
 
             return new Tuple<string, string>(path, query);

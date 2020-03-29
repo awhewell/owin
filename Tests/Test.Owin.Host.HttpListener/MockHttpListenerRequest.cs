@@ -71,8 +71,8 @@ namespace Test.AWhewell.Owin.Host.HttpListener
                     unescapedUrl = $"{unescapedUrl}:{uri.Port}";
                 }
                 var path = uri.AbsolutePath;
-                while(path != Uri.UnescapeDataString(path)) {
-                    path = Uri.UnescapeDataString(path);
+                while(path != Uri.UnescapeDataString(path.Replace("+", "%20"))) {
+                    path = Uri.UnescapeDataString(path.Replace("+", "%20"));
                 }
                 unescapedUrl = $"{unescapedUrl}{path}";
                 if(!String.IsNullOrEmpty(uri.Query)) {

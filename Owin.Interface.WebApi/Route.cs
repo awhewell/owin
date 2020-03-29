@@ -207,7 +207,7 @@ namespace AWhewell.Owin.Interface.WebApi
             PathPart[] result = null;
 
             if(!String.IsNullOrEmpty(routeAttribute.Route)) {
-                var unescaped = Uri.UnescapeDataString(routeAttribute.Route);
+                var unescaped = OwinConvert.UrlDecode(routeAttribute.Route);
                 result = unescaped
                     .Split('/')
                     .Select(r => PathPart.Create(r, methodParameters))

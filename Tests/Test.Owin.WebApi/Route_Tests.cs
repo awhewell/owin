@@ -146,6 +146,7 @@ namespace Test.AWhewell.Owin.WebApi
         public class UpperCaseRoute : Controller    { [HttpGet, Route("API")]               public int Method() { return 1; } }
         public class SpacesRoute1 : Controller      { [HttpGet, Route("A B")]               public int Method() { return 1; } }
         public class SpacesRoute2 : Controller      { [HttpGet, Route("A%20B")]             public int Method() { return 1; } }
+        public class SpacesRoute3 : Controller      { [HttpGet, Route("A+B")]               public int Method() { return 1; } }
         public class EmptyPartRoute : Controller    { [HttpGet, Route("api//entity")]       public int Method() { return 1; } }
         public class LeadingSlashRoute : Controller { [HttpGet, Route("/api/entity")]       public int Method() { return 1; } }
 
@@ -159,6 +160,7 @@ namespace Test.AWhewell.Owin.WebApi
         [DataRow(typeof(UpperCaseRoute),    "Method", new string[] { "API" })]
         [DataRow(typeof(SpacesRoute1),      "Method", new string[] { "A B" })]
         [DataRow(typeof(SpacesRoute2),      "Method", new string[] { "A B" })]
+        [DataRow(typeof(SpacesRoute3),      "Method", new string[] { "A B" })]
         [DataRow(typeof(EmptyPartRoute),    "Method", new string[] { "api", "", "entity" })]
         [DataRow(typeof(LeadingSlashRoute), "Method", new string[] { "", "api", "entity" })]
         public void Ctor_Sets_Correct_PathParts(Type controllerType, string methodName, string[] expectedPathParts)

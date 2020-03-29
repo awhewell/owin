@@ -47,6 +47,8 @@ namespace Test.AWhewell.Owin.Utility
         [DataRow("name=Andrew",             true,   "Name", null)]
         [DataRow("name=Andrew",             false,  "Name", "Andrew")]
         [DataRow("name=Andrew%20Whewell",   true,   "name", "Andrew Whewell")]
+        [DataRow("name=A+B",                true,   "name", "A B")]
+        [DataRow("name=A%2BB",              true,   "name", "A+B")]
         [DataRow("a=1&b=2",                 true,   "a",    "1")]
         [DataRow("a=1&b=2",                 true,   "b",    "2")]
         [DataRow("a=1%262&b=3",             true,   "a",    "1&2")]

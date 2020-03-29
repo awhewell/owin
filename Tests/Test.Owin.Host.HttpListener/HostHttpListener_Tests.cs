@@ -586,6 +586,7 @@ namespace Test.AWhewell.Owin.Host.HttpListener
         [DataRow("/Root",   "/Root%2fA",                "/A")]      // Path expands escaped slashes - this seems a bit odd but 5.5 Percent encoding in the spec says the path must be expanded
         [DataRow("/Root",   "/Root/a?q=1",              "/a")]      // Path does not include query string
         [DataRow("/Root",   "/Root/a%3Fid=1?id=2?id=3", "/a?id=1")] // Path includes an escaped question mark
+        [DataRow("/Root",   "/Root/a+b",                "/a b")]    // Path includes a space encoded as a plus
         [DataRow("/Root",   "/root?/a=b",               "")]        // Path is empty, query string includes slash
         [DataRow("/",       "/%25%36%31",               "/%61")]    // Path unescapes once.
                                                                     // .NET HttpListener will double-unescape this to /a in the Url property and leave it as received in RawUrl
