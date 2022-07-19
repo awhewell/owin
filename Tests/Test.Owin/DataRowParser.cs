@@ -159,7 +159,7 @@ namespace Test.AWhewell.Owin
 
                     switch(match.Groups["named"].Value.ToLower()) {
                         case "today":
-                            var today = System.DateTime.Today;
+                            var today = System.DateTime.UtcNow.Date;
                             year = today.Year;
                             month = today.Month;
                             day = today.Day;
